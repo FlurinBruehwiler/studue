@@ -76,6 +76,9 @@ main() {
     log "No access-control.json found in $DATA_DIR; backend will create a default one on first start"
   fi
 
+  log "Cleaning up downloaded artifact directories"
+  rm -rf "$WORK_DIR/backend-build" "$WORK_DIR/frontend-dist" "$WORK_DIR/deploy-script"
+
   log "Deployment files are in place"
   log "If needed, restart the backend: sudo systemctl restart studue"
   log "If needed, reload caddy: sudo systemctl reload caddy"
