@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { AppLink } from '@/components/ui/app-link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -32,10 +33,10 @@ export function SidebarNav({ items, activeKey }: SidebarNavProps) {
             )}
             asChild
           >
-            <a href={item.href}>
+            <AppLink to={item.href}>
               {item.icon}
               {item.label}
-            </a>
+            </AppLink>
           </Button>
         )
       })}

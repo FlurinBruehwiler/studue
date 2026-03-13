@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { AssignmentDetailDialog } from '@/components/assignment-detail-dialog'
 import { AssignmentFormDialog } from '@/components/assignment-form-dialog'
 import { Badge } from '@/components/ui/badge'
+import { AppLink } from '@/components/ui/app-link'
 import { Button } from '@/components/ui/button'
 import { useAssignments } from '@/hooks/use-assignments'
 import { useAuth } from '@/hooks/use-auth'
@@ -203,7 +204,7 @@ export function OverviewPage() {
                 <>
                   {canAdmin ? (
                     <Button variant="outline" size="sm" asChild>
-                      <a href="/admin">Admin</a>
+                      <AppLink to="/admin">Admin</AppLink>
                     </Button>
                   ) : null}
                   <Badge>{auth.user.displayName}</Badge>

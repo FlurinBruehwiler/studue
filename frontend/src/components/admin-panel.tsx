@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, RotateCcw, Shield, UserCog, UserRoundPlus, X } from 'lucide-react'
 
 import { ApiError, apiClient } from '@/api/client'
+import { AppLink } from '@/components/ui/app-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { SidebarNav } from '@/components/ui/sidebar-nav'
 import { formatDisplayDateTime, formatSwissDateAndTime } from '@/lib/date'
+import { usePathname } from '@/lib/router'
 import type { AccessControlState, AuditLogItem } from '@/lib/types'
 
 type AdminPanelProps = {
@@ -32,7 +34,8 @@ const initialState: AccessControlState = {
 }
 
 export function AdminPanel({ isVisible }: AdminPanelProps) {
-  const [section, setSection] = useState<AdminSection>(() => getSectionFromPath(window.location.pathname))
+  const pathname = usePathname()
+  const section = getSectionFromPath(pathname)
   const [accessControl, setAccessControl] = useState<AccessControlState>(initialState)
   const [logs, setLogs] = useState<AuditLogItem[]>([])
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
@@ -40,18 +43,6 @@ export function AdminPanel({ isVisible }: AdminPanelProps) {
   const [newAdmin, setNewAdmin] = useState('')
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-
-  useEffect(() => {
-    const onPopState = () => {
-      setSection(getSectionFromPath(window.location.pathname))
-    }
-
-    window.addEventListener('popstate', onPopState)
-
-    return () => {
-      window.removeEventListener('popstate', onPopState)
-    }
-  }, [])
 
   useEffect(() => {
     if (!isVisible) {
@@ -164,10 +155,10 @@ export function AdminPanel({ isVisible }: AdminPanelProps) {
               <h1 className="font-serif text-[1.8rem] text-foreground sm:text-[2.4rem]">Studue Admin</h1>
             </div>
             <Button variant="outline" asChild>
-              <a href="/">
+              <AppLink to="/">
                 <ArrowLeft className="h-4 w-4" />
                 Back
-              </a>
+              </AppLink>
             </Button>
           </div>
 
