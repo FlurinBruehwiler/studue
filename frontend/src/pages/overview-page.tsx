@@ -3,6 +3,7 @@ import { LogIn, LogOut, Plus } from 'lucide-react'
 
 import { ApiError, apiClient } from '@/api/client'
 import { AssignmentCard } from '@/components/assignment-card'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { AssignmentDetailDialog } from '@/components/assignment-detail-dialog'
 import { AssignmentFormDialog } from '@/components/assignment-form-dialog'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,7 @@ export function OverviewPage() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [formError, setFormError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -111,6 +113,7 @@ export function OverviewPage() {
       setSelectedAssignment(null)
       setEditingAssignment(null)
       setIsFormOpen(false)
+      setIsDeleteConfirmOpen(false)
       setReloadKey((value) => value + 1)
     } finally {
       setIsDeleting(false)
@@ -263,13 +266,26 @@ export function OverviewPage() {
           error={formError}
           onClose={() => {
             setIsFormOpen(false)
+            setIsDeleteConfirmOpen(false)
             setEditingAssignment(null)
             setFormError('')
           }}
-          onDelete={editingAssignment ? handleDelete : undefined}
+          onDelete={editingAssignment ? () => setIsDeleteConfirmOpen(true) : undefined}
           onSubmit={handleSubmit}
         />
       ) : null}
+
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        title="Are you sure?"
+        description="This assignment will be deleted."
+        confirmLabel="Delete"
+        isLoading={isDeleting}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          void handleDelete()
+        }}
+      />
     </div>
   )
 }

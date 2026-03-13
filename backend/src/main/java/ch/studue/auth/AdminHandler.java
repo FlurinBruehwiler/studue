@@ -1,6 +1,9 @@
 package ch.studue.auth;
 
 import ch.studue.audit.AuditLogStore;
+import ch.studue.assignment.Assignment;
+import ch.studue.assignment.AssignmentService;
+import ch.studue.assignment.AssignmentUser;
 import ch.studue.http.HttpExchangeHelper;
 import ch.studue.json.SimpleJson;
 import com.sun.net.httpserver.HttpExchange;
@@ -15,11 +18,18 @@ public final class AdminHandler implements HttpHandler {
     private final SessionService sessionService;
     private final AuthorizationService authorizationService;
     private final AuditLogStore auditLogStore;
+    private final AssignmentService assignmentService;
 
-    public AdminHandler(SessionService sessionService, AuthorizationService authorizationService, AuditLogStore auditLogStore) {
+    public AdminHandler(
+            SessionService sessionService,
+            AuthorizationService authorizationService,
+            AuditLogStore auditLogStore,
+            AssignmentService assignmentService
+    ) {
         this.sessionService = sessionService;
         this.authorizationService = authorizationService;
         this.auditLogStore = auditLogStore;
+        this.assignmentService = assignmentService;
     }
 
     @Override
@@ -109,9 +119,33 @@ public final class AdminHandler implements HttpHandler {
                             "assignmentId", entry.assignmentId(),
                             "title", entry.title(),
                             "dueDate", entry.dueDate(),
-                            "dueTime", entry.dueTime()
+                            "dueTime", entry.dueTime(),
+                            "changes", entry.changes(),
+                            "snapshot", entry.snapshot()
                     )).toList()
             ));
+            return;
+        }
+
+        if (path.startsWith("/api/admin/logs/") && path.endsWith("/undo") && method.equalsIgnoreCase("POST")) {
+            String assignmentId = decodePathSegment(path.substring("/api/admin/logs/".length(), path.length() - "/undo".length()));
+            Optional<ch.studue.audit.AuditLogEntry> logEntry = auditLogStore.readAll().stream()
+                    .filter(entry -> entry.assignmentId().equals(assignmentId) && entry.action().equals("delete") && !entry.snapshot().isEmpty())
+                    .findFirst();
+
+            if (logEntry.isEmpty()) {
+                HttpExchangeHelper.notFound(exchange, "Delete log entry not found.");
+                return;
+            }
+
+            Assignment restored = assignmentService.restoreDeletedAssignment(logEntry.get().snapshot());
+            AssignmentUser actor = new AssignmentUser(
+                    session.get().user().githubLogin(),
+                    session.get().user().displayName(),
+                    session.get().user().email()
+            );
+            auditLogStore.append("add", restored, actor, Map.of(), Map.of());
+            HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
             return;
         }
 

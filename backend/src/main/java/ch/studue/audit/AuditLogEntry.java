@@ -1,5 +1,7 @@
 package ch.studue.audit;
 
+import java.util.Map;
+
 public record AuditLogEntry(
         String timestamp,
         String action,
@@ -8,6 +10,8 @@ public record AuditLogEntry(
         String assignmentId,
         String title,
         String dueDate,
-        String dueTime
+        String dueTime,
+        Map<String, Map<String, String>> changes,
+        Map<String, Object> snapshot
 ) {
 }

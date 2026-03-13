@@ -70,4 +70,6 @@ export type AuditLogItem = {
   title: string
   dueDate: string
   dueTime: string
+  changes: Record<string, { before: string; after: string }>
+  snapshot: Record<string, unknown>
 }

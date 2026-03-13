@@ -37,7 +37,7 @@ public final class App {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api/assignments", new AssignmentHandler(assignmentService, sessionService, authorizationService));
         server.createContext("/api/auth", new AuthHandler(config, sessionService, authorizationService, oAuthStateService, gitHubOAuthService));
-        server.createContext("/api/admin", new AdminHandler(sessionService, authorizationService, auditLogStore));
+        server.createContext("/api/admin", new AdminHandler(sessionService, authorizationService, auditLogStore, assignmentService));
         server.createContext("/health", new HealthHandler());
         server.setExecutor(Executors.newFixedThreadPool(8));
         server.start();

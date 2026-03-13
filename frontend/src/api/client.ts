@@ -116,6 +116,11 @@ export const apiClient = {
       headers: {},
     })
   },
+  undoDeleteLogEntry(assignmentId: string) {
+    return request<{ ok: boolean }>(`/api/admin/logs/${assignmentId}/undo`, {
+      method: 'POST',
+    })
+  },
   removeAdminEntry(githubLogin: string) {
     return request<AccessControlState>(`/api/admin/admins/${githubLogin}`, {
       method: 'DELETE',

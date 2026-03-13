@@ -47,7 +47,7 @@ export function AssignmentFormDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
       <div className="w-full max-w-2xl rounded-[2rem] border-[3px] border-slate-900 bg-[#f8f6f2] p-6 shadow-soft sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>

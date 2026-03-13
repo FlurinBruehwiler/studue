@@ -24,6 +24,16 @@ public final class AuditLogStore {
     }
 
     public synchronized void append(String action, Assignment assignment, AssignmentUser actor) throws IOException {
+        append(action, assignment, actor, Map.of(), Map.of());
+    }
+
+    public synchronized void append(
+            String action,
+            Assignment assignment,
+            AssignmentUser actor,
+            Map<String, Map<String, String>> changes,
+            Map<String, Object> snapshot
+    ) throws IOException {
         AuditLogEntry entry = new AuditLogEntry(
                 java.time.Instant.now().toString(),
                 action,
@@ -32,7 +42,9 @@ public final class AuditLogStore {
                 assignment.id(),
                 assignment.title(),
                 assignment.dueDate(),
-                assignment.dueTime()
+                assignment.dueTime(),
+                changes,
+                snapshot
         );
 
         String fileName = LocalDate.now() + ".log";
@@ -78,7 +90,9 @@ public final class AuditLogStore {
                 stringValue(raw.get("assignmentId")),
                 stringValue(raw.get("title")),
                 stringValue(raw.get("dueDate")),
-                stringValue(raw.get("dueTime"))
+                stringValue(raw.get("dueTime")),
+                changeMap(raw.get("changes")),
+                objectMap(raw.get("snapshot"))
         );
     }
 
@@ -92,7 +106,36 @@ public final class AuditLogStore {
         map.put("title", entry.title());
         map.put("dueDate", entry.dueDate());
         map.put("dueTime", entry.dueTime());
+        map.put("changes", entry.changes());
+        map.put("snapshot", entry.snapshot());
         return map;
+    }
+
+    private Map<String, Map<String, String>> changeMap(Object value) {
+        if (!(value instanceof Map<?, ?> rawMap)) {
+            return Map.of();
+        }
+
+        Map<String, Map<String, String>> result = new LinkedHashMap<>();
+        rawMap.forEach((key, rawEntry) -> {
+            if (rawEntry instanceof Map<?, ?> rawChange) {
+                result.put(String.valueOf(key), Map.of(
+                        "before", stringValue(rawChange.get("before")),
+                        "after", stringValue(rawChange.get("after"))
+                ));
+            }
+        });
+        return result;
+    }
+
+    private Map<String, Object> objectMap(Object value) {
+        if (!(value instanceof Map<?, ?> rawMap)) {
+            return Map.of();
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        rawMap.forEach((key, rawValue) -> result.put(String.valueOf(key), rawValue));
+        return result;
     }
 
     private String stringValue(Object value) {
