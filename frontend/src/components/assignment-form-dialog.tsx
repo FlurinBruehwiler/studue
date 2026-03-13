@@ -88,7 +88,7 @@ export function AssignmentFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <FormField label="Module">
               <select
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
+                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
                 value={form.module}
                 onChange={(event) => setForm((current) => ({ ...current, module: event.target.value }))}
                 required
@@ -105,7 +105,7 @@ export function AssignmentFormDialog({
             <FormField label="Due date">
               <input
                 type="date"
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
+                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
                 value={form.dueDate}
                 onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
                 min={getTodayDateInputValue()}
@@ -116,7 +116,7 @@ export function AssignmentFormDialog({
             <FormField label="Time (optional)">
               <input
                 type="time"
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
+                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
                 value={form.dueTime}
                 onChange={(event) => setForm((current) => ({ ...current, dueTime: event.target.value }))}
               />
@@ -125,7 +125,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Title">
             <input
-              className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
+              className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
               value={form.title}
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               required
@@ -134,7 +134,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Details">
             <textarea
-              className="min-h-48 w-full rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-base sm:min-h-40 sm:text-sm"
+              className="min-h-48 w-full min-w-0 max-w-full rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-[16px] sm:min-h-40 sm:text-sm"
               value={form.note}
               onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
             />
@@ -197,7 +197,7 @@ type FormFieldProps = {
 
 function FormField({ label, children }: FormFieldProps) {
   return (
-    <label className="block space-y-2">
+    <label className="block min-w-0 space-y-2">
       <span className="text-sm font-semibold text-foreground">{label}</span>
       {children}
     </label>
