@@ -10,9 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { AppLink } from '@/components/ui/app-link'
 import { Button } from '@/components/ui/button'
 import { useAssignments } from '@/hooks/use-assignments'
-import { useAuth } from '@/hooks/use-auth'
 import { MODULE_OPTIONS } from '@/lib/modules'
-import type { Assignment, AssignmentFilters, AssignmentInput } from '@/lib/types'
+import type { Assignment, AssignmentFilters, AssignmentInput, AuthHookState } from '@/lib/types'
 
 const initialFilters: AssignmentFilters = {
   module: '',
@@ -25,7 +24,11 @@ const buildCommitHashFull = import.meta.env.VITE_GIT_COMMIT_HASH ?? 'abc1234def5
 const buildCommitHash = buildCommitHashFull.slice(0, 7)
 const buildCommitUrl = `https://github.com/FlurinBruehwiler/studue/commit/${buildCommitHashFull}`
 
-export function OverviewPage() {
+type OverviewPageProps = {
+  auth: AuthHookState
+}
+
+export function OverviewPage({ auth }: OverviewPageProps) {
   const [filters, setFilters] = useState<AssignmentFilters>(initialFilters)
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
@@ -36,7 +39,6 @@ export function OverviewPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
 
-  const auth = useAuth()
   const assignments = useAssignments(
     {
       from: filters.from,

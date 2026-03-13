@@ -11,7 +11,7 @@ function App() {
     return <AdminPanel isVisible={auth.authenticated && Boolean(auth.user?.isAdmin)} />
   }
 
-  return <OverviewPage />
+  return <OverviewPage auth={auth} />
 }
 
 export default App
