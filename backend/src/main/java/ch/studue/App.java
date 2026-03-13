@@ -16,7 +16,6 @@ import ch.studue.storage.AssignmentRepository;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
 public final class App {
@@ -28,7 +27,7 @@ public final class App {
         AssignmentRepository repository = new AssignmentRepository(config.dataDirectory(), config.defaultClassName());
         AuditLogStore auditLogStore = new AuditLogStore(config.dataDirectory().resolve("logs"));
         AssignmentService assignmentService = new AssignmentService(repository, config.defaultClassName(), auditLogStore);
-        AccessControlStore accessControlStore = new AccessControlStore(Path.of("config", "access-control.json"));
+        AccessControlStore accessControlStore = new AccessControlStore(config.dataDirectory().resolve("access-control.json"));
         AuthorizationService authorizationService = new AuthorizationService(accessControlStore);
         SessionService sessionService = new SessionService(config.sessionSecret(), config.sessionTtlSeconds());
         OAuthStateService oAuthStateService = new OAuthStateService(600);

@@ -126,9 +126,16 @@ export function OverviewPage() {
       <main className="min-h-screen w-full overflow-x-hidden bg-[#efefef] p-2.5 sm:mx-auto sm:min-h-0 sm:max-w-7xl sm:rounded-[1.5rem] sm:border-[3px] sm:border-slate-900 sm:p-4">
         <header className="flex flex-col gap-3 sm:gap-4">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <h1 className="text-center font-serif text-[1.95rem] text-foreground sm:flex-1 sm:text-center sm:text-[2.8rem]">
-              IT25a_WIN
-            </h1>
+            <div className="flex items-center justify-start gap-3 sm:flex-1 sm:justify-start">
+              <img
+                src="/studue-mark.svg"
+                alt="Studue logo"
+                className="h-12 w-12 shrink-0 sm:h-16 sm:w-16"
+              />
+              <h1 className="text-left font-serif text-[1.95rem] text-foreground sm:text-left sm:text-[2.8rem]">
+                IT25a_WIN
+              </h1>
+            </div>
             <div className="flex justify-center sm:flex-1 sm:justify-end">
               {canEdit ? (
                 <button

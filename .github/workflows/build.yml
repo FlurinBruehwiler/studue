@@ -47,6 +47,9 @@ jobs:
         run: chmod +x ./gradlew && ./gradlew build
         working-directory: backend
 
+      - name: Prepare deployment script
+        run: chmod +x scripts/deploy-artifacts.sh
+
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
@@ -61,4 +64,11 @@ jobs:
           path: |
             backend/build/distributions
             backend/build/libs
+          if-no-files-found: error
+
+      - name: Upload deployment script artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-script
+          path: scripts/deploy-artifacts.sh
           if-no-files-found: error
