@@ -37,12 +37,46 @@ export function OverviewPage() {
   const [reloadKey, setReloadKey] = useState(0)
 
   const auth = useAuth()
-  const assignments = useAssignments(filters, reloadKey)
+  const assignments = useAssignments(
+    {
+      from: filters.from,
+      to: filters.to,
+      module: '',
+      mandatory: '',
+    },
+    reloadKey,
+  )
 
   const today = new Date().toISOString().slice(0, 10)
-  const visibleItems = useMemo(() => {
+  const baseVisibleItems = useMemo(() => {
     return assignments.items.filter((assignment) => assignment.dueDate >= today)
   }, [assignments.items, today])
+
+  const visibleItems = useMemo(() => {
+    return baseVisibleItems.filter((assignment) => {
+      if (filters.module && assignment.module !== filters.module) {
+        return false
+      }
+
+      if (filters.mandatory !== '' && String(assignment.mandatory) !== filters.mandatory) {
+        return false
+      }
+
+      return true
+    })
+  }, [baseVisibleItems, filters.mandatory, filters.module])
+
+  const moduleFilterItems = useMemo(() => {
+    return baseVisibleItems.filter((assignment) => {
+      return filters.mandatory === '' || String(assignment.mandatory) === filters.mandatory
+    })
+  }, [baseVisibleItems, filters.mandatory])
+
+  const mandatoryFilterItems = useMemo(() => {
+    return baseVisibleItems.filter((assignment) => {
+      return !filters.module || assignment.module === filters.module
+    })
+  }, [baseVisibleItems, filters.module])
 
   const groupedAssignments = useMemo(() => {
     return visibleItems.reduce<Record<string, Assignment[]>>((groups, assignment) => {
@@ -56,14 +90,14 @@ export function OverviewPage() {
   }, [visibleItems])
 
   const moduleCounts = useMemo(() => {
-    return visibleItems.reduce<Record<string, number>>((counts, assignment) => {
+    return moduleFilterItems.reduce<Record<string, number>>((counts, assignment) => {
       counts[assignment.module] = (counts[assignment.module] ?? 0) + 1
       return counts
     }, {})
-  }, [visibleItems])
+  }, [moduleFilterItems])
 
   const mandatoryCounts = useMemo(() => {
-    return visibleItems.reduce(
+    return mandatoryFilterItems.reduce(
       (counts, assignment) => {
         if (assignment.mandatory) {
           counts.mandatory += 1
@@ -75,7 +109,7 @@ export function OverviewPage() {
       },
       { optional: 0, mandatory: 0 },
     )
-  }, [visibleItems])
+  }, [mandatoryFilterItems])
 
   const canEdit = auth.authenticated && Boolean(auth.user?.isAllowedEditor)
   const canAdmin = auth.authenticated && Boolean(auth.user?.isAdmin)
@@ -177,7 +211,7 @@ export function OverviewPage() {
                   }))
                 }
               >
-                <option value="">All modules ({visibleItems.length})</option>
+                <option value="">All modules ({moduleFilterItems.length})</option>
                 {MODULE_OPTIONS.map((module) => (
                   <option key={module.value} value={module.value}>
                     {module.label} ({moduleCounts[module.value] ?? 0})
