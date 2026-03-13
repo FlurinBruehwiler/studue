@@ -33,5 +33,9 @@ backend/build/
 backend/config/application.properties
 !backend/gradle/wrapper/gradle-wrapper.jar
 
+# Runtime data
+data/
+access-control.json
+
 # Temporary local tooling
 gradle-8.10.2/

@@ -55,26 +55,26 @@ export function AssignmentFormDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[2rem] border-[3px] border-slate-900 bg-[#f8f6f2] p-6 shadow-soft sm:p-8">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 p-0 backdrop-blur-sm sm:p-4">
+      <div className="h-full w-full overflow-y-auto bg-[#f8f6f2] p-5 sm:h-auto sm:max-w-2xl sm:rounded-[2rem] sm:border-[3px] sm:border-slate-900 sm:p-8 sm:shadow-soft">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-serif text-3xl text-foreground">
+            <h2 className="font-serif text-3xl text-foreground sm:text-4xl">
               {assignment ? 'Edit assignment' : 'New assignment'}
             </h2>
           </div>
           <button
             type="button"
-            className="rounded-full border-2 border-slate-900 p-2 text-slate-900"
+            className="rounded-full border-2 border-slate-900 p-2 text-slate-900 sm:border-2"
             onClick={onClose}
             aria-label="Close form"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
         <form
-          className="mt-6 space-y-4"
+          className="mt-6 space-y-4 pb-8 sm:pb-0"
           onSubmit={(event) => {
             event.preventDefault()
 
@@ -88,7 +88,7 @@ export function AssignmentFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <FormField label="Module">
               <select
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-sm"
+                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
                 value={form.module}
                 onChange={(event) => setForm((current) => ({ ...current, module: event.target.value }))}
                 required
@@ -105,7 +105,7 @@ export function AssignmentFormDialog({
             <FormField label="Due date">
               <input
                 type="date"
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-sm"
+                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
                 value={form.dueDate}
                 onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
                 min={getTodayDateInputValue()}
@@ -116,7 +116,7 @@ export function AssignmentFormDialog({
             <FormField label="Time (optional)">
               <input
                 type="time"
-                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-sm"
+                className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
                 value={form.dueTime}
                 onChange={(event) => setForm((current) => ({ ...current, dueTime: event.target.value }))}
               />
@@ -125,7 +125,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Title">
             <input
-              className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-sm"
+              className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-base sm:text-sm"
               value={form.title}
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               required
@@ -134,7 +134,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Details">
             <textarea
-              className="min-h-40 w-full rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-sm"
+              className="min-h-48 w-full rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-base sm:min-h-40 sm:text-sm"
               value={form.note}
               onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
             />
@@ -165,7 +165,7 @@ export function AssignmentFormDialog({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between gap-3 pt-2">
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {assignment && onDelete ? (
                 <Button type="button" variant="ghost" onClick={onDelete} disabled={isDeleting || isSaving}>
@@ -175,13 +175,13 @@ export function AssignmentFormDialog({
               ) : null}
             </div>
 
-            <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSaving || Boolean(clientValidationError)}>
-              {isSaving ? 'Saving...' : assignment ? 'Save changes' : 'Create assignment'}
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSaving || Boolean(clientValidationError)} className="w-full sm:w-auto">
+                {isSaving ? 'Saving...' : assignment ? 'Save changes' : 'Create assignment'}
+              </Button>
             </div>
           </div>
         </form>
