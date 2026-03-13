@@ -44,7 +44,7 @@ jobs:
         working-directory: frontend
 
       - name: Build backend
-        run: ./gradlew build
+        run: chmod +x ./gradlew && ./gradlew build
         working-directory: backend
 
       - name: Upload frontend artifact
