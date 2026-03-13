@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 
 import { apiClient } from '@/api/client'
 import { mockUser } from '@/lib/mock-data'
+import type { AuthHookState } from '@/lib/types'
 
-export function useAuth() {
-  const [state, setState] = useState({
+export function useAuth(): AuthHookState {
+  const [state, setState] = useState<Omit<AuthHookState, 'logout'>>({
     ...mockUser,
     isLoading: true,
     source: 'loading',
@@ -43,7 +44,7 @@ export function useAuth() {
     }
   }, [])
 
-  async function logout() {
+  async function logout(): Promise<void> {
     try {
       await apiClient.logout()
     } finally {

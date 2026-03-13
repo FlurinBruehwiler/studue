@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { LogIn, LogOut, Plus } from 'lucide-react'
 
-import { apiClient } from '@/api/client'
+import { ApiError, apiClient } from '@/api/client'
 import { AssignmentCard } from '@/components/assignment-card'
 import { AssignmentDetailDialog } from '@/components/assignment-detail-dialog'
 import { AssignmentFormDialog } from '@/components/assignment-form-dialog'
@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { useAssignments } from '@/hooks/use-assignments'
 import { useAuth } from '@/hooks/use-auth'
 import { MODULE_OPTIONS } from '@/lib/modules'
+import type { Assignment, AssignmentFilters, AssignmentInput } from '@/lib/types'
 
-const initialFilters = {
+const initialFilters: AssignmentFilters = {
   module: '',
   mandatory: '',
   from: '',
@@ -19,9 +20,9 @@ const initialFilters = {
 }
 
 export function OverviewPage() {
-  const [filters, setFilters] = useState(initialFilters)
-  const [selectedAssignment, setSelectedAssignment] = useState(null)
-  const [editingAssignment, setEditingAssignment] = useState(null)
+  const [filters, setFilters] = useState<AssignmentFilters>(initialFilters)
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [formError, setFormError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -37,7 +38,7 @@ export function OverviewPage() {
   }, [assignments.items, today])
 
   const groupedAssignments = useMemo(() => {
-    return visibleItems.reduce((groups, assignment) => {
+    return visibleItems.reduce<Record<string, Assignment[]>>((groups, assignment) => {
       if (!groups[assignment.dueDate]) {
         groups[assignment.dueDate] = []
       }
@@ -48,7 +49,7 @@ export function OverviewPage() {
   }, [visibleItems])
 
   const moduleCounts = useMemo(() => {
-    return visibleItems.reduce((counts, assignment) => {
+    return visibleItems.reduce<Record<string, number>>((counts, assignment) => {
       counts[assignment.module] = (counts[assignment.module] ?? 0) + 1
       return counts
     }, {})
@@ -69,9 +70,9 @@ export function OverviewPage() {
     )
   }, [visibleItems])
 
-  const canEdit = auth.authenticated && auth.user?.isAllowedEditor
+  const canEdit = auth.authenticated && Boolean(auth.user?.isAllowedEditor)
 
-  async function handleSubmit(input) {
+  async function handleSubmit(input: AssignmentInput) {
     setIsSaving(true)
     setFormError('')
 
@@ -86,7 +87,11 @@ export function OverviewPage() {
       setEditingAssignment(null)
       setReloadKey((value) => value + 1)
     } catch (error) {
-      setFormError(error.payload?.error?.message ?? 'Could not save the assignment.')
+      const message =
+        error instanceof ApiError && error.payload && 'error' in error.payload
+          ? String((error.payload as { error?: { message?: string } }).error?.message ?? '')
+          : ''
+      setFormError(message || 'Could not save the assignment.')
     } finally {
       setIsSaving(false)
     }
@@ -187,7 +192,7 @@ export function OverviewPage() {
             </div>
 
             <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
-              {auth.authenticated ? (
+              {auth.authenticated && auth.user ? (
                 <>
                   <Badge>{auth.user.displayName}</Badge>
                   <Button variant="ghost" onClick={auth.logout}>
@@ -260,7 +265,14 @@ export function OverviewPage() {
   )
 }
 
-function FilterChip({ active, tone = 'default', onClick, children }) {
+type FilterChipProps = {
+  active: boolean
+  tone?: 'default' | 'green' | 'red'
+  onClick: () => void
+  children: ReactNode
+}
+
+function FilterChip({ active, tone = 'default', onClick, children }: FilterChipProps) {
   const palette = {
     default: active ? 'bg-white' : 'bg-[#f7f7f7]',
     green: active ? 'bg-green-100 text-green-900' : 'bg-white text-green-700',

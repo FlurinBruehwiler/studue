@@ -4,9 +4,9 @@ export const MODULE_OPTIONS = [
   { value: 'LA', label: 'Lineare Algebra (LA)' },
   { value: 'PROG2', label: 'Programmieren2 (PROG2)' },
   { value: 'PM2', label: 'Software-Projekt 2 (PM2)' },
-  { value: 'THINK', label: 'Theoretische Informatik (THINK)' },
-]
+  { value: 'THIN', label: 'Theoretische Informatik (THIN)' },
+] as const
 
-export function getModuleLabel(moduleCode) {
+export function getModuleLabel(moduleCode: string): string {
   return MODULE_OPTIONS.find((module) => module.value === moduleCode)?.label ?? moduleCode
 }

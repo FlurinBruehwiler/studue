@@ -1,4 +1,6 @@
-export const emptyAssignmentForm = {
+import type { AssignmentFormState, AssignmentInput } from '@/lib/types'
+
+export const emptyAssignmentForm: AssignmentFormState = {
   module: '',
   title: '',
   dueDate: '',
@@ -7,7 +9,7 @@ export const emptyAssignmentForm = {
   mandatory: true,
 }
 
-export function toAssignmentInput(form) {
+export function toAssignmentInput(form: AssignmentFormState): AssignmentInput {
   return {
     module: form.module.trim(),
     title: form.title.trim(),

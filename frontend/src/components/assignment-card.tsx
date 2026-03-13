@@ -3,8 +3,16 @@ import { PencilLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDisplayDate } from '@/lib/date'
+import type { Assignment } from '@/lib/types'
 
-export function AssignmentCard({ assignment, canEdit, onSelect, onEdit }) {
+type AssignmentCardProps = {
+  assignment: Assignment
+  canEdit: boolean
+  onSelect: () => void
+  onEdit: () => void
+}
+
+export function AssignmentCard({ assignment, canEdit, onSelect, onEdit }: AssignmentCardProps) {
   return (
     <article className="animate-fade-up space-y-1">
       <div className="text-[1.2rem] font-semibold tracking-tight text-foreground sm:text-[1.45rem]">

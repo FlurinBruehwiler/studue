@@ -1,4 +1,6 @@
-export const mockAssignments = [
+import type { Assignment, AuthState } from '@/lib/types'
+
+export const mockAssignments: Assignment[] = [
   {
     id: '2026-03-20--a1b2c3d4',
     className: 'it25ta_win',
@@ -25,7 +27,7 @@ export const mockAssignments = [
   {
     id: '2026-03-24--f9e8d7c6',
     className: 'it25ta_win',
-    module: 'THINK',
+    module: 'THIN',
     title: 'Quiz 3: Endliche Automaten',
     dueDate: '2026-03-24',
     dueTime: '',
@@ -68,7 +70,7 @@ export const mockAssignments = [
   },
 ]
 
-export const mockUser = {
+export const mockUser: AuthState = {
   authenticated: false,
   user: null,
 }

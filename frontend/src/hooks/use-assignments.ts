@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 
 import { apiClient } from '@/api/client'
 import { mockAssignments } from '@/lib/mock-data'
+import type { Assignment, AssignmentFilters } from '@/lib/types'
 
-function filterMockAssignments(filters) {
+function filterMockAssignments(filters: AssignmentFilters): Assignment[] {
   return mockAssignments.filter((item) => {
     if (filters.module && item.module !== filters.module) {
       return false
@@ -25,10 +26,16 @@ function filterMockAssignments(filters) {
   })
 }
 
-export function useAssignments(filters, reloadKey = 0) {
+type AssignmentHookState = {
+  items: Assignment[]
+  isLoading: boolean
+  source: 'loading' | 'api' | 'mock'
+}
+
+export function useAssignments(filters: AssignmentFilters, reloadKey = 0): AssignmentHookState {
   const { from, mandatory, module, to } = filters
 
-  const [state, setState] = useState({
+  const [state, setState] = useState<AssignmentHookState>({
     items: [],
     isLoading: true,
     source: 'loading',

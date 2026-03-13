@@ -1,16 +1,34 @@
 import { Pencil, Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { formatDisplayDateTime } from '@/lib/date'
+import { formatDisplayDateTime, formatSwissDateAndTime } from '@/lib/date'
+import { getModuleLabel } from '@/lib/modules'
+import type { Assignment } from '@/lib/types'
 
-export function AssignmentDetailDialog({ assignment, canEdit, onClose, onEdit, onDelete, isDeleting }) {
+type AssignmentDetailDialogProps = {
+  assignment: Assignment | null
+  canEdit: boolean
+  onClose: () => void
+  onEdit: () => void
+  onDelete: () => void
+  isDeleting: boolean
+}
+
+export function AssignmentDetailDialog({
+  assignment,
+  canEdit,
+  onClose,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: AssignmentDetailDialogProps) {
   if (!assignment) {
     return null
   }
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/10 p-0 sm:p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/10 p-0 backdrop-blur-sm sm:p-4"
       onClick={onClose}
     >
       <div
@@ -23,8 +41,8 @@ export function AssignmentDetailDialog({ assignment, canEdit, onClose, onEdit, o
               {assignment.title}
             </h2>
             <p className="mt-3 text-lg text-foreground">
-              {assignment.module} - {assignment.dueDate}
-              {assignment.dueTime ? ` ${assignment.dueTime}` : ''}
+              {getModuleLabel(assignment.module)} -{' '}
+              {formatSwissDateAndTime(assignment.dueDate, assignment.dueTime)}
             </p>
           </div>
 
@@ -77,7 +95,7 @@ export function AssignmentDetailDialog({ assignment, canEdit, onClose, onEdit, o
   )
 }
 
-function renderRichLine(line) {
+function renderRichLine(line: string) {
   const urlPattern = /(https?:\/\/\S+)/g
   const parts = line.split(urlPattern)
 

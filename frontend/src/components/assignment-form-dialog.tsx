@@ -1,12 +1,29 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { emptyAssignmentForm, toAssignmentInput } from '@/lib/assignment-form'
 import { MODULE_OPTIONS } from '@/lib/modules'
+import type { Assignment, AssignmentFormState, AssignmentInput } from '@/lib/types'
 
-export function AssignmentFormDialog({ assignment, isOpen, isSaving, error, onClose, onSubmit }) {
-  const [form, setForm] = useState(() => {
+type AssignmentFormDialogProps = {
+  assignment: Assignment | null
+  isOpen: boolean
+  isSaving: boolean
+  error: string
+  onClose: () => void
+  onSubmit: (input: AssignmentInput) => void
+}
+
+export function AssignmentFormDialog({
+  assignment,
+  isOpen,
+  isSaving,
+  error,
+  onClose,
+  onSubmit,
+}: AssignmentFormDialogProps) {
+  const [form, setForm] = useState<AssignmentFormState>(() => {
     if (!assignment) {
       return emptyAssignmentForm
     }
@@ -144,7 +161,12 @@ export function AssignmentFormDialog({ assignment, isOpen, isSaving, error, onCl
   )
 }
 
-function FormField({ label, children }) {
+type FormFieldProps = {
+  label: string
+  children: ReactNode
+}
+
+function FormField({ label, children }: FormFieldProps) {
   return (
     <label className="block space-y-2">
       <span className="text-sm font-semibold text-foreground">{label}</span>
@@ -153,7 +175,14 @@ function FormField({ label, children }) {
   )
 }
 
-function ToggleButton({ active, tone, onClick, children }) {
+type ToggleButtonProps = {
+  active: boolean
+  tone: 'green' | 'red'
+  onClick: () => void
+  children: ReactNode
+}
+
+function ToggleButton({ active, tone, onClick, children }: ToggleButtonProps) {
   const colors = {
     green: active ? 'bg-green-100 text-green-900' : 'bg-white text-green-700',
     red: active ? 'bg-red-100 text-red-900' : 'bg-white text-red-700',
