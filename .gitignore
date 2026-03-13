@@ -30,6 +30,7 @@ frontend/dist/
 # Backend
 backend/.gradle/
 backend/build/
+backend/config/application.properties
 
 # Temporary local tooling
 gradle-8.10.2/

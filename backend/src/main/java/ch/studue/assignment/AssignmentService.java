@@ -10,10 +10,12 @@ import java.util.UUID;
 public final class AssignmentService {
     private final AssignmentRepository repository;
     private final String defaultClassName;
+    private final AssignmentValidator validator;
 
     public AssignmentService(AssignmentRepository repository, String defaultClassName) {
         this.repository = repository;
         this.defaultClassName = defaultClassName;
+        this.validator = new AssignmentValidator();
     }
 
     public List<Assignment> list(Map<String, String> filters) throws IOException {
@@ -25,6 +27,7 @@ public final class AssignmentService {
     }
 
     public Assignment create(AssignmentDraft draft, AssignmentUser actor) throws IOException {
+        validator.validate(draft);
         String id = draft.dueDate() + "--" + UUID.randomUUID().toString().substring(0, 8);
         String now = Instant.now().toString();
 
@@ -34,6 +37,7 @@ public final class AssignmentService {
                 draft.module(),
                 draft.title(),
                 draft.dueDate(),
+                draft.dueTime(),
                 draft.note(),
                 draft.mandatory(),
                 actor,
@@ -47,6 +51,7 @@ public final class AssignmentService {
     }
 
     public Assignment update(String id, AssignmentDraft draft, AssignmentUser actor) throws IOException {
+        validator.validate(draft);
         Assignment existing = repository.getById(id);
         if (existing == null) {
             return null;
@@ -58,6 +63,7 @@ public final class AssignmentService {
                 draft.module(),
                 draft.title(),
                 draft.dueDate(),
+                draft.dueTime(),
                 draft.note(),
                 draft.mandatory(),
                 existing.createdBy(),

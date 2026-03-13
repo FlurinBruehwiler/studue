@@ -43,5 +43,20 @@ export function useAuth() {
     }
   }, [])
 
-  return state
+  async function logout() {
+    try {
+      await apiClient.logout()
+    } finally {
+      setState({
+        ...mockUser,
+        isLoading: false,
+        source: 'local',
+      })
+    }
+  }
+
+  return {
+    ...state,
+    logout,
+  }
 }

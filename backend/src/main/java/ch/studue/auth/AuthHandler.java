@@ -5,8 +5,6 @@ import ch.studue.http.HttpExchangeHelper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,11 +12,21 @@ public final class AuthHandler implements HttpHandler {
     private final AppConfig config;
     private final SessionService sessionService;
     private final AuthorizationService authorizationService;
+    private final OAuthStateService oAuthStateService;
+    private final GitHubOAuthService gitHubOAuthService;
 
-    public AuthHandler(AppConfig config, SessionService sessionService, AuthorizationService authorizationService) {
+    public AuthHandler(
+            AppConfig config,
+            SessionService sessionService,
+            AuthorizationService authorizationService,
+            OAuthStateService oAuthStateService,
+            GitHubOAuthService gitHubOAuthService
+    ) {
         this.config = config;
         this.sessionService = sessionService;
         this.authorizationService = authorizationService;
+        this.oAuthStateService = oAuthStateService;
+        this.gitHubOAuthService = gitHubOAuthService;
     }
 
     @Override
@@ -37,7 +45,7 @@ public final class AuthHandler implements HttpHandler {
         }
 
         if (path.equals("/api/auth/callback") && method.equalsIgnoreCase("GET")) {
-            handleCallbackPlaceholder(exchange);
+            handleCallback(exchange);
             return;
         }
 
@@ -77,33 +85,62 @@ public final class AuthHandler implements HttpHandler {
     }
 
     private void handleLogin(HttpExchange exchange) throws IOException {
-        String callbackUrl = config.appBaseUrl() + "/api/auth/callback";
-        String redirectUrl = config.githubOauthBaseUrl()
-                + "/authorize?client_id=" + encode(config.githubClientId())
-                + "&redirect_uri=" + encode(callbackUrl)
-                + "&scope=" + encode("read:user user:email");
-        HttpExchangeHelper.redirect(exchange, redirectUrl);
+        String state = oAuthStateService.issue();
+        HttpExchangeHelper.redirect(exchange, gitHubOAuthService.buildAuthorizeUrl(state));
     }
 
-    private void handleCallbackPlaceholder(HttpExchange exchange) throws IOException {
-        boolean isAllowed = authorizationService.isAllowedEditor("jane.doe@students.zhaw.ch");
-        Session session = sessionService.create(new SessionUser(
-                "jdoe",
-                "Jane Doe",
-                "jane.doe@students.zhaw.ch",
-                isAllowed
-        ));
-        HttpExchangeHelper.setSessionCookie(exchange, session.sessionId());
-        HttpExchangeHelper.redirect(exchange, "/");
+    private void handleCallback(HttpExchange exchange) throws IOException {
+        Map<String, String> params = HttpExchangeHelper.queryParams(exchange);
+        String error = params.get("error");
+        String state = params.get("state");
+        String code = params.get("code");
+
+        if (error != null && !error.isBlank()) {
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl() + "?auth=error");
+            return;
+        }
+
+        if (!oAuthStateService.consume(state)) {
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl() + "?auth=invalid_state");
+            return;
+        }
+
+        if (code == null || code.isBlank()) {
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl() + "?auth=missing_code");
+            return;
+        }
+
+        try {
+            GitHubUserProfile profile = gitHubOAuthService.authenticate(code);
+            boolean isAllowed = authorizationService.isAllowedEditor(profile.login());
+
+            if (!isAllowed) {
+                System.out.println("OAuth login rejected for login: " + profile.login() + " (email: " + profile.email() + ")");
+                HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl() + "?auth=forbidden");
+                return;
+            }
+
+            Session session = sessionService.create(new SessionUser(
+                    profile.login(),
+                    profile.displayName(),
+                    profile.email(),
+                    true
+            ));
+            HttpExchangeHelper.setSessionCookie(
+                    exchange,
+                    session.sessionId(),
+                    config.appBaseUrl().startsWith("https://"),
+                    sessionService.ttlSeconds()
+            );
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl());
+        } catch (IOException exception) {
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl() + "?auth=oauth_failed");
+        }
     }
 
     private void handleLogout(HttpExchange exchange) throws IOException {
         HttpExchangeHelper.findSessionId(exchange).ifPresent(sessionService::destroy);
-        HttpExchangeHelper.clearSessionCookie(exchange);
+        HttpExchangeHelper.clearSessionCookie(exchange, config.appBaseUrl().startsWith("https://"));
         HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

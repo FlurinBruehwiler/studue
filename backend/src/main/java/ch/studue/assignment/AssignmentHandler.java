@@ -30,90 +30,134 @@ public final class AssignmentHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        String basePath = "/api/assignments";
-        String id = path.length() > basePath.length() + 1 ? path.substring(basePath.length() + 1) : null;
+        try {
+            String method = exchange.getRequestMethod();
+            String path = exchange.getRequestURI().getPath();
+            String basePath = "/api/assignments";
+            String id = path.length() > basePath.length() + 1 ? path.substring(basePath.length() + 1) : null;
 
-        if (method.equalsIgnoreCase("GET") && (id == null || id.isBlank())) {
-            List<Assignment> items = assignmentService.list(HttpExchangeHelper.queryParams(exchange));
-            HttpExchangeHelper.sendJson(exchange, 200, Map.of("items", items.stream().map(this::toMap).toList()));
-            return;
-        }
-
-        if (method.equalsIgnoreCase("GET") && id != null) {
-            Assignment assignment = assignmentService.getById(id);
-            if (assignment == null) {
-                HttpExchangeHelper.notFound(exchange, "Assignment not found.");
+            if (method.equalsIgnoreCase("GET") && (id == null || id.isBlank())) {
+                List<Assignment> items = assignmentService.list(HttpExchangeHelper.queryParams(exchange));
+                HttpExchangeHelper.sendJson(exchange, 200, Map.of("items", items.stream().map(this::toMap).toList()));
                 return;
             }
 
-            HttpExchangeHelper.sendJson(exchange, 200, Map.of("item", toMap(assignment)));
-            return;
-        }
+            if (method.equalsIgnoreCase("GET") && id != null) {
+                Assignment assignment = assignmentService.getById(id);
+                if (assignment == null) {
+                    HttpExchangeHelper.notFound(exchange, "Assignment not found.");
+                    return;
+                }
 
-        Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService);
-        if (session.isEmpty() || !authorizationService.isAllowedEditor(session.get().user().email())) {
-            HttpExchangeHelper.sendJson(exchange, 403, Map.of(
+                HttpExchangeHelper.sendJson(exchange, 200, Map.of("item", toMap(assignment)));
+                return;
+            }
+
+            Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService);
+            if (session.isEmpty() || !authorizationService.isAllowedEditor(session.get().user().githubLogin())) {
+                HttpExchangeHelper.sendJson(exchange, 403, Map.of(
+                        "error", Map.of(
+                                "code", "forbidden",
+                                "message", "You must be an allowed editor to modify assignments."
+                        )
+                ));
+                return;
+            }
+
+            AssignmentUser actor = new AssignmentUser(
+                    session.get().user().githubLogin(),
+                    session.get().user().displayName(),
+                    session.get().user().email()
+            );
+
+            if (method.equalsIgnoreCase("POST") && (id == null || id.isBlank())) {
+                Assignment created = assignmentService.create(readDraft(exchange), actor);
+                HttpExchangeHelper.sendJson(exchange, 201, Map.of("item", toMap(created)));
+                return;
+            }
+
+            if (method.equalsIgnoreCase("PUT") && id != null) {
+                Assignment updated = assignmentService.update(id, readDraft(exchange), actor);
+                if (updated == null) {
+                    HttpExchangeHelper.notFound(exchange, "Assignment not found.");
+                    return;
+                }
+
+                HttpExchangeHelper.sendJson(exchange, 200, Map.of("item", toMap(updated)));
+                return;
+            }
+
+            if (method.equalsIgnoreCase("DELETE") && id != null) {
+                boolean deleted = assignmentService.delete(id);
+                if (!deleted) {
+                    HttpExchangeHelper.notFound(exchange, "Assignment not found.");
+                    return;
+                }
+
+                HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
+                return;
+            }
+
+            HttpExchangeHelper.sendJson(exchange, 405, Map.of(
                     "error", Map.of(
-                            "code", "forbidden",
-                            "message", "You must be an allowed editor to modify assignments."
+                            "code", "method_not_allowed",
+                            "message", "Method not allowed."
                     )
             ));
-            return;
+        } catch (AssignmentValidationException exception) {
+            HttpExchangeHelper.badRequest(exchange, exception.code(), exception.getMessage(), exception.details());
+        } catch (IllegalArgumentException exception) {
+            HttpExchangeHelper.badRequest(
+                    exchange,
+                    "invalid_json",
+                    "The request body must contain valid JSON.",
+                    Map.of("reason", exception.getMessage())
+            );
         }
-
-        AssignmentUser actor = new AssignmentUser(
-                session.get().user().githubLogin(),
-                session.get().user().displayName(),
-                session.get().user().email()
-        );
-
-        if (method.equalsIgnoreCase("POST") && (id == null || id.isBlank())) {
-            Assignment created = assignmentService.create(readDraft(exchange), actor);
-            HttpExchangeHelper.sendJson(exchange, 201, Map.of("item", toMap(created)));
-            return;
-        }
-
-        if (method.equalsIgnoreCase("PUT") && id != null) {
-            Assignment updated = assignmentService.update(id, readDraft(exchange), actor);
-            if (updated == null) {
-                HttpExchangeHelper.notFound(exchange, "Assignment not found.");
-                return;
-            }
-
-            HttpExchangeHelper.sendJson(exchange, 200, Map.of("item", toMap(updated)));
-            return;
-        }
-
-        if (method.equalsIgnoreCase("DELETE") && id != null) {
-            boolean deleted = assignmentService.delete(id);
-            if (!deleted) {
-                HttpExchangeHelper.notFound(exchange, "Assignment not found.");
-                return;
-            }
-
-            HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
-            return;
-        }
-
-        HttpExchangeHelper.sendJson(exchange, 405, Map.of(
-                "error", Map.of(
-                        "code", "method_not_allowed",
-                        "message", "Method not allowed."
-                )
-        ));
     }
 
     private AssignmentDraft readDraft(HttpExchange exchange) throws IOException {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) SimpleJson.parseObject(HttpExchangeHelper.readBody(exchange));
 
+        if (!(body.get("module") instanceof String)) {
+            throw new AssignmentValidationException(
+                    "validation_error",
+                    "The module field is required.",
+                    Map.of("field", "module")
+            );
+        }
+
+        if (!(body.get("title") instanceof String)) {
+            throw new AssignmentValidationException(
+                    "validation_error",
+                    "The title field is required.",
+                    Map.of("field", "title")
+            );
+        }
+
+        if (!(body.get("dueDate") instanceof String)) {
+            throw new AssignmentValidationException(
+                    "validation_error",
+                    "The dueDate field is required.",
+                    Map.of("field", "dueDate")
+            );
+        }
+
+        if (!(body.get("mandatory") instanceof Boolean)) {
+            throw new AssignmentValidationException(
+                    "validation_error",
+                    "The mandatory field must be a boolean.",
+                    Map.of("field", "mandatory")
+            );
+        }
+
         return new AssignmentDraft(
-                stringValue(body.get("module")),
-                stringValue(body.get("title")),
-                stringValue(body.get("dueDate")),
-                stringValue(body.getOrDefault("note", "")),
+                stringValue(body.get("module")).trim(),
+                stringValue(body.get("title")).trim(),
+                stringValue(body.get("dueDate")).trim(),
+                stringValue(body.getOrDefault("dueTime", "")).trim(),
+                stringValue(body.getOrDefault("note", "")).trim(),
                 Boolean.TRUE.equals(body.get("mandatory"))
         );
     }
@@ -125,6 +169,7 @@ public final class AssignmentHandler implements HttpHandler {
         result.put("module", assignment.module());
         result.put("title", assignment.title());
         result.put("dueDate", assignment.dueDate());
+        result.put("dueTime", assignment.dueTime());
         result.put("note", assignment.note());
         result.put("mandatory", assignment.mandatory());
         result.put("createdBy", Map.of(

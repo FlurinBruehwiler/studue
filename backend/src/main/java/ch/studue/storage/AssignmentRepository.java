@@ -30,7 +30,9 @@ public final class AssignmentRepository {
                     .map(this::readQuietly)
                     .filter(item -> item != null)
                     .filter(item -> matchesFilters(item, filters))
-                    .sorted(Comparator.comparing(Assignment::dueDate).thenComparing(Assignment::title))
+                    .sorted(Comparator.comparing(Assignment::dueDate)
+                            .thenComparing(assignment -> assignment.dueTime() == null ? "" : assignment.dueTime())
+                            .thenComparing(Assignment::title))
                     .toList();
         }
     }
@@ -117,6 +119,7 @@ public final class AssignmentRepository {
                 string(map.get("module")),
                 string(map.get("title")),
                 string(map.get("dueDate")),
+                string(map.get("dueTime")),
                 string(map.get("note")),
                 Boolean.TRUE.equals(map.get("mandatory")),
                 new AssignmentUser(string(createdBy.get("githubLogin")), string(createdBy.get("displayName")), string(createdBy.get("email"))),
@@ -133,6 +136,7 @@ public final class AssignmentRepository {
         result.put("module", assignment.module());
         result.put("title", assignment.title());
         result.put("dueDate", assignment.dueDate());
+        result.put("dueTime", assignment.dueTime());
         result.put("note", assignment.note());
         result.put("mandatory", assignment.mandatory());
         result.put("createdBy", Map.of(

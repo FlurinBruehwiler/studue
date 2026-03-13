@@ -1,0 +1,11 @@
+PORT=8080
+APP_BASE_URL=http://localhost:8080
+FRONTEND_BASE_URL=http://localhost:5173
+DEFAULT_CLASS_NAME=it25ta_win
+DATA_DIRECTORY=../data
+GITHUB_CLIENT_ID=replace-me
+GITHUB_CLIENT_SECRET=replace-me
+GITHUB_OAUTH_BASE_URL=https://github.zhaw.ch/login/oauth
+GITHUB_API_BASE_URL=https://github.zhaw.ch/api/v3
+SESSION_SECRET=change-me
+SESSION_TTL_SECONDS=43200

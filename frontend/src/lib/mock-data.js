@@ -2,10 +2,12 @@ export const mockAssignments = [
   {
     id: '2026-03-20--a1b2c3d4',
     className: 'it25ta_win',
-    module: 'Software Engineering',
+    module: 'PM2',
     title: 'Project sketch submission',
     dueDate: '2026-03-20',
-    note: 'Upload the PDF before class starts and add the repository link.',
+    dueTime: '15:00',
+    note:
+      'Bewertungsmatrix: https://moodle.zhaw.ch/2561979/ITPM2_Bewertung_Projektskizze.pdf\n\nAbgabe (pro Team): https://moodle.zhaw.ch/mod/assign/view.php?id=1921293',
     mandatory: true,
     createdBy: {
       githubLogin: 'jdoe',
@@ -23,11 +25,12 @@ export const mockAssignments = [
   {
     id: '2026-03-24--f9e8d7c6',
     className: 'it25ta_win',
-    module: 'Web Engineering',
-    title: 'REST API review',
+    module: 'THINK',
+    title: 'Quiz 3: Endliche Automaten',
     dueDate: '2026-03-24',
-    note: 'Prepare endpoint examples and note authentication edge cases.',
-    mandatory: false,
+    dueTime: '',
+    note: 'Review the automata topics and prepare your notes before class.',
+    mandatory: true,
     createdBy: {
       githubLogin: 'musteri',
       displayName: 'Max Muster',
@@ -44,11 +47,12 @@ export const mockAssignments = [
   {
     id: '2026-03-28--m4n5b6v7',
     className: 'it25ta_win',
-    module: 'Databases',
-    title: 'Normalization worksheet',
+    module: 'LA',
+    title: 'Blatt 2, Aufgaben 7-15',
     dueDate: '2026-03-28',
-    note: 'Bring printed notes for the in-class discussion.',
-    mandatory: true,
+    dueTime: '10:00',
+    note: 'Solve the worksheet and bring your notes for the exercise discussion.',
+    mandatory: false,
     createdBy: {
       githubLogin: 'cstudent',
       displayName: 'Chris Student',

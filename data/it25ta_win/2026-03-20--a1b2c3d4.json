@@ -1,10 +1,11 @@
 {
   "id": "2026-03-20--a1b2c3d4",
   "className": "it25ta_win",
-  "module": "Software Engineering",
+  "module": "PM2",
   "title": "Project sketch submission",
   "dueDate": "2026-03-20",
-  "note": "Upload the PDF before class starts and add the repository link.",
+  "dueTime": "15:00",
+  "note": "Bewertungsmatrix: https://moodle.zhaw.ch/2561979/ITPM2_Bewertung_Projektskizze.pdf\n\nAbgabe (pro Team): https://moodle.zhaw.ch/mod/assign/view.php?id=1921293",
   "mandatory": true,
   "createdBy": {
     "githubLogin": "jdoe",

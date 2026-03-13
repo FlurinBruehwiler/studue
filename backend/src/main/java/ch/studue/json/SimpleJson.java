@@ -1,5 +1,6 @@
 package ch.studue.json;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,12 @@ public final class SimpleJson {
                 case 't' -> parseLiteral("true", Boolean.TRUE);
                 case 'f' -> parseLiteral("false", Boolean.FALSE);
                 case 'n' -> parseLiteral("null", null);
-                default -> throw new IllegalArgumentException("Unexpected JSON token at position " + index);
+                default -> {
+                    if (current == '-' || Character.isDigit(current)) {
+                        yield parseNumber();
+                    }
+                    throw new IllegalArgumentException("Unexpected JSON token at position " + index);
+                }
             };
         }
 
@@ -166,6 +172,42 @@ public final class SimpleJson {
 
             index += literal.length();
             return value;
+        }
+
+        private Number parseNumber() {
+            int start = index;
+
+            if (json.charAt(index) == '-') {
+                index++;
+            }
+
+            while (index < json.length() && Character.isDigit(json.charAt(index))) {
+                index++;
+            }
+
+            if (index < json.length() && json.charAt(index) == '.') {
+                index++;
+                while (index < json.length() && Character.isDigit(json.charAt(index))) {
+                    index++;
+                }
+            }
+
+            if (index < json.length() && (json.charAt(index) == 'e' || json.charAt(index) == 'E')) {
+                index++;
+                if (json.charAt(index) == '+' || json.charAt(index) == '-') {
+                    index++;
+                }
+                while (index < json.length() && Character.isDigit(json.charAt(index))) {
+                    index++;
+                }
+            }
+
+            String value = json.substring(start, index);
+            try {
+                return new BigDecimal(value);
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("Invalid JSON number at position " + start, exception);
+            }
         }
 
         private void expect(char character) {

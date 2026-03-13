@@ -13,7 +13,22 @@ async function request(path, options = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`)
+    let payload = null
+
+    try {
+      payload = await response.json()
+    } catch {
+      payload = null
+    }
+
+    const error = new Error(`Request failed with status ${response.status}`)
+    error.status = response.status
+    error.payload = payload
+    throw error
+  }
+
+  if (response.status === 204) {
+    return null
   }
 
   return response.json()
@@ -36,6 +51,28 @@ export const apiClient = {
     return request(`/api/assignments${query ? `?${query}` : ''}`, {
       method: 'GET',
       headers: {},
+    })
+  },
+  createAssignment(input) {
+    return request('/api/assignments', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+  updateAssignment(id, input) {
+    return request(`/api/assignments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    })
+  },
+  deleteAssignment(id) {
+    return request(`/api/assignments/${id}`, {
+      method: 'DELETE',
+    })
+  },
+  logout() {
+    return request('/api/auth/logout', {
+      method: 'POST',
     })
   },
 }

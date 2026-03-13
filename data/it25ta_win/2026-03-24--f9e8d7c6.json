@@ -1,11 +1,12 @@
 {
   "id": "2026-03-24--f9e8d7c6",
   "className": "it25ta_win",
-  "module": "Web Engineering",
-  "title": "REST API review",
+  "module": "THINK",
+  "title": "Quiz 3: Endliche Automaten",
   "dueDate": "2026-03-24",
-  "note": "Prepare endpoint examples and note authentication edge cases.",
-  "mandatory": false,
+  "dueTime": "",
+  "note": "Review the automata topics and prepare your notes before class.",
+  "mandatory": true,
   "createdBy": {
     "githubLogin": "musteri",
     "displayName": "Max Muster",

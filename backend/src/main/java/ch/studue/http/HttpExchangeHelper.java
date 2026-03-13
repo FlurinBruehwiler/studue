@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpCookie;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -51,7 +52,7 @@ public final class HttpExchangeHelper {
 
         Arrays.stream(query.split("&"))
                 .map(pair -> pair.split("=", 2))
-                .forEach(parts -> params.put(parts[0], parts.length > 1 ? parts[1] : ""));
+                .forEach(parts -> params.put(decode(parts[0]), parts.length > 1 ? decode(parts[1]) : ""));
         return params;
     }
 
@@ -71,17 +72,17 @@ public final class HttpExchangeHelper {
                 .findFirst();
     }
 
-    public static void setSessionCookie(HttpExchange exchange, String sessionId) {
+    public static void setSessionCookie(HttpExchange exchange, String sessionId, boolean secure, long maxAgeSeconds) {
         exchange.getResponseHeaders().add(
                 "Set-Cookie",
-                SESSION_COOKIE + "=" + sessionId + "; Path=/; HttpOnly; SameSite=Lax"
+                SESSION_COOKIE + "=" + sessionId + "; Path=/; HttpOnly; SameSite=Lax; Max-Age=" + maxAgeSeconds + (secure ? "; Secure" : "")
         );
     }
 
-    public static void clearSessionCookie(HttpExchange exchange) {
+    public static void clearSessionCookie(HttpExchange exchange, boolean secure) {
         exchange.getResponseHeaders().add(
                 "Set-Cookie",
-                SESSION_COOKIE + "=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax"
+                SESSION_COOKIE + "=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax" + (secure ? "; Secure" : "")
         );
     }
 
@@ -92,5 +93,19 @@ public final class HttpExchangeHelper {
                         "message", message
                 )
         ));
+    }
+
+    public static void badRequest(HttpExchange exchange, String code, String message, Map<String, Object> details) throws IOException {
+        sendJson(exchange, 400, Map.of(
+                "error", Map.of(
+                        "code", code,
+                        "message", message,
+                        "details", details
+                )
+        ));
+    }
+
+    private static String decode(String value) {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 }

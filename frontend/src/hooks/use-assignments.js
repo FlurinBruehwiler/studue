@@ -25,7 +25,7 @@ function filterMockAssignments(filters) {
   })
 }
 
-export function useAssignments(filters) {
+export function useAssignments(filters, reloadKey = 0) {
   const { from, mandatory, module, to } = filters
 
   const [state, setState] = useState({
@@ -65,7 +65,7 @@ export function useAssignments(filters) {
     return () => {
       active = false
     }
-  }, [from, mandatory, module, to])
+  }, [from, mandatory, module, reloadKey, to])
 
   return state
 }
