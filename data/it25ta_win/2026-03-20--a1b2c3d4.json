@@ -1,0 +1,21 @@
+{
+  "id": "2026-03-20--a1b2c3d4",
+  "className": "it25ta_win",
+  "module": "Software Engineering",
+  "title": "Project sketch submission",
+  "dueDate": "2026-03-20",
+  "note": "Upload the PDF before class starts and add the repository link.",
+  "mandatory": true,
+  "createdBy": {
+    "githubLogin": "jdoe",
+    "displayName": "Jane Doe",
+    "email": "jane.doe@students.zhaw.ch"
+  },
+  "updatedBy": {
+    "githubLogin": "jdoe",
+    "displayName": "Jane Doe",
+    "email": "jane.doe@students.zhaw.ch"
+  },
+  "createdAt": "2026-03-10T18:42:00Z",
+  "updatedAt": "2026-03-10T18:42:00Z"
+}
