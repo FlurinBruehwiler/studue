@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 
 import { apiClient } from '@/api/client'
-import { mockUser } from '@/lib/mock-data'
 import type { AuthHookState } from '@/lib/types'
+
+const unauthenticatedState = {
+  authenticated: false,
+  user: null,
+} as const
 
 export function useAuth(): AuthHookState {
   const [state, setState] = useState<Omit<AuthHookState, 'logout'>>({
-    ...mockUser,
+    ...unauthenticatedState,
     isLoading: true,
     source: 'loading',
   })
@@ -33,9 +37,9 @@ export function useAuth(): AuthHookState {
         }
 
         setState({
-          ...mockUser,
+          ...unauthenticatedState,
           isLoading: false,
-          source: 'mock',
+          source: 'error',
         })
       })
 
@@ -48,11 +52,11 @@ export function useAuth(): AuthHookState {
     try {
       await apiClient.logout()
     } finally {
-      setState({
-        ...mockUser,
-        isLoading: false,
-        source: 'local',
-      })
+        setState({
+          ...unauthenticatedState,
+          isLoading: false,
+          source: 'local',
+        })
     }
   }
 

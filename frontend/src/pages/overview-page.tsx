@@ -265,9 +265,17 @@ export function OverviewPage() {
         </header>
 
         <section className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
+          {assignments.source === 'error' ? (
+            <div className="rounded-[1.1rem] border-[3px] border-red-300 bg-red-50 p-6 text-center text-sm text-red-700 sm:rounded-[1.5rem] sm:p-8">
+              {assignments.errorMessage}
+            </div>
+          ) : null}
+
           {visibleItems.length === 0 && !assignments.isLoading ? (
             <div className="rounded-[1.1rem] border-[3px] border-dashed border-slate-900 bg-white/70 p-6 text-center text-sm text-muted-foreground sm:rounded-[1.5rem] sm:p-8">
-              No assignments match the current filters.
+              {assignments.source === 'api'
+                ? 'No assignments match the current filters.'
+                : 'Assignments are currently unavailable.'}
             </div>
           ) : null}
 

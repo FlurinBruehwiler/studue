@@ -43,8 +43,15 @@ export type AuthState = {
 
 export type AuthHookState = AuthState & {
   isLoading: boolean
-  source: 'loading' | 'api' | 'mock' | 'local'
+  source: 'loading' | 'api' | 'error' | 'local'
   logout: () => Promise<void>
+}
+
+export type AssignmentHookState = {
+  items: Assignment[]
+  isLoading: boolean
+  source: 'loading' | 'api' | 'error'
+  errorMessage: string
 }
 
 export type AssignmentFilters = {

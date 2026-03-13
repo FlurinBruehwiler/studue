@@ -1,36 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { apiClient } from '@/api/client'
-import { mockAssignments } from '@/lib/mock-data'
-import type { Assignment, AssignmentFilters } from '@/lib/types'
-
-function filterMockAssignments(filters: AssignmentFilters): Assignment[] {
-  return mockAssignments.filter((item) => {
-    if (filters.module && item.module !== filters.module) {
-      return false
-    }
-
-    if (filters.mandatory !== '' && String(item.mandatory) !== filters.mandatory) {
-      return false
-    }
-
-    if (filters.from && item.dueDate < filters.from) {
-      return false
-    }
-
-    if (filters.to && item.dueDate > filters.to) {
-      return false
-    }
-
-    return true
-  })
-}
-
-type AssignmentHookState = {
-  items: Assignment[]
-  isLoading: boolean
-  source: 'loading' | 'api' | 'mock'
-}
+import { ApiError, apiClient } from '@/api/client'
+import type { AssignmentFilters, AssignmentHookState } from '@/lib/types'
 
 export function useAssignments(filters: AssignmentFilters, reloadKey = 0): AssignmentHookState {
   const { from, mandatory, module, to } = filters
@@ -39,6 +10,7 @@ export function useAssignments(filters: AssignmentFilters, reloadKey = 0): Assig
     items: [],
     isLoading: true,
     source: 'loading',
+    errorMessage: '',
   })
 
   useEffect(() => {
@@ -55,17 +27,24 @@ export function useAssignments(filters: AssignmentFilters, reloadKey = 0): Assig
           items: data.items ?? [],
           isLoading: false,
           source: 'api',
+          errorMessage: '',
         })
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!active) {
           return
         }
 
+        const errorMessage =
+          error instanceof ApiError
+            ? `Could not load assignments (${error.status}).`
+            : 'Could not connect to the server.'
+
         setState({
-          items: filterMockAssignments({ from, mandatory, module, to }),
+          items: [],
           isLoading: false,
-          source: 'mock',
+          source: 'error',
+          errorMessage,
         })
       })
 
