@@ -33,6 +33,7 @@ export type AuthUser = {
   displayName: string
   email: string
   isAllowedEditor: boolean
+  isAdmin: boolean
 }
 
 export type AuthState = {
@@ -54,3 +55,8 @@ export type AssignmentFilters = {
 }
 
 export type AssignmentFormState = AssignmentInput
+
+export type AccessControlState = {
+  admins: string[]
+  editors: string[]
+}

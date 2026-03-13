@@ -73,13 +73,16 @@ public final class AuthHandler implements HttpHandler {
         }
 
         SessionUser user = session.get().user();
+        boolean isAllowedEditor = authorizationService.isAllowedEditor(user.githubLogin());
+        boolean isAdmin = authorizationService.isAdmin(user.githubLogin());
         HttpExchangeHelper.sendJson(exchange, 200, Map.of(
                 "authenticated", true,
                 "user", Map.of(
                         "githubLogin", user.githubLogin(),
                         "displayName", user.displayName(),
                         "email", user.email(),
-                        "isAllowedEditor", user.isAllowedEditor()
+                        "isAllowedEditor", isAllowedEditor,
+                        "isAdmin", isAdmin
                 )
         ));
     }
@@ -124,7 +127,8 @@ public final class AuthHandler implements HttpHandler {
                     profile.login(),
                     profile.displayName(),
                     profile.email(),
-                    true
+                    true,
+                    authorizationService.isAdmin(profile.login())
             ));
             HttpExchangeHelper.setSessionCookie(
                     exchange,

@@ -1,4 +1,4 @@
-import type { Assignment, AssignmentInput, AuthState } from '@/lib/types'
+import type { AccessControlState, Assignment, AssignmentInput, AuthState } from '@/lib/types'
 
 type JsonValue = Record<string, unknown> | null
 
@@ -85,6 +85,23 @@ export const apiClient = {
   logout() {
     return request<{ ok: boolean }>('/api/auth/logout', {
       method: 'POST',
+    })
+  },
+  getWhitelist() {
+    return request<AccessControlState>('/api/admin/whitelist', {
+      method: 'GET',
+      headers: {},
+    })
+  },
+  addWhitelistEntry(githubLogin: string) {
+    return request<AccessControlState>('/api/admin/whitelist', {
+      method: 'POST',
+      body: JSON.stringify({ githubLogin }),
+    })
+  },
+  removeWhitelistEntry(githubLogin: string) {
+    return request<AccessControlState>(`/api/admin/whitelist/${githubLogin}`, {
+      method: 'DELETE',
     })
   },
 }

@@ -51,7 +51,8 @@ public final class SessionService {
                 stringValue(payload.get("githubLogin")),
                 stringValue(payload.get("displayName")),
                 stringValue(payload.get("email")),
-                Boolean.TRUE.equals(payload.get("isAllowedEditor"))
+                Boolean.TRUE.equals(payload.get("isAllowedEditor")),
+                Boolean.TRUE.equals(payload.get("isAdmin"))
         );
         return Optional.of(new Session(token, user, createdAt, expiresAt));
     }
@@ -69,6 +70,7 @@ public final class SessionService {
         payload.put("displayName", user.displayName());
         payload.put("email", user.email());
         payload.put("isAllowedEditor", user.isAllowedEditor());
+        payload.put("isAdmin", user.isAdmin());
         payload.put("createdAt", createdAt.getEpochSecond());
         payload.put("expiresAt", expiresAt.getEpochSecond());
 

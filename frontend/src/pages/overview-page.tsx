@@ -3,6 +3,7 @@ import { LogIn, LogOut, Plus } from 'lucide-react'
 
 import { ApiError, apiClient } from '@/api/client'
 import { AssignmentCard } from '@/components/assignment-card'
+import { AdminPanel } from '@/components/admin-panel'
 import { AssignmentDetailDialog } from '@/components/assignment-detail-dialog'
 import { AssignmentFormDialog } from '@/components/assignment-form-dialog'
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +72,7 @@ export function OverviewPage() {
   }, [visibleItems])
 
   const canEdit = auth.authenticated && Boolean(auth.user?.isAllowedEditor)
+  const canAdmin = auth.authenticated && Boolean(auth.user?.isAdmin)
 
   async function handleSubmit(input: AssignmentInput) {
     setIsSaving(true)
@@ -205,6 +207,8 @@ export function OverviewPage() {
             </div>
           </div>
         </header>
+
+        <AdminPanel isVisible={canAdmin} />
 
         <section className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
           {visibleItems.length === 0 && !assignments.isLoading ? (

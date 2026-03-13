@@ -88,7 +88,7 @@ public final class AssignmentHandler implements HttpHandler {
             }
 
             if (method.equalsIgnoreCase("DELETE") && id != null) {
-                boolean deleted = assignmentService.delete(id);
+                boolean deleted = assignmentService.delete(id, actor);
                 if (!deleted) {
                     HttpExchangeHelper.notFound(exchange, "Assignment not found.");
                     return;

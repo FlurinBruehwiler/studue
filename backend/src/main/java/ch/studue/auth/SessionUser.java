@@ -4,6 +4,7 @@ public record SessionUser(
         String githubLogin,
         String displayName,
         String email,
-        boolean isAllowedEditor
+        boolean isAllowedEditor,
+        boolean isAdmin
 ) {
 }
