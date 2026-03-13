@@ -21,6 +21,10 @@ const initialFilters: AssignmentFilters = {
   to: '',
 }
 
+const buildCommitHashFull = import.meta.env.VITE_GIT_COMMIT_HASH ?? 'abc1234def5678abc1234def5678abc1234def5'
+const buildCommitHash = buildCommitHashFull.slice(0, 7)
+const buildCommitUrl = `https://github.com/FlurinBruehwiler/studue/commit/${buildCommitHashFull}`
+
 export function OverviewPage() {
   const [filters, setFilters] = useState<AssignmentFilters>(initialFilters)
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
@@ -251,6 +255,18 @@ export function OverviewPage() {
             </section>
           ))}
         </section>
+
+        <div className="mt-6 border-t-2 border-dashed border-slate-300 pt-3 text-xs text-muted-foreground">
+          Deployed commit:{' '}
+          <a
+            href={buildCommitUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-foreground underline underline-offset-2"
+          >
+            {buildCommitHash}
+          </a>
+        </div>
       </main>
 
       <AssignmentDetailDialog

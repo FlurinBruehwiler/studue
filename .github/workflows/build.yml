@@ -40,7 +40,7 @@ jobs:
         working-directory: frontend
 
       - name: Build frontend
-        run: npm run build
+        run: VITE_GIT_COMMIT_HASH=${GITHUB_SHA} npm run build
         working-directory: frontend
 
       - name: Build backend

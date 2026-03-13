@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  studue.ch
+  <a href="https://studue.ch">studue.ch</a>
 </p>
 
 <p align="center">
