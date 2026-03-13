@@ -31,8 +31,8 @@ Typical server-side flow:
 
 ```bash
 gh run download <run-id> -R FlurinBruehwiler/studue
-chmod +x deploy-artifacts/deploy-artifacts.sh
-sudo ./deploy-artifacts/deploy-artifacts.sh
+chmod +x deploy-script/deploy-artifacts.sh
+sudo ./deploy-script/deploy-artifacts.sh
 sudo systemctl restart studue
 sudo systemctl reload caddy
 ```
