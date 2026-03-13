@@ -2,6 +2,8 @@ package ch.studue.http;
 
 import ch.studue.auth.Session;
 import ch.studue.auth.SessionService;
+import ch.studue.auth.SessionUser;
+import ch.studue.config.AppConfig;
 import ch.studue.json.SimpleJson;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.io.OutputStream;
 import java.net.HttpCookie;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,6 +61,32 @@ public final class HttpExchangeHelper {
 
     public static Optional<Session> findSession(HttpExchange exchange, SessionService sessionService) {
         return findSessionId(exchange).flatMap(sessionService::find);
+    }
+
+    public static Optional<Session> findSession(HttpExchange exchange, SessionService sessionService, AppConfig config) {
+        Optional<Session> session = findSession(exchange, sessionService);
+        if (session.isPresent()) {
+            return session;
+        }
+
+        if (!config.authBypassEnabled()) {
+            return Optional.empty();
+        }
+
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(sessionService.ttlSeconds());
+        return Optional.of(new Session(
+                "auth-bypass",
+                new SessionUser(
+                        config.authBypassGithubLogin(),
+                        config.authBypassDisplayName(),
+                        config.authBypassEmail(),
+                        true,
+                        true
+                ),
+                now,
+                expiresAt
+        ));
     }
 
     public static Optional<String> findSessionId(HttpExchange exchange) {

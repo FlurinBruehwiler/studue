@@ -45,6 +45,26 @@ body {
   min-height: 100vh;
 }
 
+input.native-picker-input {
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input.native-picker-input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+input.native-picker-input::-webkit-datetime-edit {
+  min-width: 0;
+  padding: 0;
+}
+
+input.native-picker-input::-webkit-calendar-picker-indicator {
+  margin-left: 0;
+}
+
 ::selection {
   background: rgba(223, 116, 49, 0.18);
 }

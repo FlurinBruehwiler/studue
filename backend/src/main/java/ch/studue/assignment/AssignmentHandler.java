@@ -3,6 +3,7 @@ package ch.studue.assignment;
 import ch.studue.auth.AuthorizationService;
 import ch.studue.auth.Session;
 import ch.studue.auth.SessionService;
+import ch.studue.config.AppConfig;
 import ch.studue.http.HttpExchangeHelper;
 import ch.studue.json.SimpleJson;
 import com.sun.net.httpserver.HttpExchange;
@@ -17,15 +18,18 @@ public final class AssignmentHandler implements HttpHandler {
     private final AssignmentService assignmentService;
     private final SessionService sessionService;
     private final AuthorizationService authorizationService;
+    private final AppConfig config;
 
     public AssignmentHandler(
             AssignmentService assignmentService,
             SessionService sessionService,
-            AuthorizationService authorizationService
+            AuthorizationService authorizationService,
+            AppConfig config
     ) {
         this.assignmentService = assignmentService;
         this.sessionService = sessionService;
         this.authorizationService = authorizationService;
+        this.config = config;
     }
 
     @Override
@@ -53,7 +57,7 @@ public final class AssignmentHandler implements HttpHandler {
                 return;
             }
 
-            Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService);
+            Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService, config);
             if (session.isEmpty() || !authorizationService.isAllowedEditor(session.get().user().githubLogin())) {
                 HttpExchangeHelper.sendJson(exchange, 403, Map.of(
                         "error", Map.of(

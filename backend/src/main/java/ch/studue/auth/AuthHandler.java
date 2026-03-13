@@ -63,7 +63,7 @@ public final class AuthHandler implements HttpHandler {
     }
 
     private void handleMe(HttpExchange exchange) throws IOException {
-        Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService);
+        Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService, config);
         if (session.isEmpty()) {
             Map<String, Object> body = new java.util.LinkedHashMap<>();
             body.put("authenticated", false);
@@ -88,6 +88,11 @@ public final class AuthHandler implements HttpHandler {
     }
 
     private void handleLogin(HttpExchange exchange) throws IOException {
+        if (config.authBypassEnabled()) {
+            HttpExchangeHelper.redirect(exchange, config.frontendBaseUrl());
+            return;
+        }
+
         String state = oAuthStateService.issue();
         HttpExchangeHelper.redirect(exchange, gitHubOAuthService.buildAuthorizeUrl(state));
     }
@@ -143,6 +148,11 @@ public final class AuthHandler implements HttpHandler {
     }
 
     private void handleLogout(HttpExchange exchange) throws IOException {
+        if (config.authBypassEnabled()) {
+            HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
+            return;
+        }
+
         HttpExchangeHelper.findSessionId(exchange).ifPresent(sessionService::destroy);
         HttpExchangeHelper.clearSessionCookie(exchange, config.appBaseUrl().startsWith("https://"));
         HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));

@@ -55,8 +55,8 @@ export function AssignmentFormDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 p-0 backdrop-blur-sm sm:p-4">
-      <div className="h-full w-full overflow-y-auto bg-[#f8f6f2] p-5 sm:h-auto sm:max-w-2xl sm:rounded-[2rem] sm:border-[3px] sm:border-slate-900 sm:p-8 sm:shadow-soft">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-x-hidden bg-black/20 p-0 backdrop-blur-sm sm:p-4">
+      <div className="h-full w-full overflow-x-hidden overflow-y-auto bg-[#f8f6f2] p-5 sm:h-auto sm:max-w-2xl sm:rounded-[2rem] sm:border-[3px] sm:border-slate-900 sm:p-8 sm:shadow-soft">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-serif text-3xl text-foreground sm:text-4xl">
@@ -74,7 +74,7 @@ export function AssignmentFormDialog({
         </div>
 
         <form
-          className="mt-6 space-y-4 pb-8 sm:pb-0"
+          className="mt-6 space-y-4 overflow-x-hidden pb-8 sm:pb-0"
           onSubmit={(event) => {
             event.preventDefault()
 
@@ -88,7 +88,7 @@ export function AssignmentFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <FormField label="Module">
               <select
-                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
+                className="h-12 w-full min-w-0 max-w-full truncate overflow-hidden rounded-2xl border-2 border-slate-900 bg-white px-4 pr-10 text-[16px] sm:text-sm"
                 value={form.module}
                 onChange={(event) => setForm((current) => ({ ...current, module: event.target.value }))}
                 required
@@ -105,7 +105,7 @@ export function AssignmentFormDialog({
             <FormField label="Due date">
               <input
                 type="date"
-                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
+                className="native-picker-input h-12 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
                 value={form.dueDate}
                 onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
                 min={getTodayDateInputValue()}
@@ -116,7 +116,7 @@ export function AssignmentFormDialog({
             <FormField label="Time (optional)">
               <input
                 type="time"
-                className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
+                className="native-picker-input h-12 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
                 value={form.dueTime}
                 onChange={(event) => setForm((current) => ({ ...current, dueTime: event.target.value }))}
               />
@@ -125,7 +125,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Title">
             <input
-              className="h-12 w-full min-w-0 max-w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
+              className="h-12 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border-2 border-slate-900 bg-white px-4 text-[16px] sm:text-sm"
               value={form.title}
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               required
@@ -134,7 +134,7 @@ export function AssignmentFormDialog({
 
           <FormField label="Details">
             <textarea
-              className="min-h-48 w-full min-w-0 max-w-full rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-[16px] sm:min-h-40 sm:text-sm"
+              className="min-h-48 w-full min-w-0 max-w-full overflow-hidden rounded-[1.5rem] border-2 border-slate-900 bg-white px-4 py-3 text-[16px] sm:min-h-40 sm:text-sm"
               value={form.note}
               onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))}
             />

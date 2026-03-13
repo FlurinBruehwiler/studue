@@ -4,6 +4,10 @@ FRONTEND_BASE_URL=http://localhost:5173
 DEFAULT_CLASS_NAME=it25ta_win
 DATA_DIRECTORY=../data
 # Also stores logs and access-control.json
+AUTH_BYPASS_ENABLED=false
+AUTH_BYPASS_GITHUB_LOGIN=testing-admin
+AUTH_BYPASS_DISPLAY_NAME=Testing Admin
+AUTH_BYPASS_EMAIL=testing-admin@example.invalid
 GITHUB_CLIENT_ID=replace-me
 GITHUB_CLIENT_SECRET=replace-me
 GITHUB_OAUTH_BASE_URL=https://github.zhaw.ch/login/oauth

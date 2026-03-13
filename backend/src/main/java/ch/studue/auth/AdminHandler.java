@@ -4,6 +4,7 @@ import ch.studue.audit.AuditLogStore;
 import ch.studue.assignment.Assignment;
 import ch.studue.assignment.AssignmentService;
 import ch.studue.assignment.AssignmentUser;
+import ch.studue.config.AppConfig;
 import ch.studue.http.HttpExchangeHelper;
 import ch.studue.json.SimpleJson;
 import com.sun.net.httpserver.HttpExchange;
@@ -19,22 +20,25 @@ public final class AdminHandler implements HttpHandler {
     private final AuthorizationService authorizationService;
     private final AuditLogStore auditLogStore;
     private final AssignmentService assignmentService;
+    private final AppConfig config;
 
     public AdminHandler(
             SessionService sessionService,
             AuthorizationService authorizationService,
             AuditLogStore auditLogStore,
-            AssignmentService assignmentService
+            AssignmentService assignmentService,
+            AppConfig config
     ) {
         this.sessionService = sessionService;
         this.authorizationService = authorizationService;
         this.auditLogStore = auditLogStore;
         this.assignmentService = assignmentService;
+        this.config = config;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService);
+        Optional<Session> session = HttpExchangeHelper.findSession(exchange, sessionService, config);
         if (session.isEmpty() || !authorizationService.isAdmin(session.get().user().githubLogin())) {
             HttpExchangeHelper.sendJson(exchange, 403, Map.of(
                     "error", Map.of(
