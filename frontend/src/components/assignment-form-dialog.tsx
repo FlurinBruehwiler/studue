@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { emptyAssignmentForm, toAssignmentInput } from '@/lib/assignment-form'
@@ -10,18 +10,22 @@ type AssignmentFormDialogProps = {
   assignment: Assignment | null
   isOpen: boolean
   isSaving: boolean
+  isDeleting?: boolean
   error: string
   onClose: () => void
   onSubmit: (input: AssignmentInput) => void
+  onDelete?: () => void
 }
 
 export function AssignmentFormDialog({
   assignment,
   isOpen,
   isSaving,
+  isDeleting = false,
   error,
   onClose,
   onSubmit,
+  onDelete,
 }: AssignmentFormDialogProps) {
   const [form, setForm] = useState<AssignmentFormState>(() => {
     if (!assignment) {
@@ -147,13 +151,24 @@ export function AssignmentFormDialog({
             </div>
           ) : null}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <div>
+              {assignment && onDelete ? (
+                <Button type="button" variant="ghost" onClick={onDelete} disabled={isDeleting || isSaving}>
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>
               {isSaving ? 'Saving...' : assignment ? 'Save changes' : 'Create assignment'}
             </Button>
+            </div>
           </div>
         </form>
       </div>

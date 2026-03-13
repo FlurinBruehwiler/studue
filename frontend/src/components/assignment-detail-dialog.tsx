@@ -1,4 +1,4 @@
-import { Pencil, Trash2, X } from 'lucide-react'
+import { Pencil, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { formatDisplayDateTime, formatSwissDateAndTime } from '@/lib/date'
@@ -10,8 +10,6 @@ type AssignmentDetailDialogProps = {
   canEdit: boolean
   onClose: () => void
   onEdit: () => void
-  onDelete: () => void
-  isDeleting: boolean
 }
 
 export function AssignmentDetailDialog({
@@ -19,8 +17,6 @@ export function AssignmentDetailDialog({
   canEdit,
   onClose,
   onEdit,
-  onDelete,
-  isDeleting,
 }: AssignmentDetailDialogProps) {
   if (!assignment) {
     return null
@@ -79,16 +75,7 @@ export function AssignmentDetailDialog({
 
         <div className="mt-12 flex flex-col gap-6 text-base text-foreground sm:flex-row sm:items-end sm:justify-between">
           <div>Created by: {assignment.createdBy.displayName}</div>
-          <div className="flex items-center gap-4">
-            <div>
-              Last edited: {assignment.updatedBy.displayName} - {formatDisplayDateTime(assignment.updatedAt)}
-            </div>
-            {canEdit ? (
-              <Button variant="ghost" onClick={onDelete} disabled={isDeleting}>
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            ) : null}
-          </div>
+          <div>Last edited: {assignment.updatedBy.displayName} - {formatDisplayDateTime(assignment.updatedAt)}</div>
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@ import { LogIn, LogOut, Plus } from 'lucide-react'
 
 import { ApiError, apiClient } from '@/api/client'
 import { AssignmentCard } from '@/components/assignment-card'
-import { AdminPanel } from '@/components/admin-panel'
 import { AssignmentDetailDialog } from '@/components/assignment-detail-dialog'
 import { AssignmentFormDialog } from '@/components/assignment-form-dialog'
 import { Badge } from '@/components/ui/badge'
@@ -73,7 +72,6 @@ export function OverviewPage() {
 
   const canEdit = auth.authenticated && Boolean(auth.user?.isAllowedEditor)
   const canAdmin = auth.authenticated && Boolean(auth.user?.isAdmin)
-
   async function handleSubmit(input: AssignmentInput) {
     setIsSaving(true)
     setFormError('')
@@ -100,15 +98,19 @@ export function OverviewPage() {
   }
 
   async function handleDelete() {
-    if (!selectedAssignment) {
+    const targetAssignment = editingAssignment ?? selectedAssignment
+
+    if (!targetAssignment) {
       return
     }
 
     setIsDeleting(true)
 
     try {
-      await apiClient.deleteAssignment(selectedAssignment.id)
+      await apiClient.deleteAssignment(targetAssignment.id)
       setSelectedAssignment(null)
+      setEditingAssignment(null)
+      setIsFormOpen(false)
       setReloadKey((value) => value + 1)
     } finally {
       setIsDeleting(false)
@@ -196,6 +198,11 @@ export function OverviewPage() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
               {auth.authenticated && auth.user ? (
                 <>
+                  {canAdmin ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href="/admin">Admin</a>
+                    </Button>
+                  ) : null}
                   <Badge>{auth.user.displayName}</Badge>
                   <Button variant="ghost" onClick={auth.logout}>
                     <LogOut className="h-4 w-4" />
@@ -207,8 +214,6 @@ export function OverviewPage() {
             </div>
           </div>
         </header>
-
-        <AdminPanel isVisible={canAdmin} />
 
         <section className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
           {visibleItems.length === 0 && !assignments.isLoading ? (
@@ -240,14 +245,12 @@ export function OverviewPage() {
       <AssignmentDetailDialog
         assignment={selectedAssignment}
         canEdit={canEdit}
-        isDeleting={isDeleting}
         onClose={() => setSelectedAssignment(null)}
         onEdit={() => {
           setEditingAssignment(selectedAssignment)
           setFormError('')
           setIsFormOpen(true)
         }}
-        onDelete={handleDelete}
       />
 
       {isFormOpen ? (
@@ -256,12 +259,14 @@ export function OverviewPage() {
           assignment={editingAssignment}
           isOpen={isFormOpen}
           isSaving={isSaving}
+          isDeleting={isDeleting}
           error={formError}
           onClose={() => {
             setIsFormOpen(false)
             setEditingAssignment(null)
             setFormError('')
           }}
+          onDelete={editingAssignment ? handleDelete : undefined}
           onSubmit={handleSubmit}
         />
       ) : null}

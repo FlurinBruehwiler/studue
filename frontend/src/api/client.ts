@@ -1,4 +1,4 @@
-import type { AccessControlState, Assignment, AssignmentInput, AuthState } from '@/lib/types'
+import type { AccessControlState, Assignment, AssignmentInput, AuditLogItem, AuthState } from '@/lib/types'
 
 type JsonValue = Record<string, unknown> | null
 
@@ -87,20 +87,37 @@ export const apiClient = {
       method: 'POST',
     })
   },
-  getWhitelist() {
-    return request<AccessControlState>('/api/admin/whitelist', {
+  getAccessControl() {
+    return request<AccessControlState>('/api/admin/access-control', {
       method: 'GET',
       headers: {},
     })
   },
   addWhitelistEntry(githubLogin: string) {
-    return request<AccessControlState>('/api/admin/whitelist', {
+    return request<AccessControlState>('/api/admin/editors', {
       method: 'POST',
       body: JSON.stringify({ githubLogin }),
     })
   },
   removeWhitelistEntry(githubLogin: string) {
-    return request<AccessControlState>(`/api/admin/whitelist/${githubLogin}`, {
+    return request<AccessControlState>(`/api/admin/editors/${githubLogin}`, {
+      method: 'DELETE',
+    })
+  },
+  addAdminEntry(githubLogin: string) {
+    return request<AccessControlState>('/api/admin/admins', {
+      method: 'POST',
+      body: JSON.stringify({ githubLogin }),
+    })
+  },
+  getAuditLogs() {
+    return request<{ items: AuditLogItem[] }>('/api/admin/logs', {
+      method: 'GET',
+      headers: {},
+    })
+  },
+  removeAdminEntry(githubLogin: string) {
+    return request<AccessControlState>(`/api/admin/admins/${githubLogin}`, {
       method: 'DELETE',
     })
   },

@@ -60,3 +60,14 @@ export type AccessControlState = {
   admins: string[]
   editors: string[]
 }
+
+export type AuditLogItem = {
+  timestamp: string
+  action: 'add' | 'edit' | 'delete' | string
+  actorLogin: string
+  actorDisplayName: string
+  assignmentId: string
+  title: string
+  dueDate: string
+  dueTime: string
+}
