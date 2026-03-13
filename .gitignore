@@ -31,6 +31,7 @@ frontend/dist/
 backend/.gradle/
 backend/build/
 backend/config/application.properties
+!backend/gradle/wrapper/gradle-wrapper.jar
 
 # Temporary local tooling
 gradle-8.10.2/

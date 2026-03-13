@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220" fill="none">
+  <rect width="640" height="220" fill="transparent"/>
+  <circle cx="92" cy="110" r="68" fill="#F6E6A8" opacity="0.85"/>
+  <circle cx="142" cy="72" r="34" fill="#B9DDBB" opacity="0.9"/>
+  <rect x="22" y="22" width="176" height="176" rx="44" fill="#FBF7F0" stroke="#20353C" stroke-width="8"/>
+  <rect x="56" y="52" width="108" height="114" rx="24" fill="#FFFFFF" stroke="#20353C" stroke-width="8"/>
+  <path d="M56 84C56 70.745 66.745 60 80 60H140C153.255 60 164 70.745 164 84V96H56V84Z" fill="#E8753D"/>
+  <rect x="76" y="48" width="12" height="26" rx="6" fill="#20353C"/>
+  <rect x="132" y="48" width="12" height="26" rx="6" fill="#20353C"/>
+  <rect x="74" y="112" width="52" height="10" rx="5" fill="#20353C" opacity="0.2"/>
+  <rect x="74" y="132" width="72" height="10" rx="5" fill="#20353C" opacity="0.2"/>
+  <circle cx="138" cy="138" r="24" fill="#B9DDBB" stroke="#20353C" stroke-width="8"/>
+  <path d="M127 138L135 146L151 128" stroke="#20353C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="238" y="118" fill="#20353C" font-family="Georgia, 'Times New Roman', serif" font-size="76" font-weight="700" letter-spacing="1">studue</text>
+  <rect x="242" y="138" width="170" height="12" rx="6" fill="#E8753D"/>
+  <text x="242" y="178" fill="#5D6E73" font-family="Arial, Helvetica, sans-serif" font-size="24" letter-spacing="2">ASSIGNMENTS IN VIEW</text>
+</svg>
