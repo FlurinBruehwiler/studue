@@ -1,7 +1,25 @@
-# studue
-studue.ch
+<p align="center">
+  <img src="frontend/public/studue-logo.svg" alt="Studue" width="520" />
+</p>
 
-## Deployment artifacts
+<p align="center">
+  studue.ch
+</p>
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="Studue screenshot" width="900" />
+</p>
+
+## Overview
+
+Studue is a lightweight assignment tracker for the IT25a_WIN class.
+
+- React + Vite frontend
+- Java 21 backend with the standard library only
+- GitHub Enterprise OAuth via `github.zhaw.ch`
+- JSON file storage for assignments, logs, and access control
+
+## Deployment Artifacts
 
 The GitHub Actions build on `main` uploads three artifacts:
 
@@ -13,8 +31,8 @@ Typical server-side flow:
 
 ```bash
 gh run download <run-id> -R FlurinBruehwiler/studue
-chmod +x deploy-artifacts.sh
-sudo ./deploy-artifacts.sh
+chmod +x deploy-artifacts/deploy-artifacts.sh
+sudo ./deploy-artifacts/deploy-artifacts.sh
 sudo systemctl restart studue
 sudo systemctl reload caddy
 ```
