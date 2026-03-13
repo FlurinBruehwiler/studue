@@ -6,7 +6,7 @@ function App() {
   const auth = useAuth()
   const path = window.location.pathname
 
-  if (path === '/admin') {
+  if (path === '/admin' || path === '/admin/whitelist' || path === '/admin/admins' || path === '/admin/editlog') {
     return <AdminPanel isVisible={auth.authenticated && Boolean(auth.user?.isAdmin)} />
   }
 

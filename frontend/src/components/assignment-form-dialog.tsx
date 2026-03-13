@@ -2,7 +2,12 @@ import { useState, type ReactNode } from 'react'
 import { Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { emptyAssignmentForm, toAssignmentInput } from '@/lib/assignment-form'
+import {
+  emptyAssignmentForm,
+  getTodayDateInputValue,
+  toAssignmentInput,
+  validateAssignmentNotPast,
+} from '@/lib/assignment-form'
 import { MODULE_OPTIONS } from '@/lib/modules'
 import type { Assignment, AssignmentFormState, AssignmentInput } from '@/lib/types'
 
@@ -42,6 +47,9 @@ export function AssignmentFormDialog({
     }
   })
 
+  const clientValidationError = validateAssignmentNotPast(form)
+  const displayedError = clientValidationError ?? error
+
   if (!isOpen) {
     return null
   }
@@ -69,6 +77,11 @@ export function AssignmentFormDialog({
           className="mt-6 space-y-4"
           onSubmit={(event) => {
             event.preventDefault()
+
+            if (clientValidationError) {
+              return
+            }
+
             onSubmit(toAssignmentInput(form))
           }}
         >
@@ -95,6 +108,7 @@ export function AssignmentFormDialog({
                 className="h-12 w-full rounded-2xl border-2 border-slate-900 bg-white px-4 text-sm"
                 value={form.dueDate}
                 onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
+                min={getTodayDateInputValue()}
                 required
               />
             </FormField>
@@ -145,9 +159,9 @@ export function AssignmentFormDialog({
             </div>
           </FormField>
 
-          {error ? (
+          {displayedError ? (
             <div className="rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+              {displayedError}
             </div>
           ) : null}
 
@@ -165,7 +179,7 @@ export function AssignmentFormDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving || Boolean(clientValidationError)}>
               {isSaving ? 'Saving...' : assignment ? 'Save changes' : 'Create assignment'}
             </Button>
             </div>

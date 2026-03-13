@@ -144,7 +144,7 @@ public final class AdminHandler implements HttpHandler {
                     session.get().user().displayName(),
                     session.get().user().email()
             );
-            auditLogStore.append("add", restored, actor, Map.of(), Map.of());
+            auditLogStore.append("undo", restored, actor, Map.of(), Map.of());
             HttpExchangeHelper.sendJson(exchange, 200, Map.of("ok", true));
             return;
         }

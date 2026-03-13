@@ -63,7 +63,7 @@ export type AccessControlState = {
 
 export type AuditLogItem = {
   timestamp: string
-  action: 'add' | 'edit' | 'delete' | string
+  action: 'add' | 'edit' | 'delete' | 'undo' | string
   actorLogin: string
   actorDisplayName: string
   assignmentId: string

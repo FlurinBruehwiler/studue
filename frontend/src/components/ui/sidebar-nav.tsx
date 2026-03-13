@@ -7,15 +7,15 @@ type SidebarNavItem = {
   key: string
   label: string
   icon: ReactNode
+  href: string
 }
 
 type SidebarNavProps = {
   items: SidebarNavItem[]
   activeKey: string
-  onChange: (key: string) => void
 }
 
-export function SidebarNav({ items, activeKey, onChange }: SidebarNavProps) {
+export function SidebarNav({ items, activeKey }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-2">
       {items.map((item) => {
@@ -30,10 +30,12 @@ export function SidebarNav({ items, activeKey, onChange }: SidebarNavProps) {
               'w-full justify-start rounded-[0.8rem] border-2 border-transparent px-3 py-2 text-sm font-medium',
               isActive ? 'border-slate-900 bg-white text-foreground hover:bg-white' : 'text-muted-foreground hover:bg-white/70',
             )}
-            onClick={() => onChange(item.key)}
+            asChild
           >
-            {item.icon}
-            {item.label}
+            <a href={item.href}>
+              {item.icon}
+              {item.label}
+            </a>
           </Button>
         )
       })}

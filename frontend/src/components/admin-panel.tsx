@@ -14,13 +14,25 @@ type AdminPanelProps = {
 
 type AdminSection = 'whitelist' | 'admins' | 'logs'
 
+function getSectionFromPath(pathname: string): AdminSection {
+  if (pathname === '/admin/admins') {
+    return 'admins'
+  }
+
+  if (pathname === '/admin/editlog') {
+    return 'logs'
+  }
+
+  return 'whitelist'
+}
+
 const initialState: AccessControlState = {
   admins: [],
   editors: [],
 }
 
 export function AdminPanel({ isVisible }: AdminPanelProps) {
-  const [section, setSection] = useState<AdminSection>('whitelist')
+  const [section, setSection] = useState<AdminSection>(() => getSectionFromPath(window.location.pathname))
   const [accessControl, setAccessControl] = useState<AccessControlState>(initialState)
   const [logs, setLogs] = useState<AuditLogItem[]>([])
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
@@ -28,6 +40,18 @@ export function AdminPanel({ isVisible }: AdminPanelProps) {
   const [newAdmin, setNewAdmin] = useState('')
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const onPopState = () => {
+      setSection(getSectionFromPath(window.location.pathname))
+    }
+
+    window.addEventListener('popstate', onPopState)
+
+    return () => {
+      window.removeEventListener('popstate', onPopState)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isVisible) {
@@ -42,9 +66,9 @@ export function AdminPanel({ isVisible }: AdminPanelProps) {
   }, [accessControl])
 
   const sidebarItems = [
-    { key: 'whitelist', label: 'Whitelist', icon: <UserRoundPlus className="h-4 w-4" /> },
-    { key: 'admins', label: 'Admins', icon: <UserCog className="h-4 w-4" /> },
-    { key: 'logs', label: 'Edit Log', icon: <Shield className="h-4 w-4" /> },
+    { key: 'whitelist', label: 'Whitelist', href: '/admin/whitelist', icon: <UserRoundPlus className="h-4 w-4" /> },
+    { key: 'admins', label: 'Admins', href: '/admin/admins', icon: <UserCog className="h-4 w-4" /> },
+    { key: 'logs', label: 'Edit Log', href: '/admin/editlog', icon: <Shield className="h-4 w-4" /> },
   ] as const
 
   if (!isVisible) {
@@ -157,7 +181,6 @@ export function AdminPanel({ isVisible }: AdminPanelProps) {
                 <SidebarNav
                   items={sidebarItems.map((item) => ({ ...item }))}
                   activeKey={section}
-                  onChange={(key) => setSection(key as AdminSection)}
                 />
               </CardContent>
             </Card>
@@ -345,6 +368,12 @@ function LogDetailDialog({ item, onClose }: LogDetailDialogProps) {
             Added assignment due {formatSwissDateAndTime(item.dueDate, item.dueTime)}.
           </div>
         ) : null}
+
+        {item.action === 'undo' ? (
+          <div className="mt-5 rounded-[0.8rem] border-2 border-slate-900 bg-white px-3 py-3 text-sm text-slate-700">
+            Restored assignment due {formatSwissDateAndTime(item.dueDate, item.dueTime)}.
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -354,6 +383,7 @@ const logColors: Record<string, string> = {
   add: 'border-green-700 bg-green-50 text-green-900',
   edit: 'border-blue-700 bg-blue-50 text-blue-900',
   delete: 'border-red-700 bg-red-50 text-red-900',
+  undo: 'border-emerald-700 bg-emerald-50 text-emerald-900',
 }
 
 function extractErrorMessage(errorValue: unknown, fallback: string): string {
