@@ -2,7 +2,6 @@ import { PencilLine } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatDisplayDate } from '@/lib/date'
 import { getModuleLabel } from '@/lib/modules'
 import type { Assignment } from '@/lib/types'
 
@@ -15,11 +14,7 @@ type AssignmentCardProps = {
 
 export function AssignmentCard({ assignment, canEdit, onSelect, onEdit }: AssignmentCardProps) {
   return (
-    <article className="animate-fade-up space-y-1">
-      <div className="text-[1.2rem] font-semibold tracking-tight text-foreground sm:text-[1.45rem]">
-        {formatDisplayDate(assignment.dueDate)}
-      </div>
-      <div className="rounded-[0.95rem] border-[3px] border-slate-900 bg-[#f8f6f2] p-2.5 sm:rounded-[1.15rem] sm:p-3.5">
+    <article className="animate-fade-up rounded-[0.95rem] border-[3px] border-slate-900 bg-[#f8f6f2] p-2.5 sm:rounded-[1.15rem] sm:p-3.5">
         <div className="flex items-start justify-between gap-2">
           <button type="button" className="flex-1 text-left" onClick={onSelect}>
             <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-[0.72rem]">
@@ -42,7 +37,6 @@ export function AssignmentCard({ assignment, canEdit, onSelect, onEdit }: Assign
             ) : null}
           </div>
         </div>
-      </div>
     </article>
   )
 }

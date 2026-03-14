@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { AppLink } from '@/components/ui/app-link'
 import { Button } from '@/components/ui/button'
 import { useAssignments } from '@/hooks/use-assignments'
+import { formatDisplayDate } from '@/lib/date'
 import { MODULE_OPTIONS } from '@/lib/modules'
 import type { Assignment, AssignmentFilters, AssignmentInput, AuthHookState } from '@/lib/types'
 
@@ -287,6 +288,9 @@ export function OverviewPage({ auth }: OverviewPageProps) {
 
           {Object.entries(groupedAssignments).map(([date, items]) => (
             <section key={date} className="space-y-2">
+              <h2 className="text-[1.2rem] font-semibold tracking-tight text-foreground sm:text-[1.45rem]">
+                {formatDisplayDate(date)}
+              </h2>
               {items.map((assignment) => (
                 <AssignmentCard
                   key={assignment.id}
