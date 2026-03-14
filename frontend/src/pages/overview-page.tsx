@@ -98,6 +98,10 @@ export function OverviewPage({ auth }: OverviewPageProps) {
     }, {})
   }, [moduleFilterItems])
 
+  const visibleModuleOptions = useMemo(() => {
+    return MODULE_OPTIONS.filter((module) => (moduleCounts[module.value] ?? 0) > 0 || module.value === filters.module)
+  }, [filters.module, moduleCounts])
+
   const mandatoryCounts = useMemo(() => {
     return mandatoryFilterItems.reduce(
       (counts, assignment) => {
@@ -214,7 +218,7 @@ export function OverviewPage({ auth }: OverviewPageProps) {
                 }
               >
                 <option value="">All modules ({moduleFilterItems.length})</option>
-                {MODULE_OPTIONS.map((module) => (
+                {visibleModuleOptions.map((module) => (
                   <option key={module.value} value={module.value}>
                     {module.label} ({moduleCounts[module.value] ?? 0})
                   </option>

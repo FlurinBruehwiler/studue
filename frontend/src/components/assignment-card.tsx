@@ -3,6 +3,7 @@ import { PencilLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDisplayDate } from '@/lib/date'
+import { getModuleLabel } from '@/lib/modules'
 import type { Assignment } from '@/lib/types'
 
 type AssignmentCardProps = {
@@ -22,7 +23,7 @@ export function AssignmentCard({ assignment, canEdit, onSelect, onEdit }: Assign
         <div className="flex items-start justify-between gap-2">
           <button type="button" className="flex-1 text-left" onClick={onSelect}>
             <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-[0.72rem]">
-              <span>{assignment.module}</span>
+              <span>{getModuleLabel(assignment.module)}</span>
               {assignment.dueTime ? <span>{assignment.dueTime}</span> : null}
             </div>
             <h3 className="text-[1.02rem] font-semibold leading-tight text-foreground sm:text-[1.15rem]">
