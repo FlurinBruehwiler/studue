@@ -78,7 +78,7 @@ jobs:
     needs: build
 
     env:
-      DEPLOY_HOST: studue.ch
+      DEPLOY_HOST: 78.47.33.43
       DEPLOY_PORT: '22'
       DEPLOY_USER: studue
       DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}

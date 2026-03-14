@@ -36,7 +36,7 @@ Configure these GitHub Actions secrets:
 - `DEPLOY_SSH_PRIVATE_KEY`: private key used by GitHub Actions
 - `DEPLOY_SSH_KNOWN_HOSTS`: `known_hosts` entry for the target server
 
-The workflow currently deploys to `studue@studue.ch` on port `22`.
+The workflow currently deploys to `studue@78.47.33.43` on port `22`.
 
 The remote user must be able to:
 
