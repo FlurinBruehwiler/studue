@@ -76,7 +76,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY != '' && secrets.DEPLOY_SSH_KNOWN_HOSTS != '' }}
 
     env:
       DEPLOY_HOST: studue.ch
