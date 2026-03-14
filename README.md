@@ -21,13 +21,38 @@ Studue is a lightweight assignment tracker for the IT25a_WIN class.
 
 ## Deployment Artifacts
 
-The GitHub Actions build on `main` uploads three artifacts:
+The GitHub Actions workflow on `main` builds the app, uploads three artifacts, and can deploy them to the server over SSH:
 
 - `frontend-dist` with the static frontend files
 - `backend-build` with the backend distribution archives and jars
 - `deploy-script` with `scripts/deploy-artifacts.sh`
 
-Typical server-side flow:
+### Automated deployment
+
+The deploy job copies those three artifacts to the server with `scp`, then runs `scripts/deploy-artifacts.sh` remotely over `ssh`.
+
+Configure these GitHub Actions secrets:
+
+- `DEPLOY_SSH_PRIVATE_KEY`: private key used by GitHub Actions
+- `DEPLOY_SSH_KNOWN_HOSTS`: `known_hosts` entry for the target server
+
+The workflow currently deploys to `studue@studue.ch` on port `22`.
+
+The remote user must be able to:
+
+- connect over SSH
+- create and remove the temporary deploy directory under `/tmp`
+- run `sudo /usr/local/bin/studue-deploy.sh /tmp/studue-deploy-*`
+
+Recommended sudoers setup:
+
+```sudoers
+studue ALL=(root) NOPASSWD: /usr/local/bin/studue-deploy.sh *
+```
+
+### Manual fallback
+
+If needed, you can still deploy a run manually on the server:
 
 ```bash
 gh run download <run-id> -R FlurinBruehwiler/studue

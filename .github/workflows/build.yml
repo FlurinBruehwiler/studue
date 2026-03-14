@@ -1,4 +1,4 @@
-name: Build
+name: Build And Deploy
 
 on:
   push:
@@ -72,3 +72,61 @@ jobs:
           name: deploy-script
           path: scripts/deploy-artifacts.sh
           if-no-files-found: error
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY != '' && secrets.DEPLOY_SSH_KNOWN_HOSTS != '' }}
+
+    env:
+      DEPLOY_HOST: studue.ch
+      DEPLOY_PORT: '22'
+      DEPLOY_USER: studue
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+      REMOTE_DEPLOY_DIR: /tmp/studue-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: deploy-workdir/frontend-dist
+
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: deploy-workdir/backend-build
+
+      - name: Download deployment script artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-script
+          path: deploy-workdir/deploy-script
+
+      - name: Configure SSH access
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Prepare remote staging directory
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$DEPLOY_PORT" -o IdentitiesOnly=yes "$DEPLOY_USER@$DEPLOY_HOST" \
+            "rm -rf '$REMOTE_DEPLOY_DIR' && mkdir -p '$REMOTE_DEPLOY_DIR'"
+
+      - name: Copy deployment artifacts to server
+        run: |
+          scp -i ~/.ssh/id_ed25519 -P "$DEPLOY_PORT" -o IdentitiesOnly=yes -r \
+            deploy-workdir/frontend-dist \
+            deploy-workdir/backend-build \
+            deploy-workdir/deploy-script \
+            "$DEPLOY_USER@$DEPLOY_HOST:$REMOTE_DEPLOY_DIR/"
+
+      - name: Run remote deployment
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$DEPLOY_PORT" -o IdentitiesOnly=yes "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo /usr/local/bin/studue-deploy.sh '$REMOTE_DEPLOY_DIR'"
