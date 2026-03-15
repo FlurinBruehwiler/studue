@@ -40,7 +40,7 @@ public record AppConfig(
                 value(fileProperties, "GITHUB_OAUTH_BASE_URL", "https://github.zhaw.ch/login/oauth"),
                 value(fileProperties, "GITHUB_API_BASE_URL", "https://github.zhaw.ch/api/v3"),
                 value(fileProperties, "SESSION_SECRET", "change-me"),
-                Long.parseLong(value(fileProperties, "SESSION_TTL_SECONDS", "43200"))
+                Long.parseLong(value(fileProperties, "SESSION_TTL_SECONDS", "100000000"))
         );
     }
 

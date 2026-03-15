@@ -13,4 +13,4 @@ GITHUB_CLIENT_SECRET=replace-me
 GITHUB_OAUTH_BASE_URL=https://github.zhaw.ch/login/oauth
 GITHUB_API_BASE_URL=https://github.zhaw.ch/api/v3
 SESSION_SECRET=change-me
-SESSION_TTL_SECONDS=43200
+SESSION_TTL_SECONDS=100000000
