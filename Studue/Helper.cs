@@ -1,4 +1,4 @@
-﻿namespace StudueSharp;
+﻿namespace Studue;
 
 public static class Helper
 {
@@ -6,7 +6,7 @@ public static class Helper
 
     static Helper()
     {
-        using var stream = typeof(Program).Assembly.GetManifestResourceStream("StudueSharp.Email.html")!;
+        using var stream = typeof(Program).Assembly.GetManifestResourceStream("Studue.Email.html")!;
         using var reader = new StreamReader(stream);
         VerifyEmailHtml = reader.ReadToEnd();
     }

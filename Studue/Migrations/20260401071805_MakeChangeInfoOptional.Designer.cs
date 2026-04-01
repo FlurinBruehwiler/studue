@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Studue;
 using StudueSharp;
 
 #nullable disable
@@ -11,8 +12,8 @@ using StudueSharp;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    [Migration("20260401114524_MakeChangeInfoNonMandatory")]
-    partial class MakeChangeInfoNonMandatory
+    [Migration("20260401071805_MakeChangeInfoOptional")]
+    partial class MakeChangeInfoOptional
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -175,9 +176,6 @@ namespace StudueSharp.Migrations
 
                     b.Property<string>("StudentId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WriteToken")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

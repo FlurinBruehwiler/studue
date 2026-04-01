@@ -2,17 +2,20 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using StudueSharp;
+using Studue;
 
 #nullable disable
 
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    partial class StudueContextModelSnapshot : ModelSnapshot
+    [Migration("20260401175446_Test")]
+    partial class Test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -32,7 +35,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("ModuleInstanceStudent");
                 });
 
-            modelBuilder.Entity("StudueSharp.Assignment", b =>
+            modelBuilder.Entity("Studue.Assignment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -80,7 +83,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("Assignements");
                 });
 
-            modelBuilder.Entity("StudueSharp.EditLogEntry", b =>
+            modelBuilder.Entity("Studue.EditLogEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,7 +114,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("EditLog");
                 });
 
-            modelBuilder.Entity("StudueSharp.Incident", b =>
+            modelBuilder.Entity("Studue.Incident", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,7 +138,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("Incidents");
                 });
 
-            modelBuilder.Entity("StudueSharp.Module", b =>
+            modelBuilder.Entity("Studue.Module", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,7 +157,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("Modules");
                 });
 
-            modelBuilder.Entity("StudueSharp.ModuleInstance", b =>
+            modelBuilder.Entity("Studue.ModuleInstance", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -178,7 +181,7 @@ namespace StudueSharp.Migrations
                     b.ToTable("ModuleInstances");
                 });
 
-            modelBuilder.Entity("StudueSharp.Student", b =>
+            modelBuilder.Entity("Studue.Student", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -209,34 +212,34 @@ namespace StudueSharp.Migrations
 
             modelBuilder.Entity("ModuleInstanceStudent", b =>
                 {
-                    b.HasOne("StudueSharp.ModuleInstance", null)
+                    b.HasOne("Studue.ModuleInstance", null)
                         .WithMany()
                         .HasForeignKey("ModuleInstancesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudueSharp.Student", null)
+                    b.HasOne("Studue.Student", null)
                         .WithMany()
                         .HasForeignKey("StudentsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("StudueSharp.Assignment", b =>
+            modelBuilder.Entity("Studue.Assignment", b =>
                 {
-                    b.HasOne("StudueSharp.Student", "CreatedBy")
+                    b.HasOne("Studue.Student", "CreatedBy")
                         .WithMany("CreatedAssignments")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudueSharp.ModuleInstance", "ModuleInstance")
+                    b.HasOne("Studue.ModuleInstance", "ModuleInstance")
                         .WithMany("Assignements")
                         .HasForeignKey("ModuleInstanceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudueSharp.Student", "UpdatedBy")
+                    b.HasOne("Studue.Student", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -249,15 +252,15 @@ namespace StudueSharp.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("StudueSharp.EditLogEntry", b =>
+            modelBuilder.Entity("Studue.EditLogEntry", b =>
                 {
-                    b.HasOne("StudueSharp.Assignment", "Assignment")
+                    b.HasOne("Studue.Assignment", "Assignment")
                         .WithMany()
                         .HasForeignKey("AssignmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudueSharp.Student", "Student")
+                    b.HasOne("Studue.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -268,9 +271,9 @@ namespace StudueSharp.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("StudueSharp.ModuleInstance", b =>
+            modelBuilder.Entity("Studue.ModuleInstance", b =>
                 {
-                    b.HasOne("StudueSharp.Module", "Module")
+                    b.HasOne("Studue.Module", "Module")
                         .WithMany("ModuleInstances")
                         .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -279,17 +282,17 @@ namespace StudueSharp.Migrations
                     b.Navigation("Module");
                 });
 
-            modelBuilder.Entity("StudueSharp.Module", b =>
+            modelBuilder.Entity("Studue.Module", b =>
                 {
                     b.Navigation("ModuleInstances");
                 });
 
-            modelBuilder.Entity("StudueSharp.ModuleInstance", b =>
+            modelBuilder.Entity("Studue.ModuleInstance", b =>
                 {
                     b.Navigation("Assignements");
                 });
 
-            modelBuilder.Entity("StudueSharp.Student", b =>
+            modelBuilder.Entity("Studue.Student", b =>
                 {
                     b.Navigation("CreatedAssignments");
                 });

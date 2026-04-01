@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Studue;
 using StudueSharp;
 
 #nullable disable
@@ -11,8 +12,8 @@ using StudueSharp;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    [Migration("20260330192506_Changes")]
-    partial class Changes
+    [Migration("20260401114117_MakeWriteTokenMandatory")]
+    partial class MakeWriteTokenMandatory
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -93,7 +94,6 @@ namespace StudueSharp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ChangeInfo")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateTime")
@@ -168,7 +168,17 @@ namespace StudueSharp.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WriteToken")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

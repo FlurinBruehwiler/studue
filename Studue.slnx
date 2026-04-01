@@ -2,5 +2,5 @@
   <Folder Name="/SolutionItems/">
     <File Path=".github/workflows/ci.yml" />
   </Folder>
-  <Project Path="StudueSharp/StudueSharp.csproj" />
+  <Project Path="Studue/Studue.csproj" />
 </Solution>

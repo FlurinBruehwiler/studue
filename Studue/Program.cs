@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using StudueSharp;
-using StudueSharp.Components;
-using StudueSharp.Services;
+using Studue;
+using Studue.Components;
+using Studue.Services;
 
 try
 {
@@ -149,18 +149,21 @@ string? GetCookieOrQuery(HttpContext context, string name)
     return value;
 }
 
-public class AssignmentModel
+namespace Studue
 {
-    public string ModuleCode { get; set; } = "";
-    public DateOnly DueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-    public TimeOnly? DueTime { get; set; }
-    public string Title { get; set; } = "";
-    public string? Details { get; set; }
-    public AssignmentType Type { get; set; } = AssignmentType.Mandatory;
-}
+    public class AssignmentModel
+    {
+        public string ModuleCode { get; set; } = "";
+        public DateOnly DueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public TimeOnly? DueTime { get; set; }
+        public string Title { get; set; } = "";
+        public string? Details { get; set; }
+        public AssignmentType Type { get; set; } = AssignmentType.Mandatory;
+    }
 
-public enum AssignmentType
-{
-    Mandatory,
-    Optional
+    public enum AssignmentType
+    {
+        Mandatory,
+        Optional
+    }
 }

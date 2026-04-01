@@ -20,10 +20,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ./StudueSharp/StudueSharp.csproj
+        run: dotnet restore ./Studue/Studue.csproj
 
       - name: Build
-        run: dotnet publish ./StudueSharp/StudueSharp.csproj --configuration Release --no-restore --output ./ReleaseBuild
+        run: dotnet publish ./Studue/Studue.csproj --configuration Release --no-restore --output ./ReleaseBuild
 
       - name: CopyToServer
         uses: appleboy/scp-action@v1
@@ -42,4 +42,4 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           username: studue
           password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
-          script: sudo systemctl restart studueSharp
+          script: sudo systemctl restart studue

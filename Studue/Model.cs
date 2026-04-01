@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace StudueSharp;
+namespace Studue;
 
 public class StudueContext(IOptions<Settings> settings) : DbContext
 {

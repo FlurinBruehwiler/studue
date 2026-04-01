@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Studue;
 using StudueSharp;
 
 #nullable disable
@@ -11,8 +12,8 @@ using StudueSharp;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    [Migration("20260328224820_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260330192506_Changes")]
+    partial class Changes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,6 +54,9 @@ namespace StudueSharp.Migrations
                     b.Property<DateTime>("DueDateTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("Mandatory")
                         .HasColumnType("INTEGER");
 
@@ -78,6 +82,38 @@ namespace StudueSharp.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("Assignements");
+                });
+
+            modelBuilder.Entity("StudueSharp.EditLogEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AssignmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ChangeInfo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignmentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("EditLog");
                 });
 
             modelBuilder.Entity("StudueSharp.Module", b =>
@@ -160,7 +196,7 @@ namespace StudueSharp.Migrations
             modelBuilder.Entity("StudueSharp.Assignment", b =>
                 {
                     b.HasOne("StudueSharp.Student", "CreatedBy")
-                        .WithMany()
+                        .WithMany("CreatedAssignments")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -184,6 +220,25 @@ namespace StudueSharp.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("StudueSharp.EditLogEntry", b =>
+                {
+                    b.HasOne("StudueSharp.Assignment", "Assignment")
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudueSharp.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("StudueSharp.ModuleInstance", b =>
                 {
                     b.HasOne("StudueSharp.Module", "Module")
@@ -203,6 +258,11 @@ namespace StudueSharp.Migrations
             modelBuilder.Entity("StudueSharp.ModuleInstance", b =>
                 {
                     b.Navigation("Assignements");
+                });
+
+            modelBuilder.Entity("StudueSharp.Student", b =>
+                {
+                    b.Navigation("CreatedAssignments");
                 });
 #pragma warning restore 612, 618
         }

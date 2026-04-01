@@ -2,9 +2,9 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
-using StudueSharp.Services;
+using Studue.Services;
 
-namespace StudueSharp;
+namespace Studue;
 
 public class AdminAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,

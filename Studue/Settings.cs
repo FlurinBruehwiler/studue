@@ -1,4 +1,4 @@
-﻿namespace StudueSharp;
+﻿namespace Studue;
 
 public class Settings
 {
