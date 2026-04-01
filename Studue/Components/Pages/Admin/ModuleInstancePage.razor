@@ -8,23 +8,23 @@
 @inject NavigationManager Navigation;
 @rendermode InteractiveServer
 
-<section class="admin-section">
-    <div class="admin-section-header admin-section-header-split">
+<section>
+    <div>
         <div>
-            <h2 class="admin-section-eyebrow">Module instance</h2>
-            <span class="admin-section-title">@_moduleInstance.Module.Name</span>
-            <span class="admin-section-description">Section identifier: @_moduleInstance.LessionsId</span>
+            <h2>Module instance</h2>
+            <span>@_moduleInstance.Module.Name</span>
+            <span>Section identifier: @_moduleInstance.LessionsId</span>
         </div>
 
         <div>
-            <a class="admin-button admin-button-secondary" href="/Admin/Modules/@ModuleCode">Back to module</a>
+            <a href="/Admin/Modules/@ModuleCode">Back to module</a>
         </div>
     </div>
 </section>
 
-<section class="admin-section admin-grid">
-    <article class="admin-subsection">
-        <h3 class="admin-subsection-title">Students</h3>
+<section>
+    <div>
+        <h3>Students</h3>
 
         <table>
             <thead>
@@ -41,10 +41,10 @@
             }
             </tbody>
         </table>
-    </article>
+    </div>
 
-    <article class="admin-subsection">
-        <h3 class="admin-subsection-title">Assignments</h3>
+    <div>
+        <h3>Assignments</h3>
 
         <table>
             <thead>
@@ -63,7 +63,7 @@
             }
             </tbody>
         </table>
-    </article>
+    </div>
 </section>
 
 

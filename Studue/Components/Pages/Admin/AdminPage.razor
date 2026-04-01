@@ -7,25 +7,14 @@
 @rendermode InteractiveServer
 @inject StudueContext StudueContext;
 
-<section class="admin-section">
-    <h2 class="admin-section-title">Overview</h2>
+<section>
+    <h2>Overview</h2>
 
-    <div class="admin-stat-grid">
-        <article class="admin-stat-card">
-            <span class="admin-stat-label">Students: @_studentCount</span>
-        </article>
-
-        <article class="admin-stat-card">
-            <span class="admin-stat-label">Modules: @_moduleCount</span>
-        </article>
-
-        <article class="admin-stat-card">
-            <span class="admin-stat-label">Module instances: @_moduleInstanceCount</span>
-        </article>
-
-        <article class="admin-stat-card">
-            <span class="admin-stat-label">Assignments: @_assignmentCount</span>
-        </article>
+    <div>
+        <p>Students: <b>@_studentCount</b> </p>
+        <p>Modules: <b>@_moduleCount</b></p>
+        <p>Module instances: <b>@_moduleInstanceCount</b></p>
+        <p>Assignments: <b>@_assignmentCount</b></p>
     </div>
 </section>
 
