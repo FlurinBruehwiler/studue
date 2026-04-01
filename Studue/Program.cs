@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Studue;
 using Studue.Components;
@@ -12,9 +13,13 @@ try
 
     builder.Host.UseSerilog((context, config) => { config.ReadFrom.Configuration(context.Configuration); });
 
+    var dbFile = builder.Configuration["Studue:DbFile"]
+        ?? throw new InvalidOperationException("Missing configuration value 'Studue:DbFile'.");
+
     builder.Services.Configure<Settings>(builder.Configuration.GetSection("Studue"));
     builder.Services.AddScoped<StudentContext>();
-    builder.Services.AddDbContext<StudueContext>();
+    builder.Services.AddDbContextFactory<StudueContext>(options =>
+        options.UseSqlite($"Data Source={dbFile}"));
 
     builder.Services.AddHttpClient();
 

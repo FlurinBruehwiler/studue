@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace Studue.Services;
 
-public class StudentContext(IHttpClientFactory clientFactory, StudueContext context, ILogger<StudentContext> logger, IOptions<Settings> settings, IHostEnvironment environment)
+public class StudentContext(IHttpClientFactory clientFactory, StudueContext context, ILogger<StudentContext> logger, IOptions<Settings> settings, IHostEnvironment environment, IDbContextFactory<StudueContext> studueContextFactory)
 {
     public Student Student { get; private set; }
     public bool HasWriteAccess { get; set; }
@@ -40,6 +40,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
     public async Task GenerateIncident(string description, Exception? exception = null, bool sendMail = true)
     {
+        await using var db = await studueContextFactory.CreateDbContextAsync();
+
         logger.LogError(exception, "Incident occured: {0}", description);
 
         var incident = new Incident
@@ -49,8 +51,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             DateTime = DateTime.Now,
             UserId = Student?.StudentId
         };
-        context.Incidents.Add(incident);
-        await context.SaveChangesAsync();
+        db.Incidents.Add(incident);
+        await db.SaveChangesAsync();
 
         if (sendMail)
         {

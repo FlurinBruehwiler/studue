@@ -1,9 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
 namespace Studue;
 
-public class StudueContext(IOptions<Settings> settings) : DbContext
+public class StudueContext(DbContextOptions<StudueContext> options) : DbContext(options)
 {
     public DbSet<Student> Students { get; set; }
     public DbSet<Module> Modules { get; set; }
@@ -11,13 +10,6 @@ public class StudueContext(IOptions<Settings> settings) : DbContext
     public DbSet<Assignment> Assignements { get; set; }
     public DbSet<EditLogEntry> EditLog { get; set; }
     public DbSet<Incident> Incidents { get; set; }
-
-    private string dbFilePath = settings.Value.DbFile;
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlite($"Data Source={dbFilePath}");
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

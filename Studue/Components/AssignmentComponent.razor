@@ -120,7 +120,7 @@
     {
         if (studentContext.HasWriteAccess)
         {
-            if (!studentContext.Student.ModuleInstances.Contains(assignmentToUpdate.ModuleInstance))
+            if (studentContext.Student.ModuleInstances.All(x => x.Id != assignmentToUpdate.ModuleInstance.Id))
                 return;
 
             assignmentToUpdate.IsDeleted = true;
@@ -215,7 +215,7 @@
         assignment.Mandatory = formData.Type == AssignmentType.Mandatory;
         var moduleInstance = (await context.ModuleInstances.FirstOrDefaultAsync(x => x.Module.Code == formData.ModuleCode))!;
         assignment.ModuleInstance = moduleInstance;
-        if (student.ModuleInstances.Contains(moduleInstance))
+        if (student.ModuleInstances.All(x => x.Id != moduleInstance.Id))
         {
             throw new Exception($"Cannot create assignment with module instance {moduleInstance.Id}, because {student.StudentId} is not part of that module instance");
         }
