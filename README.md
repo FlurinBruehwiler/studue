@@ -1,6 +1,6 @@
 # Studue
 
-Shared assignment management for ZHAW students
+A shared assignment calendar for ZHAW students
 
 ## How it works
 - Go to https://zhaw.studue.ch
