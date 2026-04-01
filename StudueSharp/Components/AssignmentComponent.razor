@@ -1,0 +1,223 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using StudueSharp.Services
+@inject StudueContext studueContext
+@inject StudentContext studentContext
+@inject NavigationManager Navigation
+
+
+<div class="assignment-form-card assignment-form-dialog">
+    <div class="assignment-form-header">
+        <div>
+            <h2>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h2>
+        </div>
+
+        <a href="/" class="assignment-form-icon-link" aria-label="Close form">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-form-icon assignment-form-icon-close">
+                <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </a>
+    </div>
+
+    <form method="post" class="assignment-form-body" @formname="assignment-form" @onsubmit="Submit">
+        <AntiforgeryToken />
+
+        <div class="assignment-form-grid">
+            <div class="assignment-form-field">
+                <label for="assignment-module">Module</label>
+                <InputSelect required id="assignment-module" class="assignment-form-control assignment-form-select" @bind-Value="AssignmentModel!.ModuleCode">
+                    <option value="">Choose a module</option>
+                    @foreach (var module in Modules)
+                    {
+                        <option value="@module.Code">@module.Name</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="assignment-form-field">
+                <label for="assignment-date">Due date</label>
+                <InputDate required id="assignment-date" class="assignment-form-control assignment-form-control-compact" min="@DateTime.Now.ToString("yyyy-MM-dd")" Type="InputDateType.Date" @bind-Value="AssignmentModel!.DueDate"></InputDate>
+            </div>
+
+            <div class="assignment-form-field">
+                <label for="assignment-time">Time (optional)</label>
+                <InputDate id="assignment-time" class="assignment-form-control assignment-form-control-compact" Type="InputDateType.Time" @bind-Value="AssignmentModel!.DueTime"></InputDate>
+            </div>
+        </div>
+
+        <div class="assignment-form-field">
+            <label for="assignment-title">Title</label>
+            <InputText required id="assignment-title" class="assignment-form-control assignment-form-control-compact" @bind-Value="AssignmentModel!.Title"/>
+        </div>
+
+        <div class="assignment-form-field">
+            <label for="assignment-details">Details</label>
+            <InputTextArea id="assignment-details" class="assignment-form-control assignment-form-textarea" @bind-Value="AssignmentModel!.Details"/>
+        </div>
+
+        <div class="assignment-form-field">
+            <span>Type</span>
+
+            <InputRadioGroup class="assignment-form-radio-group" @bind-Value="AssignmentModel!.Type">
+                <label class="assignment-form-radio-option assignment-form-radio-option-optional">
+                    <InputRadio class="assignment-form-radio" Value="AssignmentType.Optional"/>
+                    Optional
+                </label>
+                <label class="assignment-form-radio-option assignment-form-radio-option-mandatory">
+                    <InputRadio class="assignment-form-radio" Value="AssignmentType.Mandatory"/>
+                    Mandatory
+                </label>
+            </InputRadioGroup>
+        </div>
+
+        <div class="assignment-form-footer">
+            <div class="assignment-form-footer-start">
+                @if (AssignmentToUpdate != null)
+                {
+                    var id = $"delete-assignment-{AssignmentToUpdate.Id}";
+                    <button type="submit" form="@id" class="assignment-form-button assignment-form-button-ghost">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-form-icon assignment-form-icon-trash">
+                            <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M10 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        Delete
+                    </button>
+                }
+            </div>
+
+            <div class="assignment-form-actions">
+                <a href="/" class="assignment-form-close">Cancel</a>
+                <button type="submit" class="assignment-form-button assignment-form-button-primary">@(AssignmentToUpdate != null ? "Save changes" : "Create assignment")</button>
+            </div>
+        </div>
+    </form>
+
+    @if (AssignmentToUpdate != null)
+    {
+        var id = $"delete-assignment-{AssignmentToUpdate.Id}";
+        <form id="@id" method="post" class="assignment-form-delete" @formname=@id onsubmit="@(() => DeleteAssignment(AssignmentToUpdate))">
+            <AntiforgeryToken />
+        </form>
+    }
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public Assignment? AssignmentToUpdate { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public List<Module> Modules { get; set; }
+
+    [SupplyParameterFromForm(FormName = "assignment-form")]
+    public AssignmentModel? AssignmentModel { get; set; }
+
+    async Task DeleteAssignment(Assignment assignmentToUpdate)
+    {
+        if (studentContext.HasWriteAccess)
+        {
+            if (!studentContext.Student.ModuleInstances.Contains(assignmentToUpdate.ModuleInstance))
+                return;
+
+            assignmentToUpdate.IsDeleted = true;
+            studueContext.EditLog.Add(new EditLogEntry
+            {
+                Assignment = assignmentToUpdate,
+                DateTime = DateTime.Now,
+                Student = studentContext.Student,
+                Type = "delete",
+            });
+
+            await studueContext.SaveChangesAsync();
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (AssignmentToUpdate != null)
+        {
+            AssignmentModel ??= new AssignmentModel
+            {
+                ModuleCode = AssignmentToUpdate.ModuleInstance.Module.Code,
+                Details = AssignmentToUpdate.Description,
+                Title = AssignmentToUpdate.Title,
+                Type = AssignmentToUpdate.Mandatory ? AssignmentType.Mandatory : AssignmentType.Optional,
+                DueDate = DateOnly.FromDateTime(AssignmentToUpdate.DueDateTime),
+                DueTime = TimeOnly.FromDateTime(AssignmentToUpdate.DueDateTime)
+            };
+        }
+        else
+        {
+            AssignmentModel ??= new();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (AssignmentModel == null)
+            return;
+
+        if (AssignmentToUpdate == null && studentContext.HasWriteAccess)
+        {
+            var assignment = new Assignment
+            {
+                CreatedBy = studentContext.Student,
+                CreatedTime = DateTime.Now,
+            };
+            var logEntry = new EditLogEntry
+            {
+                Assignment = assignment,
+                Student = studentContext.Student,
+                Type = "add",
+                DateTime = DateTime.Now,
+            };
+            studueContext.EditLog.Add(logEntry);
+
+            await SetValuesOnAssignment(assignment, AssignmentModel, studentContext.Student, studueContext);
+
+            studueContext.Assignements.Add(assignment);
+            await studueContext.SaveChangesAsync();
+
+            Navigation.NavigateTo("/");
+        }
+
+        if (AssignmentToUpdate != null && studentContext.HasWriteAccess)
+        {
+            await SetValuesOnAssignment(AssignmentToUpdate, AssignmentModel, studentContext.Student, studueContext);
+
+            var logEntry = new EditLogEntry
+            {
+                Assignment = AssignmentToUpdate,
+                Student = studentContext.Student,
+                Type = "change",
+                DateTime = DateTime.Now
+            };
+            studueContext.EditLog.Add(logEntry);
+
+            await studueContext.SaveChangesAsync();
+
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    async Task SetValuesOnAssignment(Assignment assignment, AssignmentModel formData, Student student, StudueContext context)
+    {
+        assignment.UpdatedBy = student;
+        assignment.UpdatedTime = DateTime.Now;
+        assignment.Title = formData.Title;
+        assignment.Description = formData.Details;
+        assignment.DueDateTime = new DateTime(formData.DueDate, formData.DueTime ?? new TimeOnly());
+        assignment.Mandatory = formData.Type == AssignmentType.Mandatory;
+        var moduleInstance = (await context.ModuleInstances.FirstOrDefaultAsync(x => x.Module.Code == formData.ModuleCode))!;
+        assignment.ModuleInstance = moduleInstance;
+        if (student.ModuleInstances.Contains(moduleInstance))
+        {
+            throw new Exception($"Cannot create assignment with module instance {moduleInstance.Id}, because {student.StudentId} is not part of that module instance");
+        }
+    }
+}

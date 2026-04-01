@@ -1,0 +1,46 @@
+@page "/login"
+
+<PageTitle>Studue Login</PageTitle>
+
+<div class="login-page">
+    <main class="login-shell">
+        <section class="login-hero">
+            <img src="/studue-logo.svg" alt="Studue logo" class="login-logo" />
+            <h1>Shared assignment management for your modules.</h1>
+            <p>See deadlines in one place with your classmates.</p>
+        </section>
+
+        <section class="login-card">
+            <img src="/studue-logo.svg" alt="Studue logo" class="login-logo-mobile" />
+
+            <div class="login-copy">
+                <span class="login-eyebrow">Studue access</span>
+                <h2>One place for shared assignments</h2>
+                <p>Use your student ID to open your shared assignment overview.</p>
+            </div>
+
+            <form class="login-form" onsubmit="login(event)">
+                <input
+                    type="text"
+                    id="studentId"
+                    class="login-input"
+                    placeholder="Enter student ID (eg. tomavant3)"
+                    maxlength="8"
+                    autocomplete="username" />
+                <button type="submit" class="login-button">Open my assignments</button>
+            </form>
+        </section>
+    </main>
+</div>
+
+<script>
+function login(e) {
+    e.preventDefault();
+
+    const studentId = document.getElementById("studentId").value;
+
+    document.cookie = `student_id=${encodeURIComponent(studentId)}; path=/; SameSite=Lax`;
+
+    window.location.href = "/";
+}
+</script>

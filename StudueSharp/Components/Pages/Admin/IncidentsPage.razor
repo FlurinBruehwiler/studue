@@ -1,0 +1,43 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/admin/incidents"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject StudueContext StudueContext;
+@rendermode InteractiveServer
+
+<section class="admin-section">
+    <h2 class="admin-section-title">Incidents</h2>
+
+    <div class="admin-stack">
+        <table>
+            <thead>
+            <th>DateTime</th>
+            <th>UserId</th>
+            <th>Description</th>
+            <th>StackTrace</th>
+            </thead>
+            <tbody>
+            @foreach (var incident in _incidents)
+            {
+                <tr>
+                    <td>@incident.DateTime</td>
+                    <td>@incident.UserId</td>
+                    <td>@incident.Description</td>
+                    <td>@incident.StackTrace</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private List<Incident> _incidents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _incidents = await StudueContext.Incidents.ToListAsync();
+    }
+}

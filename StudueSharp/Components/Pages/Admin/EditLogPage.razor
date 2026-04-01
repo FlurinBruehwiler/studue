@@ -1,0 +1,62 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/admin/editLog"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject StudueContext StudueContext;
+@rendermode InteractiveServer
+
+<section class="admin-section">
+    <h2 class="admin-section-title">Edit log</h2>
+
+    <div class="admin-stack">
+        <table>
+            <thead>
+            <th>DateTime</th>
+            <th>Type</th>
+            <th>StudentID</th>
+            <th>ModuleName</th>
+            <th>ChangeInfo</th>
+            <th>Undo</th>
+            </thead>
+            <tbody>
+            @foreach (var editLogEntry in _editLogEntries)
+            {
+                <tr>
+                    <td>@editLogEntry.DateTime</td>
+                    <td>@editLogEntry.Type</td>
+                    <td>@editLogEntry.Student.StudentId</td>
+                    <td>@editLogEntry.Assignment.ModuleInstance.Module.Name</td>
+                    <td>@editLogEntry.ChangeInfo</td>
+                    <td>
+                        @if (editLogEntry.Type == "delete")
+                        {
+                            <button type="button" @onclick="() => UndoDelete(editLogEntry)">Undo delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private List<EditLogEntry> _editLogEntries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _editLogEntries = await StudueContext.EditLog.Include(x => x.Assignment)
+            .ThenInclude(x => x.ModuleInstance)
+            .ThenInclude(x => x.Module)
+            .Include(x => x.Student)
+            .ToListAsync();
+    }
+
+    private async Task UndoDelete(EditLogEntry editLogEntry)
+    {
+        editLogEntry.Assignment.IsDeleted = false;
+        await StudueContext.SaveChangesAsync();
+    }
+}

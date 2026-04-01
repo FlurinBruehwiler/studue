@@ -1,0 +1,89 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/Admin/modules/{ModuleCode}/instances/{InstanceId:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@layout AdminLayout
+@inject StudueContext StudueContext;
+@inject NavigationManager Navigation;
+@rendermode InteractiveServer
+
+<section class="admin-section">
+    <div class="admin-section-header admin-section-header-split">
+        <div>
+            <h2 class="admin-section-eyebrow">Module instance</h2>
+            <span class="admin-section-title">@_moduleInstance.Module.Name</span>
+            <span class="admin-section-description">Section identifier: @_moduleInstance.LessionsId</span>
+        </div>
+
+        <div>
+            <a class="admin-button admin-button-secondary" href="/Admin/Modules/@ModuleCode">Back to module</a>
+        </div>
+    </div>
+</section>
+
+<section class="admin-section admin-grid">
+    <article class="admin-subsection">
+        <h3 class="admin-subsection-title">Students</h3>
+
+        <table>
+            <thead>
+            <th>StudentId</th>
+            <th>Class</th>
+            </thead>
+            <tbody>
+            @foreach (var student in _moduleInstance.Students)
+            {
+                <tr>
+                    <td>@student.StudentId</td>
+                    <td>@student.Class</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </article>
+
+    <article class="admin-subsection">
+        <h3 class="admin-subsection-title">Assignments</h3>
+
+        <table>
+            <thead>
+            <th>Title</th>
+            <th>DueDate</th>
+            <th>Deleted</th>
+            </thead>
+            <tbody>
+            @foreach (var assignment in _moduleInstance.Assignements)
+            {
+                <tr>
+                    <td>@assignment.Title</td>
+                    <td>@assignment.DueDateTime</td>
+                    <td>@assignment.IsDeleted</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </article>
+</section>
+
+
+@code {
+    [Parameter] public string ModuleCode { get; set; }
+    [Parameter] public int InstanceId { get; set; }
+
+    private ModuleInstance? _moduleInstance;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var m = await StudueContext.ModuleInstances.Where(x => x.Id == InstanceId)
+            .Include(x => x.Students)
+            .ThenInclude(x => x.CreatedAssignments)
+            .Include(x => x.Assignements)
+            .Include(x => x.Module)
+            .FirstOrDefaultAsync();
+        if (m is null)
+            Navigation.NotFound();
+        else
+            _moduleInstance = m;
+    }
+}

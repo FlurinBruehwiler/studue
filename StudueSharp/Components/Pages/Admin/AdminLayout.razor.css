@@ -1,0 +1,395 @@
+.admin-layout {
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.admin-shell {
+    max-width: 88rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.admin-header {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.admin-branding {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-brand-mark {
+    width: 4rem;
+    height: 4rem;
+    flex: 0 0 auto;
+}
+
+.admin-brand-copy h1 {
+    margin: 0;
+    color: #0061a2;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.admin-brand-copy p {
+    margin: 0.65rem 0 0;
+    color: #4f6477;
+    line-height: 1.6;
+}
+
+.admin-eyebrow {
+    display: inline-block;
+    margin-bottom: 0.35rem;
+    color: #0061a2;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #c8d6e4;
+    border-radius: 0.9rem;
+    background: #ffffff;
+    color: #111111;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.admin-nav-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(0, 97, 162, 0.08);
+}
+
+.admin-nav-link.active {
+    border-color: #0061a2;
+    background: #0061a2;
+    color: #ffffff;
+    box-shadow: 0 16px 28px rgba(0, 97, 162, 0.18);
+}
+
+.admin-nav-link:focus-visible {
+    outline: none;
+    border-color: #0061a2;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.admin-content {
+    margin-top: 1.75rem;
+}
+
+.admin-content ::deep(.admin-section) {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.admin-content ::deep(.admin-section + .admin-section) {
+    margin-top: 1.5rem;
+}
+
+.admin-content ::deep(.admin-section-header) {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.admin-content ::deep(.admin-section-header-split) {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    align-items: start;
+}
+
+.admin-content ::deep(.admin-section-eyebrow) {
+    display: inline-block;
+    color: #0061a2;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.admin-content ::deep(.admin-section-title) {
+    margin: 0;
+    color: #111111;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+}
+
+.admin-content ::deep(.admin-section-description) {
+    margin: 0.5rem 0 0;
+    color: #5c7185;
+    line-height: 1.6;
+}
+
+.admin-content ::deep(.admin-stat-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+}
+
+.admin-content ::deep(.admin-stat-card),
+.admin-content ::deep(.admin-record),
+.admin-content ::deep(.admin-subsection) {
+    padding: 1rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.05);
+}
+
+.admin-content ::deep(.admin-stat-card) {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.admin-content ::deep(.admin-stat-label) {
+    color: #5c7185;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.admin-content ::deep(.admin-stat-value) {
+    color: #0061a2;
+    font-size: clamp(2rem, 4vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.admin-content ::deep(.admin-stack) {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-content ::deep(.admin-record) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-content ::deep(.admin-record-main) {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.admin-content ::deep(.admin-record-title),
+.admin-content ::deep(.admin-subsection-title) {
+    margin: 0;
+    color: #111111;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.admin-content ::deep(.admin-record-description),
+.admin-content ::deep(.admin-subsection-description) {
+    margin: 0.45rem 0 0;
+    color: #5c7185;
+    line-height: 1.6;
+}
+
+.admin-content ::deep(.admin-meta-row) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.admin-content ::deep(.admin-badge) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.admin-content ::deep(.admin-badge-accent) {
+    border-color: #b6d2e7;
+    background: #eaf4fb;
+    color: #003f6b;
+}
+
+.admin-content ::deep(.admin-badge-outline) {
+    border-color: #c8d6e4;
+    background: #ffffff;
+    color: #111111;
+}
+
+.admin-content ::deep(.admin-muted) {
+    color: #5c7185;
+}
+
+.admin-content ::deep(.admin-button) {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.9rem;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.admin-content ::deep(.admin-button:hover) {
+    transform: translateY(-1px);
+}
+
+.admin-content ::deep(.admin-button-primary) {
+    background: #0061a2;
+    color: #ffffff;
+    box-shadow: 0 16px 28px rgba(0, 97, 162, 0.18);
+}
+
+.admin-content ::deep(.admin-button-secondary) {
+    border-color: #c8d6e4;
+    background: #ffffff;
+    color: #111111;
+}
+
+.admin-content ::deep(.admin-button:focus-visible) {
+    outline: none;
+    border-color: #0061a2;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.admin-content ::deep(.admin-toggle-group) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-content ::deep(.admin-toggle) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 2.75rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 0.9rem;
+    background: #f9fbfd;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.admin-content ::deep(.admin-toggle input) {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #0061a2;
+}
+
+.admin-content ::deep(.admin-grid) {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.admin-content ::deep(.admin-list) {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.admin-content ::deep(.admin-list-item) {
+    padding: 0.9rem 1rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 0.9rem;
+    background: #f9fbfd;
+}
+
+.admin-content ::deep(.admin-list-item-title) {
+    margin: 0;
+    color: #111111;
+    font-size: 0.98rem;
+    font-weight: 600;
+}
+
+.admin-content ::deep(.admin-list-item-copy) {
+    margin: 0.35rem 0 0;
+    color: #5c7185;
+    line-height: 1.5;
+}
+
+.admin-content ::deep(.admin-empty-state) {
+    padding: 2rem;
+    border: 1px dashed #cddae5;
+    border-radius: 1.5rem;
+    background: #f9fbfd;
+    color: #5c7185;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .admin-layout {
+        padding: 0.75rem;
+    }
+
+    .admin-shell {
+        padding: 1rem;
+        border-radius: 1.25rem;
+    }
+
+    .admin-content ::deep(.admin-record) {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-layout {
+        padding: 0;
+    }
+
+    .admin-shell {
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .admin-branding {
+        align-items: flex-start;
+    }
+
+    .admin-brand-mark {
+        width: 3.4rem;
+        height: 3.4rem;
+    }
+
+    .admin-nav-link,
+    .admin-content ::deep(.admin-button),
+    .admin-content ::deep(.admin-toggle) {
+        width: 100%;
+    }
+
+    .admin-content ::deep(.admin-toggle-group) {
+        width: 100%;
+    }
+}

@@ -1,0 +1,235 @@
+.assignment-form-card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: #ffffff;
+}
+
+.assignment-form-dialog {
+    max-width: 42rem;
+}
+
+.assignment-form-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.assignment-form-header h2 {
+    margin: 0;
+    color: #0061a2;
+    font-size: 1.875rem;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+}
+
+.assignment-form-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 1px solid #cfdce8;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #0f172a;
+    text-decoration: none;
+    flex: 0 0 auto;
+}
+
+.assignment-form-icon-link:hover {
+    background: #f4f8fb;
+}
+
+.assignment-form-icon-link:focus-visible {
+    outline: none;
+    border-color: #0061a2;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.assignment-form-icon {
+    display: block;
+}
+
+.assignment-form-icon-close {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.assignment-form-icon-trash {
+    width: 1rem;
+    height: 1rem;
+}
+
+.assignment-form-body {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    overflow-x: hidden;
+    padding-bottom: 2rem;
+}
+
+.assignment-form-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.assignment-form-field {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.assignment-form-field label,
+.assignment-form-field span {
+    color: #111111;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.assignment-form-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.assignment-form-radio-option {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid #cfdce8;
+    border-radius: 0.85rem;
+    background: #ffffff;
+    color: #111111;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assignment-form-radio-option:has(.assignment-form-radio:checked) {
+    border-color: #0061a2;
+    background: #eaf4fb;
+    color: #0061a2;
+}
+
+.assignment-form-radio-option-mandatory:has(.assignment-form-radio:checked) {
+    border-color: #f0b7b7;
+    background: #fff1f1;
+    color: #9f1d1d;
+}
+
+.assignment-form-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.assignment-form-footer {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+.assignment-form-footer-start {
+    display: flex;
+}
+
+.assignment-form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.assignment-form-button,
+.assignment-form-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.9rem;
+    background: #ffffff;
+    color: #111111;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.assignment-form-button:hover,
+.assignment-form-close:hover {
+    transform: translateY(-1px);
+}
+
+.assignment-form-button:focus-visible,
+.assignment-form-close:focus-visible {
+    outline: none;
+    border-color: #0061a2;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.assignment-form-button-primary {
+    background: #0061a2;
+    color: #ffffff;
+}
+
+.assignment-form-button-ghost {
+    justify-content: flex-start;
+    padding-inline: 0;
+    border: 0;
+    background: transparent;
+    color: #111111;
+}
+
+.assignment-form-button-secondary,
+.assignment-form-close {
+    border-color: #cfdce8;
+    background: #ffffff;
+    color: #111111;
+}
+
+.assignment-form-delete {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .assignment-form-card {
+        width: min(100%, 42rem);
+        height: auto;
+        max-height: calc(100vh - 2rem);
+        padding: 2rem;
+        border: 1px solid #d8e3ed;
+        border-radius: 1.5rem;
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+    }
+
+    .assignment-form-header h2 {
+        font-size: 2.25rem;
+    }
+
+    .assignment-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .assignment-form-footer {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .assignment-form-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}

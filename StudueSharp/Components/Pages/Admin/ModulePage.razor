@@ -1,0 +1,59 @@
+﻿@page "/Admin/Modules/{ModuleCode}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize]
+@attribute [StudentRequired]
+@layout AdminLayout
+@inject StudueContext StudueContext;
+@inject NavigationManager Navigation;
+@rendermode InteractiveServer
+
+<section class="admin-section">
+    <h2>Module: @_module.Name</h2>
+    <a class="admin-button admin-button-secondary" href="/Admin/Modules">Back to modules</a>
+
+    <div class="admin-stack">
+
+        <table>
+            <thead>
+            <th>Link</th>
+            <th>Professor</th>
+            <th>Assignments</th>
+            <th>Students</th>
+            <th>LessonId</th>
+            </thead>
+            <tbody>
+            @foreach (var moduleInstance in _module.ModuleInstances)
+            {
+                <tr>
+                    <td><a href="/Admin/modules/@(ModuleCode)/instances/@(moduleInstance.Id)">@moduleInstance.Id</a></td>
+                    <td>@moduleInstance.ProfessorNames</td>
+                    <td>@moduleInstance.Assignements.Count</td>
+                    <td>@moduleInstance.Students.Count</td>
+                    <td>@moduleInstance.LessionsId</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string ModuleCode { get; set; }
+
+    private Module _module;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var m = await StudueContext.Modules.Where(x => x.Code == ModuleCode)
+            .Include(x => x.ModuleInstances)
+            .ThenInclude(x => x.Assignements)
+            .Include(x => x.ModuleInstances)
+            .ThenInclude(x => x.Students)
+            .FirstOrDefaultAsync();
+        if (m is null)
+            Navigation.NotFound();
+        else
+            _module = m;
+    }
+}

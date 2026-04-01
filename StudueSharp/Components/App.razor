@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="/"/>
+    <link rel="icon" href="favicon.png" />
+    <ResourcePreloader/>
+    <link rel="stylesheet" href="@Assets["app.css"]"/>
+    <link rel="stylesheet" href="@Assets["StudueSharp.styles.css"]"/>
+    <ImportMap/>
+    <HeadOutlet/>
+</head>
+
+<body>
+<Routes/>
+@* <ReconnectModal/> *@
+<script src="@Assets["_framework/blazor.web.js"]"></script>
+
+<script>
+    function clearQuery(){
+        if (window.location.search.length > 0) {
+            const url = new URL(window.location);
+            url.search = "";
+            window.history.replaceState({}, '', url);
+        }
+    }
+
+    Blazor.addEventListener('enhancedload', clearQuery);
+
+    clearQuery();
+</script>
+</body>
+
+</html>

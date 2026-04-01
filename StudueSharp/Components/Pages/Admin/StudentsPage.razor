@@ -1,0 +1,66 @@
+﻿@page "/Admin/Students"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using StudueSharp.Services
+@inject StudueContext StudueContext;
+@attribute [StudentRequired]
+@attribute [Authorize]
+@rendermode InteractiveServer
+@layout AdminLayout
+
+<section class="admin-section">
+    <div class="admin-section-header">
+        <span class="admin-section-eyebrow">Students</span>
+    </div>
+
+    <div class="admin-stack">
+        <table>
+            <thead>
+            <th>StudentID</th>
+            <th>Class</th>
+            <th>IsAdmin</th>
+            <th>IsBanned</th>
+            <th>Write Token</th>
+            </thead>
+            <tbody>
+            @foreach (var student in _students)
+            {
+                <tr>
+                    <td>@student.StudentId</td>
+                    <td>@student.Class</td>
+                    <td><input type="checkbox" @bind="student.IsAdmin" @bind:after="Changed"></td>
+                    <td><input type="checkbox" @bind="student.IsBanned" @bind:after="Changed"></td>
+                    <td>@student.WriteToken <button @onclick="async () => await RegenerateToken(student)">Regenerate</button></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private List<Student> _students = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStudents();
+    }
+
+    private async Task RefreshStudents()
+    {
+        _students = await StudueContext.Students.ToListAsync();
+    }
+
+    private async Task Changed()
+    {
+        await StudueContext.SaveChangesAsync();
+    }
+
+    private async Task RegenerateToken(Student student)
+    {
+        student.WriteToken = StudentContext.GenerateWriteToken();
+        await StudueContext.SaveChangesAsync();
+
+        await RefreshStudents();
+    }
+}

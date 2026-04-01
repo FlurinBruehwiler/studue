@@ -1,0 +1,356 @@
+﻿@page "/"
+@page "/{Action}"
+@page "/edit/{Id:int}"
+@page "/{Id:int}"
+@attribute [StudentRequired]
+@using System.Globalization
+@using System.Text.RegularExpressions
+@using System.Net.Http.Headers
+@using System.Web
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Options
+@using QRCoder
+@using StudueSharp.Services
+@inject StudueContext StudueContext
+@inject StudentContext StudentContext
+@inject IOptions<Settings> Settings
+@inject NavigationManager Navigation
+@inject IHostEnvironment Environment
+
+<PageTitle>Studue</PageTitle>
+
+<div class="home-page">
+    <main class="home-shell">
+        <header class="home-header">
+            <div class="home-branding">
+                <img src="/studue-mark.svg" alt="Studue logo" class="home-brand-mark"/>
+
+                <div class="home-brand-copy">
+                    <span class="home-eyebrow">Assignment overview</span>
+                    <h1>Studue</h1>
+                    <p>Shared assignment tracking for @StudentContext.Student.Class.</p>
+                </div>
+            </div>
+
+            <div class="home-identity">
+                <span class="home-chip">Student ID: @StudentContext.Student.StudentId</span>
+                <span class="home-chip home-chip-outline">Class: @StudentContext.Student.Class</span>
+                @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
+                {
+                    <a href="/admin" class="home-button home-button-secondary">Admin</a>
+                }
+                <button type="button" class="home-icon-button" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <section class="home-toolbar">
+
+            @if (StudentContext.HasWriteAccess)
+            {
+                <a href="/create" class="home-button home-button-primary">Create assignment</a>
+            }
+            else
+            {
+                <a href="?requestEditLink=true" class="home-button home-button-secondary">Request edit link</a>
+                <span class="home-chip home-chip-outline">Read-only mode</span>
+            }
+        </section>
+
+        @if (_statusMessages.Count > 0)
+        {
+            <section class="home-messages" aria-live="polite">
+                @foreach (var message in _statusMessages)
+                {
+                    <p class="home-message">@message</p>
+                }
+            </section>
+        }
+
+        <section class="assignment-groups">
+            @if (_assignments.Count == 0)
+            {
+                <div class="home-empty-state">
+                    <h2>No assignments yet</h2>
+                    <p>
+                        @(StudentContext.HasWriteAccess
+                            ? "Start the list by adding the first assignment for your class."
+                            : "Assignments for your modules will appear here as soon as one gets added.")
+                    </p>
+                </div>
+            }
+
+            @foreach (var assignmentGroup in _assignments.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
+            {
+                <section class="assignment-group">
+                    <h2 class="assignment-group-title">@FormatDate(assignmentGroup.Key)</h2>
+
+                    <div class="assignment-list">
+                        @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
+                        {
+                            <article class="assignment-card">
+                                <a class="assignment-card-link" href="/@(assignment.Id)" aria-label="Open details for @assignment.Title"></a>
+
+                                <div class="assignment-card-header">
+                                    <div class="assignment-card-copy">
+                                        <div class="assignment-card-meta">
+                                            <span>@assignment.ModuleInstance.Module.Name</span>
+                                            @if (HasDueTime(assignment.DueDateTime))
+                                            {
+                                                <span>@FormatTime(assignment.DueDateTime)</span>
+                                            }
+                                        </div>
+
+                                        <h3 class="assignment-card-title">@assignment.Title</h3>
+                                    </div>
+
+                                    <div class="assignment-card-actions">
+                                        <span class="assignment-badge @(assignment.Mandatory ? "assignment-badge-accent" : "assignment-badge-outline")">
+                                            @(assignment.Mandatory ? "Mandatory" : "Optional")
+                                        </span>
+
+                                        @if (StudentContext.HasWriteAccess)
+                                        {
+                                            <a href="/edit/@assignment.Id" class="assignment-edit-link" aria-label="Edit assignment">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
+                                                    <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                </svg>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        </section>
+    </main>
+
+    @if (IsCreateMode)
+    {
+        <div class="assignment-dialog-layer" >
+            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@((Assignment?)null)"></AssignmentComponent>
+        </div>
+    }
+
+    @if (IsEditMode)
+    {
+        <div class="assignment-dialog-layer">
+            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
+        </div>
+    }
+
+    @if (IsDetailView && _selectedAssignment is not null)
+    {
+        <div class="assignment-dialog-layer assignment-detail-overlay">
+            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <article class="assignment-detail-card assignment-detail-dialog">
+                <div class="assignment-detail-header">
+                    <div>
+                        <h2 class="assignment-detail-title">@_selectedAssignment.Title</h2>
+                        <p class="assignment-detail-subtitle">
+                            @_selectedAssignment.ModuleInstance.Module.Name - @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)
+                        </p>
+                    </div>
+
+                    <div class="assignment-detail-toolbar">
+                        @if (StudentContext.HasWriteAccess)
+                        {
+                            <a href="/edit/@_selectedAssignment.Id" class="assignment-detail-icon-button" aria-label="Edit assignment">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-pencil">
+                                    <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                        }
+
+                        <a href="/" class="assignment-detail-icon-button" aria-label="Close details">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-close">
+                                <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="assignment-detail-content">
+                    @foreach (var line in GetDetailLines(_selectedAssignment.Description))
+                    {
+                        <p>@RenderRichLine(line)</p>
+                    }
+                </div>
+
+                <div class="assignment-detail-footer">
+                    <div>Created by: @_selectedAssignment.CreatedBy.StudentId</div>
+                    <div>Last edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
+                </div>
+            </article>
+        </div>
+    }
+</div>
+
+<script>
+
+    function logout() {
+
+    document.cookie =  'student_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie =  'write_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    window.location.href = "/";
+}
+
+</script>
+
+@code {
+    private List<Module> _modules = [];
+    private List<Assignment> _assignments = [];
+
+    private readonly List<MarkupString> _statusMessages = [];
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "requestEditLink")]
+    public bool RequestEditLink { get; set; }
+
+    [Parameter]
+    public string? Action { get; set; }
+
+    [Parameter] public int? Id { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private bool IsCreateMode => string.Equals(Action, "create", StringComparison.OrdinalIgnoreCase);
+    private bool IsEditMode => Id.HasValue && HttpContext?.Request.Path.Value?.Contains("/edit/") == true;
+    private bool IsDetailView => Id.HasValue && !IsEditMode;
+
+    private Assignment? _selectedAssignment;
+
+    private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-GB");
+    private static readonly Regex UrlRegex = new(@"https?:\/\/\S+", RegexOptions.Compiled);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RequestEditLink)
+        {
+            var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
+
+            var qrCodeGenerator = new PayloadGenerator.Url(verifyLink.ToString());
+            using var qrCode = QRCodeGenerator.GenerateQrCode(qrCodeGenerator);
+            using var pongRenderer = new PngByteQRCode(qrCode);
+            var qrCodeImage = pongRenderer.GetGraphic(20);
+
+            if (Environment.IsDevelopment())
+            {
+                Console.WriteLine(verifyLink);
+            }
+
+            var qrCodeContent = (new ByteArrayContent(qrCodeImage)
+                {
+                    Headers = { ContentType = new MediaTypeHeaderValue("image/png") }
+                },
+                "inline",
+                "magic-link-qr.png");
+
+            if (await StudentContext.SendMail($"{StudentContext.Student.StudentId}@students.zhaw.ch", "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ]))
+            {
+                _statusMessages.Add(new MarkupString($"We sent an email to {StudentContext.Student.StudentId}@students.zhaw.ch asking you to confirm your identity (see <a href=\"https://outlook.office.com\">outlook.office.com</a>)."));
+            }
+            else
+            {
+                _statusMessages.Add(new MarkupString("We were unable to send you an email, try again later"));
+            }
+        }
+
+        _modules = (await StudueContext.ModuleInstances
+            .Where(x => x.Students.Contains(StudentContext.Student))
+            .Include(x => x.Module)
+            .ToListAsync()).Select(x => x.Module).ToList();
+
+        _assignments = await StudueContext.Assignements
+            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted)
+            .Include(x => x.CreatedBy)
+            .Include(x => x.UpdatedBy)
+            .Include(x => x.ModuleInstance)
+            .ThenInclude(x => x.Module)
+            .ToListAsync();
+
+        if (Id.HasValue)
+        {
+            _selectedAssignment = _assignments.FirstOrDefault(x => x.Id == Id.Value);
+            if (_selectedAssignment == null)
+            {
+                Navigation.NotFound();
+            }
+        }
+    }
+
+    private static string FormatDate(DateOnly date)
+    {
+        return date.ToString("dddd, d MMMM", DisplayCulture);
+    }
+
+    private static bool HasDueTime(DateTime dueDateTime)
+    {
+        return TimeOnly.FromDateTime(dueDateTime) != TimeOnly.MinValue;
+    }
+
+    private static string FormatTime(DateTime dueDateTime)
+    {
+        return TimeOnly.FromDateTime(dueDateTime).ToString("HH:mm", DisplayCulture);
+    }
+
+    private static string FormatDetailDateTime(DateTime dateTime)
+    {
+        return dateTime.ToString("dd.MM.yyyy HH:mm", DisplayCulture);
+    }
+
+    private static string FormatSwissDateAndTime(DateTime dueDateTime)
+    {
+        return HasDueTime(dueDateTime)
+            ? dueDateTime.ToString("dd.MM.yyyy HH:mm", DisplayCulture)
+            : dueDateTime.ToString("dd.MM.yyyy", DisplayCulture);
+    }
+
+    private static IEnumerable<string> GetDetailLines(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return [];
+        }
+
+        return text.Split('\n').Select(line => line.TrimEnd('\r')).Where(line => !string.IsNullOrWhiteSpace(line));
+    }
+
+    private static RenderFragment RenderRichLine(string line) => builder =>
+    {
+        var matches = UrlRegex.Matches(line);
+        var lastIndex = 0;
+        var sequence = 0;
+
+        foreach (Match match in matches)
+        {
+            if (match.Index > lastIndex)
+            {
+                builder.AddContent(sequence++, line[lastIndex..match.Index]);
+            }
+
+            builder.OpenElement(sequence++, "a");
+            builder.AddAttribute(sequence++, "href", match.Value);
+            builder.AddAttribute(sequence++, "target", "_blank");
+            builder.AddAttribute(sequence++, "rel", "noreferrer");
+            builder.AddAttribute(sequence++, "class", "assignment-detail-link");
+            builder.AddContent(sequence++, match.Value);
+            builder.CloseElement();
+
+            lastIndex = match.Index + match.Length;
+        }
+
+        if (lastIndex < line.Length)
+        {
+            builder.AddContent(sequence, line[lastIndex..]);
+        }
+    };
+
+}

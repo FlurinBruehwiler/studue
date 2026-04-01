@@ -1,0 +1,45 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/Admin"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+@inject StudueContext StudueContext;
+
+<section class="admin-section">
+    <h2 class="admin-section-title">Overview</h2>
+
+    <div class="admin-stat-grid">
+        <article class="admin-stat-card">
+            <span class="admin-stat-label">Students: @_studentCount</span>
+        </article>
+
+        <article class="admin-stat-card">
+            <span class="admin-stat-label">Modules: @_moduleCount</span>
+        </article>
+
+        <article class="admin-stat-card">
+            <span class="admin-stat-label">Module instances: @_moduleInstanceCount</span>
+        </article>
+
+        <article class="admin-stat-card">
+            <span class="admin-stat-label">Assignments: @_assignmentCount</span>
+        </article>
+    </div>
+</section>
+
+@code {
+    private int _studentCount;
+    private int _moduleCount;
+    private int _moduleInstanceCount;
+    private int _assignmentCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _studentCount = await StudueContext.Students.CountAsync();
+        _moduleCount = await StudueContext.Modules.CountAsync();
+        _moduleInstanceCount = await StudueContext.ModuleInstances.CountAsync();
+        _assignmentCount = await StudueContext.Assignements.CountAsync();
+    }
+}
