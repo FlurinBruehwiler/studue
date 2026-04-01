@@ -26,7 +26,6 @@ try
         .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(AdminAuthenticationHandler.SchemeName, _ => { });
     builder.Services.AddAuthorization();
 
-    // Add services to the container.
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
 
@@ -50,7 +49,6 @@ try
 
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("An error occurred.");
-            //todo maybe redirect to root and display error??
         });
     });
 
@@ -61,11 +59,9 @@ try
         db.Database.Migrate();
     }
 
-    // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())
     {
         app.UseExceptionHandler("/Error", createScopeForErrors: true);
-        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
     }
 
@@ -143,7 +139,10 @@ string? GetCookieOrQuery(HttpContext context, string name)
         if (queryValue is [{ } str])
         {
             value = str;
-            context.Response.Cookies.Append(name, str);
+            context.Response.Cookies.Append(name, str, new CookieOptions
+            {
+                MaxAge = TimeSpan.FromDays(365)
+            });
         }
     }
 

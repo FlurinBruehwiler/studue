@@ -38,7 +38,7 @@ function login(e) {
 
     const studentId = document.getElementById("studentId").value;
 
-    document.cookie = `student_id=${encodeURIComponent(studentId)}; path=/; SameSite=Lax`;
+    document.cookie = `student_id=${encodeURIComponent(studentId)}; path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 365}`;
 
     window.location.href = "/";
 }
