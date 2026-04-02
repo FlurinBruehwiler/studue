@@ -133,23 +133,22 @@ catch (Exception e)
 
 string? GetCookieOrQuery(HttpContext context, string name)
 {
-    string? value = null;
     if (context.Request.Query.TryGetValue(name, out var queryValue))
     {
         if (queryValue is [{ } str])
         {
-            value = str;
             context.Response.Cookies.Append(name, str, new CookieOptions
             {
                 MaxAge = TimeSpan.FromDays(365)
             });
+            return str;
         }
     }
 
     if (context.Request.Cookies.TryGetValue(name, out var cookieWriteToken))
-        value = cookieWriteToken;
+        return cookieWriteToken;
 
-    return value;
+    return null;
 }
 
 namespace Studue

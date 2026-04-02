@@ -19,22 +19,32 @@
             <th>IsAdmin</th>
             <th>IsBanned</th>
             <th>Write Token</th>
+            <th>Impersonate</th>
             </thead>
             <tbody>
             @foreach (var student in _students)
             {
+                var impersonateCall = $"impersonate(\"{student.StudentId}\", \"{student.WriteToken}\")";
+
                 <tr>
                     <td>@student.StudentId</td>
                     <td>@student.Class</td>
                     <td><input type="checkbox" @bind="student.IsAdmin" @bind:after="Changed"></td>
                     <td><input type="checkbox" @bind="student.IsBanned" @bind:after="Changed"></td>
                     <td>@student.WriteToken <button @onclick="async () => await RegenerateToken(student)">Regenerate</button></td>
+                    <td><button onclick="@impersonateCall" >Impersonate</button></td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
 </section>
+
+<script>
+function impersonate(studentId, writeToken) {
+    window.location.href = `/?student_id=${encodeURIComponent(studentId)}&write_token=${encodeURIComponent(writeToken)}`;
+}
+</script>
 
 @code {
     private List<Student> _students = new();
