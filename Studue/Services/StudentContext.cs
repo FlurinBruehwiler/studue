@@ -16,6 +16,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
     public async Task<Student?> GetOrCreateStudent(string studentId)
     {
+        studentId = studentId.ToLower().Trim();
+
         try
         {
             //check existing student
