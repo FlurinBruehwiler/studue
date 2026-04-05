@@ -130,7 +130,6 @@ catch (Exception e)
 {
     Console.WriteLine(e);
 }
-
 string? GetCookieOrQuery(HttpContext context, string name)
 {
     if (context.Request.Query.TryGetValue(name, out var queryValue))

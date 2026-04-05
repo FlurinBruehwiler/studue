@@ -268,8 +268,10 @@
             .Include(x => x.Module)
             .ToListAsync()).Select(x => x.Module).ToList();
 
+        var today = DateTime.Today;
+
         _assignments = await StudueContext.Assignements
-            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted)
+            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.DueDateTime >= today)
             .Include(x => x.CreatedBy)
             .Include(x => x.UpdatedBy)
             .Include(x => x.ModuleInstance)
