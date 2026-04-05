@@ -24,6 +24,8 @@
             const url = new URL(window.location.href);
             url.searchParams.delete("write_token");
             url.searchParams.delete("student_id");
+            url.searchParams.delete("requestEditLink");
+
             window.history.replaceState({}, '', url);
         }
     }

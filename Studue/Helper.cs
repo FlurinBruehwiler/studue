@@ -22,6 +22,11 @@ public static class Helper
     {
         if (info.ShowOverdue)
         {
+            var u = new Url(url);
+            if (!string.IsNullOrEmpty(u.Query))
+            {
+                return u + "&overdue=true";
+            }
             return new Url(new Url(url), "?overdue=true").ToString();
         }
 

@@ -50,7 +50,7 @@
             }
             else
             {
-                <a href="?requestEditLink=true" class="home-button home-button-secondary">Request edit link</a>
+                <a href="@Helper.CreateLink(_info, "/?requestEditLink=true")" class="home-button home-button-secondary">Request edit link</a>
                 <span class="home-chip home-chip-outline">Read-only mode</span>
             }
         </section>
@@ -169,7 +169,7 @@
     @if (IsDetailView && _selectedAssignment is not null)
     {
         <div class="assignment-dialog-layer assignment-detail-overlay">
-            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
             <article class="assignment-detail-card assignment-detail-dialog">
                 <div class="assignment-detail-header">
                     <div>
