@@ -123,8 +123,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
     private async Task<Student?> InitializeStudentInternal(string studentId)
     {
-        studentId = studentId.ToLower();
-
         if (studentId.Length != 8)
             return null;
 

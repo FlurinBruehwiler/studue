@@ -44,8 +44,7 @@
         </header>
 
         <section class="home-toolbar">
-
-            @if (StudentContext.HasWriteAccess)
+           @if (StudentContext.HasWriteAccess)
             {
                 <a href="/create" class="home-button home-button-primary">Create assignment</a>
             }
@@ -82,7 +81,19 @@
             @foreach (var assignmentGroup in _assignments.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
             {
                 <section class="assignment-group">
-                    <h2 class="assignment-group-title">@FormatDate(assignmentGroup.Key)</h2>
+                    <h2 class="assignment-group-title">
+                        <span>@FormatDate(assignmentGroup.Key)</span>
+
+                        @if (assignmentGroup.Key == DateOnly.FromDateTime(DateTime.Today))
+                        {
+                            <span> - </span>
+                            <span style="color: #B23A48">Today!</span>
+                        } else if (assignmentGroup.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(1)))
+                        {
+                            <span> - </span>
+                            <span style="color: #0061a2">Tomorrow</span>
+                        }
+                    </h2>
 
                     <div class="assignment-list">
                         @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
@@ -123,6 +134,18 @@
                         }
                     </div>
                 </section>
+            }
+
+            @if (!ShowOverdue)
+            {
+                if (_totalAssignmentCount > _assignments.Count)
+                {
+                    <a href="/?overdue=true">Show overdue assignments</a>
+                }
+            }
+            else
+            {
+                <a href="/">Don't show overdue assignments</a>
             }
         </section>
     </main>
@@ -221,11 +244,17 @@
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "overdue")]
+    public bool ShowOverdue { get; set; } = false;
+
     private bool IsCreateMode => string.Equals(Action, "create", StringComparison.OrdinalIgnoreCase);
     private bool IsEditMode => Id.HasValue && HttpContext?.Request.Path.Value?.Contains("/edit/") == true;
     private bool IsDetailView => Id.HasValue && !IsEditMode;
 
     private Assignment? _selectedAssignment;
+
+    private int _totalAssignmentCount;
 
     private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-GB");
     private static readonly Regex UrlRegex = new(@"https?:\/\/\S+", RegexOptions.Compiled);
@@ -268,15 +297,8 @@
             .Include(x => x.Module)
             .ToListAsync()).Select(x => x.Module).ToList();
 
-        var today = DateTime.Today;
-
-        _assignments = await StudueContext.Assignements
-            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.DueDateTime >= today)
-            .Include(x => x.CreatedBy)
-            .Include(x => x.UpdatedBy)
-            .Include(x => x.ModuleInstance)
-            .ThenInclude(x => x.Module)
-            .ToListAsync();
+        _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted);
+        _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : DateTime.Today);
 
         if (Id.HasValue)
         {
@@ -286,6 +308,18 @@
                 Navigation.NotFound();
             }
         }
+    }
+
+    async Task<List<Assignment>> GetAssignments(DateTime today)
+    {
+        return await StudueContext.Assignements
+            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.DueDateTime >= today)
+            .OrderBy(x => x.DueDateTime)
+            .Include(x => x.CreatedBy)
+            .Include(x => x.UpdatedBy)
+            .Include(x => x.ModuleInstance)
+            .ThenInclude(x => x.Module)
+            .ToListAsync();
     }
 
     private static string FormatDate(DateOnly date)

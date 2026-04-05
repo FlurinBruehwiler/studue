@@ -21,8 +21,9 @@
 <script>
     function clearQuery(){
         if (window.location.search.length > 0) {
-            const url = new URL(window.location);
-            url.search = "";
+            const url = new URL(window.location.href);
+            url.searchParams.delete("write_token");
+            url.searchParams.delete("student_id");
             window.history.replaceState({}, '', url);
         }
     }
