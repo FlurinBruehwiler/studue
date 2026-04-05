@@ -11,7 +11,7 @@
             <h2>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h2>
         </div>
 
-        <a href="/" class="assignment-form-icon-link" aria-label="Close form">
+        <a href="@Helper.CreateLink(Info, "/")" class="assignment-form-icon-link" aria-label="Close form">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-form-icon assignment-form-icon-close">
                 <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                 <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -89,7 +89,7 @@
             </div>
 
             <div class="assignment-form-actions">
-                <a href="/" class="assignment-form-close">Cancel</a>
+                <a href="@Helper.CreateLink(Info, "/")" class="assignment-form-close">Cancel</a>
                 <button type="submit" class="assignment-form-button assignment-form-button-primary">@(AssignmentToUpdate != null ? "Save changes" : "Create assignment")</button>
             </div>
         </div>
@@ -112,6 +112,10 @@
     [Parameter]
     [EditorRequired]
     public List<Module> Modules { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Helper.HomePageUrlInfo Info { get; set; }
 
     [SupplyParameterFromForm(FormName = "assignment-form")]
     public AssignmentModel? AssignmentModel { get; set; }

@@ -1,4 +1,6 @@
-﻿namespace Studue;
+﻿using AngleSharp.Dom;
+
+namespace Studue;
 
 public static class Helper
 {
@@ -14,5 +16,20 @@ public static class Helper
     public static string GetCurrentSemester()
     {
         return "FS2026";
+    }
+
+    public static string CreateLink(HomePageUrlInfo info, string url)
+    {
+        if (info.ShowOverdue)
+        {
+            return new Url(new Url(url), "?overdue=true").ToString();
+        }
+
+        return url;
+    }
+
+    public class HomePageUrlInfo
+    {
+        public bool ShowOverdue;
     }
 }

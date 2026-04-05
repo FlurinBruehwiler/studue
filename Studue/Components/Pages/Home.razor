@@ -46,7 +46,7 @@
         <section class="home-toolbar">
            @if (StudentContext.HasWriteAccess)
             {
-                <a href="/create" class="home-button home-button-primary">Create assignment</a>
+                <a href="@Helper.CreateLink(_info, "/create")" class="home-button home-button-primary">Create assignment</a>
             }
             else
             {
@@ -99,7 +99,7 @@
                         @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
                         {
                             <article class="assignment-card">
-                                <a class="assignment-card-link" href="/@(assignment.Id)" aria-label="Open details for @assignment.Title"></a>
+                                <a class="assignment-card-link" href="@Helper.CreateLink(_info, $"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
 
                                 <div class="assignment-card-header">
                                     <div class="assignment-card-copy">
@@ -121,7 +121,7 @@
 
                                         @if (StudentContext.HasWriteAccess)
                                         {
-                                            <a href="/edit/@assignment.Id" class="assignment-edit-link" aria-label="Edit assignment">
+                                            <a href="@Helper.CreateLink(_info, $"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
                                                     <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                                     <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -153,16 +153,16 @@
     @if (IsCreateMode)
     {
         <div class="assignment-dialog-layer" >
-            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
-            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@((Assignment?)null)"></AssignmentComponent>
+            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@((Assignment?)null)" Info="_info"></AssignmentComponent>
         </div>
     }
 
     @if (IsEditMode)
     {
         <div class="assignment-dialog-layer">
-            <a href="/" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
-            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
+            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
+            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment" Info="_info"></AssignmentComponent>
         </div>
     }
 
@@ -182,7 +182,7 @@
                     <div class="assignment-detail-toolbar">
                         @if (StudentContext.HasWriteAccess)
                         {
-                            <a href="/edit/@_selectedAssignment.Id" class="assignment-detail-icon-button" aria-label="Edit assignment">
+                            <a href="@Helper.CreateLink(_info, $"/edit/{_selectedAssignment.Id}")" class="assignment-detail-icon-button" aria-label="Edit assignment">
                                 <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-pencil">
                                     <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                     <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -190,7 +190,7 @@
                             </a>
                         }
 
-                        <a href="/" class="assignment-detail-icon-button" aria-label="Close details">
+                        <a href="@Helper.CreateLink(_info, "/")" class="assignment-detail-icon-button" aria-label="Close details">
                             <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-close">
                                 <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                 <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -246,7 +246,7 @@
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "overdue")]
-    public bool ShowOverdue { get; set; } = false;
+    public bool ShowOverdue { get; set; }
 
     private bool IsCreateMode => string.Equals(Action, "create", StringComparison.OrdinalIgnoreCase);
     private bool IsEditMode => Id.HasValue && HttpContext?.Request.Path.Value?.Contains("/edit/") == true;
@@ -259,8 +259,15 @@
     private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-GB");
     private static readonly Regex UrlRegex = new(@"https?:\/\/\S+", RegexOptions.Compiled);
 
+    private Helper.HomePageUrlInfo _info = null!;
+
     protected override async Task OnInitializedAsync()
     {
+        _info = new Helper.HomePageUrlInfo
+        {
+            ShowOverdue = ShowOverdue
+        };
+
         if (RequestEditLink)
         {
             var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
