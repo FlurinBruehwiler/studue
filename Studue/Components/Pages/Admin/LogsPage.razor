@@ -1,0 +1,97 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@layout AdminLayout
+@page "/admin/logs/{LogFile?}"
+@using System.Web
+@using Microsoft.AspNetCore.Authorization
+@inject IConfiguration Configuration
+@rendermode InteractiveServer
+
+<h3>Logs - @selectedLogFile</h3>
+
+@foreach (var logFile in logFiles)
+{
+    var href = $"/admin/logs/{HttpUtility.UrlEncode(logFile.name)}";
+    <NavLink href="@href">@logFile.name</NavLink>
+}
+
+<span>
+    <pre>@selectedLogFileContent</pre>
+</span>
+
+@code {
+    private List<(string name, string path)> logFiles = [];
+    private string? selectedLogFile;
+    private string? selectedLogFileContent;
+
+    [Parameter]
+    public string? LogFile { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var writeTo = Configuration.GetSection("Serilog:WriteTo").GetChildren();
+
+        foreach (var sink in writeTo)
+        {
+            if (sink["Name"] == "File")
+            {
+                var path = sink.GetSection("Args")["path"];
+
+                if (path != null)
+                {
+                    var directory = Path.GetDirectoryName(path);
+                    if (directory != null && Directory.Exists(directory))
+                    {
+                        foreach (var file in Directory.GetFiles(directory))
+                        {
+                            logFiles.Add((name: Path.GetFileName(file), path: file));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (LogFile == null && logFiles is not [])
+        {
+            selectedLogFile = logFiles[0].name;
+            selectedLogFileContent = await ReadLogFile(logFiles[0].path);
+        }
+
+        if (LogFile != null)
+        {
+            var l = HttpUtility.UrlDecode(LogFile);
+            var match = logFiles.FirstOrDefault(x => x.name == l);
+            if (match.name != null)
+            {
+                selectedLogFile = match.name;
+                selectedLogFileContent = await ReadLogFile(match.path);
+            }
+        }
+    }
+
+    private async Task<string> ReadLogFile(string path)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            try
+            {
+                using var stream = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
+
+                using var reader = new StreamReader(stream);
+                return await reader.ReadToEndAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                await Task.Delay(100);
+                // ignored
+            }
+        }
+
+        return "Failed to read file :(";
+    }
+}
