@@ -4,7 +4,7 @@ A shared assignment calendar for ZHAW students
 
 ## How it works
 - Go to https://zhaw.studue.ch
-- Enter your student ID (e.g., tomavant3)
+- Enter your student ID (e.g., bruehflu)
 - Your schedule is downloaded from stundenplan.zhaw.ch
 - You can see assignments created by other students who attend the same classes/modules as you
 - Click "Request edit link" and you will receive an email with an authentication link
