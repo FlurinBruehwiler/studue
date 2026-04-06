@@ -20,6 +20,7 @@
             <th>IsBanned</th>
             <th>Write Token</th>
             <th>Impersonate</th>
+            <th>Last Access</th>
             </thead>
             <tbody>
             @foreach (var student in _students)
@@ -33,6 +34,7 @@
                     <td><input type="checkbox" @bind="student.IsBanned" @bind:after="Changed"></td>
                     <td>@student.WriteToken <button @onclick="async () => await RegenerateToken(student)">Regenerate</button></td>
                     <td><button onclick="@impersonateCall" >Impersonate</button></td>
+                    <td>@student.LastAccess.ToString("dd.MM.yyyy HH:mm")</td>
                 </tr>
             }
             </tbody>

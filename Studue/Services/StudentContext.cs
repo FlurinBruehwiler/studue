@@ -29,7 +29,10 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             student ??= await InitializeStudentInternal(studentId);
 
             if (student != null)
+            {
                 Student = student;
+                await UpdateLastAccess(studentId);
+            }
 
             return student;
         }
@@ -37,6 +40,17 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         {
             await GenerateIncident($"Could not initialize student with id {studentId}", e);
             return null;
+        }
+    }
+
+    private async Task UpdateLastAccess(string studentId)
+    {
+        await using var dbContext = await studueContextFactory.CreateDbContextAsync();
+        var stu = await dbContext.Students.FirstAsync(x => x.StudentId == studentId);
+        if (stu.LastAccess != DateTime.Now)
+        {
+            stu.LastAccess = DateTime.Now;
+            await dbContext.SaveChangesAsync();
         }
     }
 

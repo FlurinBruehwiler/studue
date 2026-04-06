@@ -50,6 +50,7 @@ public class Student
     public bool IsAdmin { get; set; }
     public bool IsBanned { get; set; }
     public string WriteToken { get; set; }
+    public DateTime LastAccess { get; set; }
 
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
