@@ -9,11 +9,14 @@
 
 <h3>Logs - @selectedLogFile</h3>
 
-@foreach (var logFile in logFiles)
-{
-    var href = $"/admin/logs/{HttpUtility.UrlEncode(logFile.name)}";
-    <NavLink href="@href">@logFile.name</NavLink>
-}
+<div style="display: flex; flex-direction: column">
+    @foreach (var logFile in logFiles)
+    {
+        var href = $"/admin/logs/{HttpUtility.UrlEncode(logFile.name)}";
+        <NavLink href="@href">@logFile.name</NavLink>
+    }
+</div>
+
 
 <span>
     <pre>@selectedLogFileContent</pre>
