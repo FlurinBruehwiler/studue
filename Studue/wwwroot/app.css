@@ -71,6 +71,10 @@ a {
     box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
 }
 
+a.active {
+    color: #0061a2;
+}
+
 .assignment-form-card .assignment-form-control::placeholder {
     color: #7a8ea1;
 }

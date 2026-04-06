@@ -54,21 +54,10 @@
             }
         }
 
-        if (LogFile == null && logFiles is not [])
+        if (!string.IsNullOrEmpty(LogFile) && logFiles is not [])
         {
             selectedLogFile = logFiles[0].name;
             selectedLogFileContent = await ReadLogFile(logFiles[0].path);
-        }
-
-        if (LogFile != null)
-        {
-            var l = HttpUtility.UrlDecode(LogFile);
-            var match = logFiles.FirstOrDefault(x => x.name == l);
-            if (match.name != null)
-            {
-                selectedLogFile = match.name;
-                selectedLogFileContent = await ReadLogFile(match.path);
-            }
         }
     }
 
