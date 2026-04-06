@@ -75,7 +75,7 @@
                 @if (AssignmentToUpdate != null)
                 {
                     var id = $"delete-assignment-{AssignmentToUpdate.Id}";
-                    <button type="submit" form="@id" class="assignment-form-button assignment-form-button-ghost">
+                    <button onclick="if(!confirm('Do you want to delete the assignment?')) return false;" type="submit" form="@id" class="assignment-form-button assignment-form-button-ghost">
                         <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-form-icon assignment-form-icon-trash">
                             <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>

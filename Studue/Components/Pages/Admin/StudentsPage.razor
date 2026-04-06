@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
 @inject StudueContext StudueContext;
+@inject IJSRuntime JSRuntime
 @attribute [StudentRequired]
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -68,9 +69,13 @@ function impersonate(studentId, writeToken) {
 
     private async Task RegenerateToken(Student student)
     {
-        student.WriteToken = StudentContext.GenerateWriteToken();
-        await StudueContext.SaveChangesAsync();
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+        if (confirm)
+        {
+            student.WriteToken = StudentContext.GenerateWriteToken();
+            await StudueContext.SaveChangesAsync();
 
-        await RefreshStudents();
+            await RefreshStudents();
+        }
     }
 }
