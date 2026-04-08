@@ -149,7 +149,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             Content = new FormUrlEncodedContent([
                 new KeyValuePair<string, string>("ctl00$SelectionContent$txtSearch", studentId),
                 new KeyValuePair<string, string>("ctl00$SelectionContent$selDepartment", "T"),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selPeriodVersion", semester)]),
+                new KeyValuePair<string, string>("ctl00$SelectionContent$selPeriodVersion", semester),
+                new KeyValuePair<string, string>("ctl00$SelectionContent$selWeek", 8.ToString())]),
             Method = HttpMethod.Post,
             RequestUri = new Uri("https://stundenplan.zhaw.ch/"),
         });
