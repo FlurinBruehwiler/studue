@@ -36,7 +36,7 @@
 
             <div class="assignment-form-field">
                 <label for="assignment-date">Due date</label>
-                <InputDate required id="assignment-date" class="assignment-form-control assignment-form-control-compact" min="@DateTime.Now.ToString("yyyy-MM-dd")" Type="InputDateType.Date" @bind-Value="AssignmentModel!.DueDate"></InputDate>
+                <InputDate required id="assignment-date" class="assignment-form-control assignment-form-control-compact" min="@Helper.Now().ToString("yyyy-MM-dd")" Type="InputDateType.Date" @bind-Value="AssignmentModel!.DueDate"></InputDate>
             </div>
 
             <div class="assignment-form-field">
@@ -131,7 +131,7 @@
             studueContext.EditLog.Add(new EditLogEntry
             {
                 Assignment = assignmentToUpdate,
-                DateTime = DateTime.Now,
+                DateTime = Helper.Now(),
                 Student = studentContext.Student,
                 Type = "delete",
             });
@@ -171,14 +171,14 @@
             var assignment = new Assignment
             {
                 CreatedBy = studentContext.Student,
-                CreatedTime = DateTime.Now,
+                CreatedTime = Helper.Now(),
             };
             var logEntry = new EditLogEntry
             {
                 Assignment = assignment,
                 Student = studentContext.Student,
                 Type = "add",
-                DateTime = DateTime.Now,
+                DateTime = Helper.Now(),
             };
             studueContext.EditLog.Add(logEntry);
 
@@ -199,7 +199,7 @@
                 Assignment = AssignmentToUpdate,
                 Student = studentContext.Student,
                 Type = "change",
-                DateTime = DateTime.Now
+                DateTime = Helper.Now()
             };
             studueContext.EditLog.Add(logEntry);
 
@@ -212,7 +212,7 @@
     async Task SetValuesOnAssignment(Assignment assignment, AssignmentModel formData, Student student, StudueContext context)
     {
         assignment.UpdatedBy = student;
-        assignment.UpdatedTime = DateTime.Now;
+        assignment.UpdatedTime = Helper.Now();
         assignment.Title = formData.Title;
         assignment.Description = formData.Details;
         assignment.DueDateTime = new DateTime(formData.DueDate, formData.DueTime ?? new TimeOnly());

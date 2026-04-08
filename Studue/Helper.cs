@@ -37,4 +37,11 @@ public static class Helper
     {
         public bool ShowOverdue;
     }
+
+    private static TimeZoneInfo zurichTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich");
+
+    public static DateTime Now()
+    {
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zurichTimeZone);
+    }
 }

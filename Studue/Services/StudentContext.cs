@@ -47,9 +47,9 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     {
         await using var dbContext = await studueContextFactory.CreateDbContextAsync();
         var stu = await dbContext.Students.FirstAsync(x => x.StudentId == studentId);
-        if (stu.LastAccess != DateTime.Now)
+        if (stu.LastAccess != Helper.Now())
         {
-            stu.LastAccess = DateTime.Now;
+            stu.LastAccess = Helper.Now();
             await dbContext.SaveChangesAsync();
         }
     }
@@ -64,7 +64,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         {
             StackTrace = exception?.ToString(),
             Description = description,
-            DateTime = DateTime.Now,
+            DateTime = Helper.Now(),
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             UserId = Student?.StudentId
         };

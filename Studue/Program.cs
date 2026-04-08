@@ -165,7 +165,7 @@ namespace Studue
     public class AssignmentModel
     {
         public string ModuleCode { get; set; } = "";
-        public DateOnly DueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateOnly DueDate { get; set; } = DateOnly.FromDateTime(Helper.Now());
         public TimeOnly? DueTime { get; set; }
         public string Title { get; set; } = "";
         public string? Details { get; set; }

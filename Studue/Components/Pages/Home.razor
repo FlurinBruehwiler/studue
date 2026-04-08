@@ -85,11 +85,11 @@
                     <h2 class="assignment-group-title">
                         <span>@FormatDate(assignmentGroup.Key)</span>
 
-                        @if (assignmentGroup.Key == DateOnly.FromDateTime(DateTime.Today))
+                        @if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date))
                         {
                             <span> - </span>
                             <span style="color: #B23A48">Today!</span>
-                        } else if (assignmentGroup.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(1)))
+                        } else if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date.AddDays(1)))
                         {
                             <span> - </span>
                             <span style="color: #0061a2">Tomorrow</span>
@@ -307,7 +307,7 @@
             .ToListAsync()).Select(x => x.Module).ToList();
 
         _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted);
-        _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : DateTime.Today);
+        _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : Helper.Now().Date);
 
         if (Id.HasValue)
         {
