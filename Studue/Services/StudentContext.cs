@@ -11,7 +11,7 @@ namespace Studue.Services;
 
 public class StudentContext(IHttpClientFactory clientFactory, StudueContext context, ILogger<StudentContext> logger, IOptions<Settings> settings, IHostEnvironment environment, IDbContextFactory<StudueContext> studueContextFactory)
 {
-    public Student Student { get; private set; }
+    public Student Student { get; private set; } = null!;
     public bool HasWriteAccess { get; set; }
 
     public async Task<Student?> GetOrCreateStudent(string studentId)
@@ -65,6 +65,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             StackTrace = exception?.ToString(),
             Description = description,
             DateTime = DateTime.Now,
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             UserId = Student?.StudentId
         };
         db.Incidents.Add(incident);
@@ -140,6 +141,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         if (studentId.Length != 8)
             return null;
 
+        logger.LogInformation("Initializing student {studentId}", studentId);
+
         using var client = clientFactory.CreateClient();
 
         var semester = Helper.GetCurrentSemester();
@@ -193,10 +196,12 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             allLessons.Add(lesson);
         }
 
-        var newStudent = new Student();
-        newStudent.WriteToken = GenerateWriteToken();
-        newStudent.StudentId = studentId;
-        newStudent.Class = className;
+        var newStudent = new Student
+        {
+            WriteToken = GenerateWriteToken(),
+            StudentId = studentId,
+            Class = className
+        };
         if (studentId == "bruehflu")
             newStudent.IsAdmin = true;
 

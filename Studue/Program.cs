@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Studue;
 using Studue.Components;
@@ -12,13 +13,12 @@ try
 
     builder.Host.UseSerilog((context, config) => { config.ReadFrom.Configuration(context.Configuration); });
 
-    var dbFile = builder.Configuration["Studue:DbFile"]
-        ?? throw new InvalidOperationException("Missing configuration value 'Studue:DbFile'.");
-
     builder.Services.Configure<Settings>(builder.Configuration.GetSection("Studue"));
     builder.Services.AddScoped<StudentContext>();
-    builder.Services.AddDbContextFactory<StudueContext>(options =>
-        options.UseSqlite($"Data Source={dbFile}"));
+    builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
+    {
+        options.UseSqlite($"Data Source={services.GetRequiredService<IOptions<Settings>>().Value.DbFile}");
+    });
 
     builder.Services.AddHttpClient();
 
@@ -69,6 +69,7 @@ try
     {
         var endpoint = context.GetEndpoint();
         var studentNotRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
         if (studentNotRequired == null)
         {
@@ -78,7 +79,7 @@ try
 
         var studentContext = context.RequestServices.GetRequiredService<StudentContext>();
 
-        var studentId = GetCookieOrQuery(context, "student_id");
+        var studentId = GetCookieOrQuery(context, "student_id", logger);
         if (studentId == null)
         {
             context.Response.Redirect("/login");
@@ -93,7 +94,7 @@ try
             return;
         }
 
-        var writeToken = GetCookieOrQuery(context, "write_token");
+        var writeToken = GetCookieOrQuery(context, "write_token", logger);
         if (writeToken != null)
         {
             if (student.IsBanned)
@@ -137,12 +138,14 @@ catch (Exception e)
 {
     Console.WriteLine(e);
 }
-string? GetCookieOrQuery(HttpContext context, string name)
+string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logger)
 {
     if (context.Request.Query.TryGetValue(name, out var queryValue))
     {
         if (queryValue is [{ } str])
         {
+            logger.LogInformation("{studentId} just logged in, writing {cookieName} cookie", str, name);
+
             context.Response.Cookies.Append(name, str, new CookieOptions
             {
                 MaxAge = TimeSpan.FromDays(365)

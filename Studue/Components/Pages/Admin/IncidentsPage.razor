@@ -32,7 +32,7 @@
 @code {
     private List<Incident> _incidents = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _incidents = await StudueContext.Incidents.ToListAsync();
     }

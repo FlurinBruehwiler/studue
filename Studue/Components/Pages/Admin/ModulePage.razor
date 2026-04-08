@@ -39,11 +39,11 @@
 </section>
 
 @code {
-    [Parameter] public string ModuleCode { get; set; }
+    [Parameter] public string ModuleCode { get; set; } = null!;
 
-    private Module _module;
+    private Module _module = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         var m = await StudueContext.Modules.Where(x => x.Code == ModuleCode)
             .Include(x => x.ModuleInstances)

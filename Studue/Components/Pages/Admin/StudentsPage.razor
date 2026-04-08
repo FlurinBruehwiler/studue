@@ -51,7 +51,7 @@
 @code {
     private List<Student> _students = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await RefreshStudents();
     }

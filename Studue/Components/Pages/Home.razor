@@ -16,6 +16,7 @@
 @inject IOptions<Settings> Settings
 @inject NavigationManager Navigation
 @inject IHostEnvironment Environment
+@inject ILogger<Home> Logger
 
 <PageTitle>Studue</PageTitle>
 
@@ -286,9 +287,13 @@
                 "inline",
                 "magic-link-qr.png");
 
-            if (await StudentContext.SendMail($"{StudentContext.Student.StudentId}@students.zhaw.ch", "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ]))
+            var email = $"{StudentContext.Student.StudentId}@students.zhaw.ch";
+
+            Logger.LogInformation("Sending edit link to {email}", email);
+
+            if (await StudentContext.SendMail(email, "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ]))
             {
-                _statusMessages.Add(new MarkupString($"We sent an email to {StudentContext.Student.StudentId}@students.zhaw.ch asking you to confirm your identity (see <a href=\"https://outlook.office.com\">outlook.office.com</a>)."));
+                _statusMessages.Add(new MarkupString($"We sent an email to {email} asking you to confirm your identity (see <a href=\"https://outlook.office.com\">outlook.office.com</a>)."));
             }
             else
             {

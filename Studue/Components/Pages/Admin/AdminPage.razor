@@ -24,7 +24,7 @@
     private int _moduleInstanceCount;
     private int _assignmentCount;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _studentCount = await StudueContext.Students.CountAsync();
         _moduleCount = await StudueContext.Modules.CountAsync();

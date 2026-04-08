@@ -41,7 +41,7 @@
 @code {
     private List<EditLogEntry> _editLogEntries = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _editLogEntries = await StudueContext.EditLog.Include(x => x.Assignment)
             .ThenInclude(x => x.ModuleInstance)

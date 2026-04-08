@@ -68,12 +68,12 @@
 
 
 @code {
-    [Parameter] public string ModuleCode { get; set; }
+    [Parameter] public string ModuleCode { get; set; } = null!;
     [Parameter] public int InstanceId { get; set; }
 
-    private ModuleInstance? _moduleInstance;
+    private ModuleInstance _moduleInstance = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         var m = await StudueContext.ModuleInstances.Where(x => x.Id == InstanceId)
             .Include(x => x.Students)
