@@ -11,25 +11,21 @@
     <h2>Incidents</h2>
 
     <div>
-        <table>
-            <thead>
-            <th>DateTime</th>
-            <th>UserId</th>
-            <th>Description</th>
-            <th>StackTrace</th>
-            </thead>
-            <tbody>
-            @foreach (var incident in _incidents)
-            {
+        <SortableTable TItem="Incident" Items="_incidents" Columns="@([
+                                                                        new("DateTime", x => x.DateTime),
+                                                                        new("UserId", x => x.UserId),
+                                                                        new("Description", x => x.Description),
+                                                                        new("StackTrace", x => x.StackTrace),
+                                                                    ])" InitialSortingColumn="DateTime" Ascending="false">
+            <RowTemplate Context="incident">
                 <tr>
                     <td>@incident.DateTime</td>
                     <td>@incident.UserId</td>
                     <td>@incident.Description</td>
                     <td>@incident.StackTrace</td>
                 </tr>
-            }
-            </tbody>
-        </table>
+            </RowTemplate>
+        </SortableTable>
     </div>
 </section>
 

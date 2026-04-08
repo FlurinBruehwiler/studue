@@ -13,40 +13,39 @@
     <h2>Students</h2>
 
     <div>
-        <table>
-            <thead>
-            <th>StudentID</th>
-            <th>Class</th>
-            <th>IsAdmin</th>
-            <th>IsBanned</th>
-            <th>Write Token</th>
-            <th>Impersonate</th>
-            <th>Last Access</th>
-            </thead>
-            <tbody>
-            @foreach (var student in _students)
-            {
-                var impersonateCall = $"impersonate(\"{student.StudentId}\", \"{student.WriteToken}\")";
-
+        <SortableTable TItem="Student" Items="_students"
+                       Columns="@([
+                                    new("StudentID", x => x.StudentId),
+                                    new("Class", x => x.IsAdmin),
+                                    new("IsAdmin", x => x.IsAdmin),
+                                    new("IsBanned", x => x.IsBanned),
+                                    new("Write Token", x => x.WriteToken),
+                                    new("Impersonate", _ => null),
+                                    new("Last Access", x => x.LastAccess),
+                                ])" InitialSortingColumn="Last Access">
+            <RowTemplate Context="student">
                 <tr>
                     <td>@student.StudentId</td>
                     <td>@student.Class</td>
                     <td><input type="checkbox" @bind="student.IsAdmin" @bind:after="Changed"></td>
                     <td><input type="checkbox" @bind="student.IsBanned" @bind:after="Changed"></td>
-                    <td>@student.WriteToken <button @onclick="async () => await RegenerateToken(student)">Regenerate</button></td>
-                    <td><button onclick="@impersonateCall" >Impersonate</button></td>
+                    <td>@student.WriteToken <button @onclick="async () => await RegenerateToken(student)">Regenerate
+                        </button>
+                    </td>
+                    <td>
+                        <button onclick="@($"impersonate(\"{student.StudentId}\", \"{student.WriteToken}\")")">Impersonate</button>
+                    </td>
                     <td>@student.LastAccess.ToString("dd.MM.yyyy HH:mm")</td>
                 </tr>
-            }
-            </tbody>
-        </table>
+            </RowTemplate>
+        </SortableTable>
     </div>
 </section>
 
 <script>
-function impersonate(studentId, writeToken) {
-    window.location.href = `/?student_id=${encodeURIComponent(studentId)}&write_token=${encodeURIComponent(writeToken)}`;
-}
+    function impersonate(studentId, writeToken) {
+        window.location.href = `/?student_id=${encodeURIComponent(studentId)}&write_token=${encodeURIComponent(writeToken)}`;
+    }
 </script>
 
 @code {
@@ -78,4 +77,5 @@ function impersonate(studentId, writeToken) {
             await RefreshStudents();
         }
     }
+
 }

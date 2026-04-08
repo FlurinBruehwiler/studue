@@ -11,18 +11,15 @@
     <h2>Edit log</h2>
 
     <div>
-        <table>
-            <thead>
-            <th>DateTime</th>
-            <th>Type</th>
-            <th>StudentID</th>
-            <th>ModuleName</th>
-            <th>ChangeInfo</th>
-            <th>Undo</th>
-            </thead>
-            <tbody>
-            @foreach (var editLogEntry in _editLogEntries)
-            {
+        <SortableTable TItem="EditLogEntry" Items="_editLogEntries" Columns="@([
+                                                                                 new("DateTime", x => x.DateTime),
+                                                                                 new("Type", x => x.Type),
+                                                                                 new("StudentID", x => x.Student.StudentId),
+                                                                                 new("ModuleName", x => x.Assignment.ModuleInstance.Module.Name),
+                                                                                 new("ChangeInfo", x => x.ChangeInfo),
+                                                                                 new("Undo", _ => 0),
+                                                                             ])" InitialSortingColumn="DateTime">
+            <RowTemplate Context="editLogEntry">
                 <tr>
                     <td>@editLogEntry.DateTime</td>
                     <td>@editLogEntry.Type</td>
@@ -36,9 +33,8 @@
                         }
                     </td>
                 </tr>
-            }
-            </tbody>
-        </table>
+            </RowTemplate>
+        </SortableTable>
     </div>
 </section>
 

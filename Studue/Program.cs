@@ -96,14 +96,21 @@ try
         var writeToken = GetCookieOrQuery(context, "write_token");
         if (writeToken != null)
         {
-            if (writeToken != student.WriteToken)
+            if (student.IsBanned)
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.Cookies.Delete("write_token");
-                return;
             }
+            else
+            {
+                if (writeToken != student.WriteToken)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.Cookies.Delete("write_token");
+                    return;
+                }
 
-            studentContext.HasWriteAccess = true;
+                studentContext.HasWriteAccess = true;
+            }
         }
 
         await next(context);

@@ -1,0 +1,72 @@
+@typeparam TItem
+
+<table class="table">
+    <thead>
+    <tr>
+        @foreach (var col in Columns)
+        {
+            <th @onclick="() => SortBy(col)">
+                @col.Title
+                @if (CurrentColumn == col)
+                {
+                    <span>@(Ascending ? "▲" : "▼")</span>
+                }
+            </th>
+        }
+    </tr>
+    </thead>
+
+    <tbody>
+    @foreach (var item in SortedItems)
+    {
+        @RowTemplate(item)
+    }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter] public List<ColumnDefinition<TItem>> Columns { get; set; } = [];
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+
+    [Parameter] public string? InitialSortingColumn { get; set; }
+
+    private ColumnDefinition<TItem>? CurrentColumn;
+    [Parameter] public bool Ascending { get; set; }
+
+    private IEnumerable<TItem> SortedItems
+    {
+        get
+        {
+            if (CurrentColumn == null)
+                return Items;
+            if (Ascending)
+                return Items.OrderBy(CurrentColumn.SortKey);
+            return Items.OrderByDescending(CurrentColumn.SortKey);
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (InitialSortingColumn != null)
+        {
+            CurrentColumn = Columns.FirstOrDefault(x => x.Title == InitialSortingColumn);
+        }
+    }
+
+    void SortBy(ColumnDefinition<TItem> col)
+    {
+        if (CurrentColumn == col)
+        {
+            if (Ascending) Ascending = false;
+            else CurrentColumn = null;
+        }
+        else
+        {
+            CurrentColumn = col;
+            Ascending = true;
+        }
+    }
+
+    public record ColumnDefinition<T>(string Title, Func<T, object?> SortKey);
+}

@@ -1,5 +1,5 @@
 ﻿@page "/"
-@page "/{Action}"
+@page "/create"
 @page "/edit/{Id:int}"
 @page "/{Id:int}"
 @attribute [StudentRequired]
@@ -236,9 +236,6 @@
     [SupplyParameterFromQuery(Name = "requestEditLink")]
     public bool RequestEditLink { get; set; }
 
-    [Parameter]
-    public string? Action { get; set; }
-
     [Parameter] public int? Id { get; set; }
 
     [CascadingParameter]
@@ -248,7 +245,7 @@
     [SupplyParameterFromQuery(Name = "overdue")]
     public bool ShowOverdue { get; set; }
 
-    private bool IsCreateMode => string.Equals(Action, "create", StringComparison.OrdinalIgnoreCase);
+    private bool IsCreateMode => HttpContext?.Request.Path.StartsWithSegments("/create", StringComparison.OrdinalIgnoreCase) == true;
     private bool IsEditMode => Id.HasValue && HttpContext?.Request.Path.Value?.Contains("/edit/") == true;
     private bool IsDetailView => Id.HasValue && !IsEditMode;
 
