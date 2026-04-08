@@ -25,6 +25,7 @@
             url.searchParams.delete("write_token");
             url.searchParams.delete("student_id");
             url.searchParams.delete("requestEditLink");
+            url.searchParams.delete("message");
 
             window.history.replaceState({}, '', url);
         }

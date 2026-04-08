@@ -25,7 +25,13 @@
                     class="login-input"
                     placeholder="Enter student ID (eg. bruehflu)"
                     maxlength="8"
-                    autocomplete="username" />
+                    autocomplete="username"
+                    required
+                    />
+                @if (message != null)
+                {
+                    <p style="color: #B23A48; margin: 0;">@message</p>
+                }
                 <button type="submit" class="login-button">Open my assignments</button>
             </form>
         </section>
@@ -43,3 +49,19 @@ function login(e) {
     window.location.href = "/";
 }
 </script>
+
+@code
+{
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string? message;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContext?.Request.Query.TryGetValue("message", out var m) is true)
+        {
+            message = m;
+        }
+    }
+}

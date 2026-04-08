@@ -14,7 +14,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     public Student Student { get; private set; } = null!;
     public bool HasWriteAccess { get; set; }
 
-    public async Task<Student?> GetOrCreateStudent(string studentId)
+    public async Task<(Student?, string)> GetOrCreateStudent(string studentId)
     {
         studentId = studentId.ToLower().Trim();
 
@@ -34,12 +34,12 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 await UpdateLastAccess(studentId);
             }
 
-            return student;
+            return (student, $"We couldn't find a student with the student ID '{studentId}'");
         }
         catch (Exception e)
         {
             await GenerateIncident($"Could not initialize student with id {studentId}", e);
-            return null;
+            return (null, "An error occured, try again later");
         }
     }
 

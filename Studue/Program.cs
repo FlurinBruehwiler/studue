@@ -86,10 +86,10 @@ try
             return;
         }
 
-        var student = await studentContext.GetOrCreateStudent(studentId);
+        var (student, errorMsg) = await studentContext.GetOrCreateStudent(studentId);
         if (student == null)
         {
-            context.Response.Redirect("/login");
+            context.Response.Redirect($"/login?message={errorMsg}");
             context.Response.Cookies.Delete("student_id");
             return;
         }
