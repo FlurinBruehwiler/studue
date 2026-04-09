@@ -1,9 +1,9 @@
-﻿@page "/Admin/Students"
+﻿@page "/admin/students"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
 @inject StudueContext StudueContext;
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 @attribute [StudentRequired]
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -68,7 +68,7 @@
 
     private async Task RegenerateToken(Student student)
     {
-        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+        var confirm = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
         if (confirm)
         {
             student.WriteToken = StudentContext.GenerateWriteToken();

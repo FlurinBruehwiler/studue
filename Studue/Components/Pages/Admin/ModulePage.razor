@@ -1,4 +1,4 @@
-﻿@page "/Admin/Modules/{ModuleCode}"
+﻿@page "/admin/modules/{ModuleCode}"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @attribute [Authorize]
@@ -10,10 +10,11 @@
 
 <section>
     <h2>Module: @_module.Name</h2>
-    <a href="/Admin/Modules">Back to modules</a>
+    <a href="/admin/modules">Back to modules</a>
+
+    <button disabled="@(_selectedInstances.Count < 2)" @onclick="MergeSelectedInstances">Merge Instances</button>
 
     <div>
-
         <table>
             <thead>
             <th>Link</th>
@@ -21,16 +22,18 @@
             <th>Assignments</th>
             <th>Students</th>
             <th>LessonId</th>
+            <th>Select</th>
             </thead>
             <tbody>
             @foreach (var moduleInstance in _module.ModuleInstances)
             {
                 <tr>
-                    <td><a href="/Admin/modules/@(ModuleCode)/instances/@(moduleInstance.Id)">@moduleInstance.Id</a></td>
+                    <td><a href="/admin/modules/@(ModuleCode)/instances/@(moduleInstance.Id)">@moduleInstance.Id</a></td>
                     <td>@moduleInstance.ProfessorNames</td>
                     <td>@moduleInstance.Assignements.Count</td>
                     <td>@moduleInstance.Students.Count</td>
                     <td>@moduleInstance.LessionsId</td>
+                    <td> <input type="checkbox" @onclick="@(() => Toggle(moduleInstance))"/> </td>
                 </tr>
             }
             </tbody>
@@ -43,7 +46,48 @@
 
     private Module _module = null!;
 
+    private readonly HashSet<ModuleInstance> _selectedInstances = [];
+
+    private async Task MergeSelectedInstances()
+    {
+        if (_selectedInstances.Count < 2)
+            return;
+
+        var first = _selectedInstances.First();
+
+        var newCombinedInstance = new ModuleInstance
+        {
+            Module = first.Module,
+            ProfessorNames = string.Join(", ", _selectedInstances.SelectMany(x => x.ProfessorNames.Split(",").Select(y => y.Trim())).Distinct()),
+            Students = _selectedInstances.SelectMany(x => x.Students).DistinctBy(x => x.Id).ToList(),
+            Assignements = _selectedInstances.SelectMany(x => x.Assignements).DistinctBy(x => x.Id).ToList(),
+            LessionsId = string.Join("#", _selectedInstances.Select(x => x.LessionsId))
+        };
+
+        StudueContext.RemoveRange(_selectedInstances);
+        StudueContext.Add(newCombinedInstance);
+
+        _selectedInstances.Clear();
+
+        await StudueContext.SaveChangesAsync();
+
+        await FetchModule();
+    }
+
+    private void Toggle(ModuleInstance instance)
+    {
+        if (!_selectedInstances.Add(instance))
+        {
+            _selectedInstances.Remove(instance);
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
+    {
+        await FetchModule();
+    }
+
+    private async Task FetchModule()
     {
         var m = await StudueContext.Modules.Where(x => x.Code == ModuleCode)
             .Include(x => x.ModuleInstances)
