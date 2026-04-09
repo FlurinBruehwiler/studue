@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ./Studue/Studue.csproj
+        run: dotnet restore ./Studue/Studue.csproj -r linux-x64
 
       - name: Build
         run: dotnet publish ./Studue/Studue.csproj --configuration Release --no-restore --output ./ReleaseBuild -r linux-x64
