@@ -230,7 +230,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             }
 
             var lessonsId = string.Join(',', moduleLessons.Select(x => $"({x.Semester},{x.LessonId},{x.TeacherName},{x.RoomCode},{x.WeekdayNumber},{x.FirstLessonTime})"));
-            var moduleInstance = await context.ModuleInstances.FirstOrDefaultAsync(x => x.LessionsId == lessonsId && x.Module == module);
+            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module).ToListAsync();
+            var moduleInstance = moduleInstances.FirstOrDefault(x => x.LessionsId.Split("#").Contains(lessonsId));
             if (moduleInstance == null)
             {
                 moduleInstance = new ModuleInstance
