@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore ./Studue/Studue.csproj
 
       - name: Build
-        run: dotnet publish ./Studue/Studue.csproj --configuration Release --no-restore --output ./ReleaseBuild
+        run: dotnet publish ./Studue/Studue.csproj --configuration Release --no-restore --output ./ReleaseBuild -r linux-x64
 
       - name: CopyToServer
         uses: appleboy/scp-action@v1
