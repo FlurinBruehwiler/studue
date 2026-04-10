@@ -109,6 +109,11 @@
                                             @if (HasDueTime(assignment.DueDateTime))
                                             {
                                                 <span>@FormatTime(assignment.DueDateTime)</span>
+
+                                                if (assignment.DueDateTime <= Helper.Now())
+                                                {
+                                                    <span style="color: #B23A48">Overdue!</span>
+                                                }
                                             }
                                         </div>
 
