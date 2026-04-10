@@ -478,13 +478,7 @@
     margin: 0 0 1.25rem;
 }
 
-.assignment-detail-link {
-    overflow-wrap: anywhere;
-    color: #0061a2;
-    text-decoration: underline;
-    text-decoration-color: #8ab5d1;
-    text-underline-offset: 0.25rem;
-}
+
 
 .assignment-detail-footer {
     display: flex;
