@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -136,22 +137,15 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
     }
 
-    private async Task<Student?> InitializeStudentInternal(string studentId)
+    private async Task<IHtmlDocument?> GetDocumentForDepartement(string studentId, string departement, string semester)
     {
-        if (studentId.Length != 8)
-            return null;
-
-        logger.LogInformation("Initializing student {studentId}", studentId);
-
         using var client = clientFactory.CreateClient();
-
-        var semester = Helper.GetCurrentSemester();
 
         var response = await client.SendAsync(new HttpRequestMessage
         {
             Content = new FormUrlEncodedContent([
                 new KeyValuePair<string, string>("ctl00$SelectionContent$txtSearch", studentId),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selDepartment", "T"),
+                new KeyValuePair<string, string>("ctl00$SelectionContent$selDepartment", departement),
                 new KeyValuePair<string, string>("ctl00$SelectionContent$selPeriodVersion", semester),
                 new KeyValuePair<string, string>("ctl00$SelectionContent$selWeek", 8.ToString())]),
             Method = HttpMethod.Post,
@@ -167,6 +161,26 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         if (searchHighlight == null) //this case we check, because when the studentId does not exist, we hit it
             return null;
+
+        return document;
+    }
+
+    private async Task<Student?> InitializeStudentInternal(string studentId)
+    {
+        if (studentId.Length != 8)
+            return null;
+
+        var semester = Helper.GetCurrentSemester();
+
+        logger.LogInformation("Initializing student {studentId}", studentId);
+
+        var document = await GetDocumentForDepartement(studentId, "T", semester);
+        document ??= await GetDocumentForDepartement(studentId, "A", semester);
+
+        if (document == null)
+            return null;
+
+        var searchHighlight = document.QuerySelector(".searchHighlight")!;
 
         var className = searchHighlight.NextSibling!.TextContent.Trim(',', ' ');
 
