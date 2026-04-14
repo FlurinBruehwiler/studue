@@ -214,6 +214,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         context.Students.Add(newStudent);
         await context.SaveChangesAsync();
 
+        await SendMail("bruhwiler.flurin@gmail.com", $"Studue signup: {studentId}", $"Initialized student {studentId}", null, []);
+
         return newStudent;
 
         async Task<ModuleInstance> GetOrCreateModuleInstance(string moduleCode, Lesson[] moduleLessons)
