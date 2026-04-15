@@ -17,7 +17,8 @@ try
     builder.Services.AddScoped<StudentContext>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
-        options.UseSqlite($"Data Source={services.GetRequiredService<IOptions<Settings>>().Value.DbFile}");
+        options.UseSqlite($"Data Source={services.GetRequiredService<IOptions<Settings>>().Value.DbFile}",
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
     });
 
     builder.Services.AddHttpClient();

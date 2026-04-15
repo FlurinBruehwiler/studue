@@ -213,8 +213,11 @@
                 </div>
 
                 <div class="assignment-detail-footer">
-                    <div>Created by: @_selectedAssignment.CreatedBy.StudentId</div>
-                    <div>Last edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
+                    <div>Created by: @_selectedAssignment.CreatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.CreatedTime)</div>
+                    @if (_selectedAssignment.CreatedTime != _selectedAssignment.UpdatedTime)
+                    {
+                        <div>Last edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
+                    }
                 </div>
             </article>
         </div>
