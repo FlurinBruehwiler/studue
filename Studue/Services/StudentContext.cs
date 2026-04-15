@@ -147,7 +147,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 new KeyValuePair<string, string>("ctl00$SelectionContent$txtSearch", studentId),
                 new KeyValuePair<string, string>("ctl00$SelectionContent$selDepartment", departement),
                 new KeyValuePair<string, string>("ctl00$SelectionContent$selPeriodVersion", semester),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selWeek", 8.ToString())]),
+                new KeyValuePair<string, string>("ctl00$SelectionContent$selWeek", 8.ToString())]), //todo don't hardcode the week!
             Method = HttpMethod.Post,
             RequestUri = new Uri("https://stundenplan.zhaw.ch/"),
         });

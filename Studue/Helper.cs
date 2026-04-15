@@ -15,7 +15,14 @@ public static class Helper
 
     public static string GetCurrentSemester()
     {
-        return "FS2026";
+        var currentYear = DateTime.Now.Year;
+
+        var endOfSpringSemester = new DateTime(currentYear, 6, 29);
+        var endOfFallSemester = new DateTime(currentYear, 2, 1);
+
+        if (DateTime.Now < endOfFallSemester) return $"HS{currentYear - 1}";
+        if (DateTime.Now > endOfSpringSemester) return $"HS{currentYear}";
+        return $"FS{currentYear}";
     }
 
     public static string CreateLink(HomePageUrlInfo info, string url)
