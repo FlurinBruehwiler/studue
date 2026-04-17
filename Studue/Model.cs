@@ -11,6 +11,7 @@ public class StudueContext(DbContextOptions<StudueContext> options) : DbContext(
     public DbSet<Assignment> Assignements { get; set; }
     public DbSet<EditLogEntry> EditLog { get; set; }
     public DbSet<Incident> Incidents { get; set; }
+    public DbSet<ScheduleEntry> ScheduleEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,11 +70,24 @@ public class ModuleInstance
 {
     public int Id { get; set; }
     public required Module Module { get; set; }
-    public required string LessionsId { get; set; }
-    public required string ProfessorNames { get; set; }
+    public string Semester { get; set; }
 
+    public List<ScheduleEntry> ScheduleEntries { get; set; }
     public List<Student> Students { get; set; } = new();
     public List<Assignment> Assignements { get; set; } = new();
+}
+
+public class ScheduleEntry
+{
+    public string Semester { get; set; } = null!;
+    public int ZhawID { get; set; }
+    public Module Module { get; set; }
+    public string Teacher { get; set; }
+    public string Room { get; set; }
+    public int Weekday { get; set; }
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
+    public List<Student> Students { get; set; }
 }
 
 public class Assignment

@@ -184,7 +184,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         var className = searchHighlight.NextSibling!.TextContent.Trim(',', ' ');
 
-        var allLessons = new List<Lesson>();
+        var allLessons = new List<ScheduleEntry>();
         foreach (var lessonElement in document.QuerySelectorAll(".left"))
         {
             var lesson = new Lesson();
@@ -207,7 +207,31 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
             lesson.FirstLessonTime = tableDefinition.ParentElement!.FirstElementChild!.TextContent;
 
-            allLessons.Add(lesson);
+            var startTime = TimeOnly.Parse(lesson.FirstLessonTime);
+            var scheduleEntry = await context.ScheduleEntries.FirstOrDefaultAsync(x => x.Module.Code == lesson.ModuleCode
+                                                             && x.Semester == lesson.Semester
+                                                             && x.ZhawID == lesson.LessonId
+                                                             && x.Teacher == lesson.TeacherName
+                                                             && x.Room == lesson.RoomCode
+                                                             && x.Weekday == lesson.WeekdayNumber
+                                                             && x.StartTime == startTime);
+
+            if (scheduleEntry == null)
+            {
+                scheduleEntry = new ScheduleEntry
+                {
+                    Room = lesson.RoomCode,
+                    Semester = lesson.Semester,
+                    Weekday = lesson.WeekdayNumber,
+                    Teacher = lesson.TeacherName,
+                    ZhawID = lesson.LessonId,
+                    Module = await GetOrCreateModule(lesson.ModuleCode, lesson.ModuleName ?? ""),
+                    StartTime = TimeOnly.Parse(lesson.FirstLessonTime),
+                    EndTime = TimeOnly.Parse("todo")
+                };
+            }
+
+            allLessons.Add(scheduleEntry);
         }
 
         var newStudent = new Student
@@ -219,7 +243,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         if (studentId == "bruehflu")
             newStudent.IsAdmin = true;
 
-        foreach (var x in allLessons.GroupBy(x => x.ModuleCode))
+        foreach (var x in allLessons.GroupBy(x => x.Module))
         {
             var moduleInstance = await GetOrCreateModuleInstance(x.Key, x.ToArray());
             newStudent.ModuleInstances.Add(moduleInstance);
@@ -232,7 +256,25 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         return newStudent;
 
-        async Task<ModuleInstance> GetOrCreateModuleInstance(string moduleCode, Lesson[] moduleLessons)
+        async Task<ModuleInstance> GetOrCreateModuleInstance(Module module, ScheduleEntry[] scheduleEntries)
+        {
+            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module)
+                .Include(moduleInstance => moduleInstance.ScheduleEntries).ToListAsync();
+            var moduleInstance =
+                moduleInstances.FirstOrDefault(x => x.ScheduleEntries.Any(y => scheduleEntries.Contains(y)));
+            if (moduleInstance == null)
+            {
+                moduleInstance = new ModuleInstance
+                {
+                    Module = module,
+                };
+                context.ModuleInstances.Add(moduleInstance);
+            }
+
+            return moduleInstance;
+        }
+
+        async Task<Module> GetOrCreateModule(string moduleCode, string moduleName)
         {
             var module = await context.Modules.FirstOrDefaultAsync(x => x.Code == moduleCode);
             if (module == null)
@@ -240,26 +282,12 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 module = new Module
                 {
                     Code = moduleCode,
-                    Name = moduleLessons.First().ModuleName ?? string.Empty
+                    Name = moduleName
                 };
                 context.Modules.Add(module);
             }
 
-            var lessonsId = string.Join(',', moduleLessons.Select(x => $"({x.Semester},{x.LessonId},{x.TeacherName},{x.RoomCode},{x.WeekdayNumber},{x.FirstLessonTime})"));
-            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module).ToListAsync();
-            var moduleInstance = moduleInstances.FirstOrDefault(x => x.LessionsId.Split("#").Contains(lessonsId));
-            if (moduleInstance == null)
-            {
-                moduleInstance = new ModuleInstance
-                {
-                    LessionsId = lessonsId,
-                    Module = module,
-                    ProfessorNames = string.Join(", ", moduleLessons.Select(x => x.TeacherName).Distinct()),
-                };
-                context.ModuleInstances.Add(moduleInstance);
-            }
-
-            return moduleInstance;
+            return module;
         }
     }
 

@@ -18,10 +18,8 @@
         <table>
             <thead>
             <th>Link</th>
-            <th>Professor</th>
             <th>Assignments</th>
             <th>Students</th>
-            <th>LessonId</th>
             <th>Select</th>
             </thead>
             <tbody>
@@ -29,10 +27,8 @@
             {
                 <tr>
                     <td><a href="/admin/modules/@(ModuleCode)/instances/@(moduleInstance.Id)">@moduleInstance.Id</a></td>
-                    <td>@moduleInstance.ProfessorNames</td>
                     <td>@moduleInstance.Assignements.Count</td>
                     <td>@moduleInstance.Students.Count</td>
-                    <td>@moduleInstance.LessionsId</td>
                     <td> <input type="checkbox" @onclick="@(() => Toggle(moduleInstance))"/> </td>
                 </tr>
             }
@@ -55,13 +51,12 @@
 
         var first = _selectedInstances.First();
 
+        //todo make work again
         var newCombinedInstance = new ModuleInstance
         {
             Module = first.Module,
-            ProfessorNames = string.Join(", ", _selectedInstances.SelectMany(x => x.ProfessorNames.Split(",").Select(y => y.Trim())).Distinct()),
             Students = _selectedInstances.SelectMany(x => x.Students).DistinctBy(x => x.Id).ToList(),
             Assignements = _selectedInstances.SelectMany(x => x.Assignements).DistinctBy(x => x.Id).ToList(),
-            LessionsId = string.Join("#", _selectedInstances.Select(x => x.LessionsId))
         };
 
         StudueContext.RemoveRange(_selectedInstances);
