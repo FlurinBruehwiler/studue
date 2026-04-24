@@ -22,6 +22,10 @@ public class StudueContext(DbContextOptions<StudueContext> options) : DbContext(
         modelBuilder.Entity<Assignment>()
             .HasOne(x => x.UpdatedBy)
             .WithMany();
+
+        modelBuilder.Entity<Assignment>()
+            .HasMany(x => x.CompletedByStudents)
+            .WithMany(x => x.CompletedAssignments);
     }
 }
 
@@ -56,6 +60,7 @@ public class Student
 
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
+    public List<Assignment> CompletedAssignments { get; set; } = new();
 }
 
 public class Module
@@ -82,12 +87,12 @@ public class ScheduleEntry
     public string Semester { get; set; } = null!;
     public int ZhawID { get; set; }
     public Module Module { get; set; }
-    public string Teacher { get; set; }
-    public string Room { get; set; }
+    public string Teacher { get; set; } = null!;
+    public string Room { get; set; } = null!;
     public int Weekday { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
-    public List<Student> Students { get; set; }
+    public List<Student> Students { get; set; } = new();
 }
 
 public class Assignment
@@ -96,6 +101,7 @@ public class Assignment
     public ModuleInstance ModuleInstance { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
+    public List<Student> CompletedByStudents { get; set; } = new();
     public bool IsDeleted { get; set; }
 
 
