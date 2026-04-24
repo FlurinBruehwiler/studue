@@ -45,7 +45,9 @@
         </header>
 
         <section class="home-toolbar">
-           @if (StudentContext.HasWriteAccess)
+            <button class="home-button home-button-secondary enable-notifications-button" style="display: none" onclick="enableNotifications()">Enable notifications</button>
+
+            @if (StudentContext.HasWriteAccess)
             {
                 <a href="@Helper.CreateLink(_info, "/create")" class="home-button home-button-primary">Create assignment</a>
             }
@@ -226,12 +228,50 @@
 
 <script>
 
-    function logout() {
+function logout() {
 
     document.cookie =  'student_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     document.cookie =  'write_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     window.location.href = "/";
 }
+
+async function areNotificationsEnabled() {
+    const reg = await navigator.serviceWorker.getRegistration("/");
+    return !!reg;
+}
+
+async function enableNotifications() {
+    // TODO this is not good, yet, if someone disables notifications, the service worker is still registered.
+    // If someone wants to disable the notification they don't have a button right now.
+    // If someone wants to customize when to receive notifications, this is also not possible currently
+    if (!("serviceWorker" in navigator)) return;
+    if (!("PushManager" in window)) return;
+
+    const registration = await navigator.serviceWorker.register("/ServiceWorker.js");
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: "@(_vapidPublicKey)"
+    });
+
+    // send subscription to your server
+    await fetch("/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription)
+    });
+
+    window.location.href = "/";
+}
+
+areNotificationsEnabled().then(x => {
+    if (!x) {
+        document.querySelector(".enable-notifications-button").style.display = "block";
+    }
+})
 
 </script>
 
@@ -266,6 +306,8 @@
     private static readonly Regex UrlRegex = new(@"https?:\/\/\S+", RegexOptions.Compiled);
 
     private Helper.HomePageUrlInfo _info = null!;
+
+    private string _vapidPublicKey;
 
     protected override async Task OnInitializedAsync()
     {
@@ -308,6 +350,8 @@
                 _statusMessages.Add(new MarkupString("We were unable to send you an email, try again later"));
             }
         }
+
+        _vapidPublicKey = (await StudueContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
 
         _modules = (await StudueContext.ModuleInstances
             .Where(x => x.Students.Contains(StudentContext.Student))

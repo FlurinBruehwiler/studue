@@ -30,6 +30,8 @@ try
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
 
+    builder.Services.AddHostedService<PushService>();
+
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
@@ -132,6 +134,8 @@ try
 
     app.MapRazorComponents<App>()
         .AddInteractiveServerRenderMode();
+
+    PushService.RegisterEndpoint(app);
 
     app.Run();
 }

@@ -125,6 +125,7 @@
     display: flex;
     justify-content: end;
     margin-top: 1.75rem;
+    gap: 1rem;
 }
 
 .home-filter-panel {

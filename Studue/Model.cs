@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Principal;
 using Microsoft.EntityFrameworkCore;
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 
@@ -12,6 +14,8 @@ public class StudueContext(DbContextOptions<StudueContext> options) : DbContext(
     public DbSet<EditLogEntry> EditLog { get; set; }
     public DbSet<Incident> Incidents { get; set; }
     public DbSet<ScheduleEntry> ScheduleEntries { get; set; }
+    public DbSet<PushSubscriptionRow> PushSubscriptions { get; set; }
+    public DbSet<Config> Configs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,7 +65,10 @@ public class Student
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
     public List<Assignment> CompletedAssignments { get; set; } = new();
+    public List<PushSubscriptionRow> PushSubscriptions { get; set; } = new();
 }
+
+
 
 public class Module
 {
@@ -82,8 +89,25 @@ public class ModuleInstance
     public List<Assignment> Assignements { get; set; } = new();
 }
 
+public class PushSubscriptionRow
+{
+    public int Id { get; set; }
+    public string Endpoint { get; set; }
+    public string P256DH { get; set; }
+    public string Auth { get; set; }
+
+    public Student Student { get; set; }
+}
+
+public class Config
+{
+    public string Id { get; set; }
+    public string Data { get; set; }
+}
+
 public class ScheduleEntry
 {
+    public int Id { get; set; }
     public string Semester { get; set; } = null!;
     public int ZhawID { get; set; }
     public Module Module { get; set; }
