@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -17,10 +18,11 @@ try
     builder.Services.AddScoped<StudentContext>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
-        options.UseSqlite($"Data Source={services.GetRequiredService<IOptions<Settings>>().Value.DbFile}",
+        options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),
             o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
     });
 
+    builder.Services.AddHostedService<BackupService>();
     builder.Services.AddHttpClient();
 
     builder.Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
@@ -126,12 +128,20 @@ try
     app.MapStaticAssets();
 
     app.UseAuthentication();
-    app.UseAuthorization();
+    app.UseAuthorization();  
 
     app.UseAntiforgery();
 
     app.MapRazorComponents<App>()
         .AddInteractiveServerRenderMode();
+
+    app.MapGet("/admin/downloadDb", async (IOptions<Settings> settings) =>
+    {
+        var backupPath = await BackupService.CreateBackup(settings.Value);
+        var stream = new FileStream(backupPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return Results.File(stream, "application/octet-stream", Path.GetFileName(backupPath));
+    }).WithMetadata(new StudentRequiredAttribute())
+        .RequireAuthorization();
 
     app.Run();
 }
@@ -139,6 +149,7 @@ catch (Exception e)
 {
     Console.WriteLine(e);
 }
+
 string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logger)
 {
     if (context.Request.Query.TryGetValue(name, out var queryValue))
