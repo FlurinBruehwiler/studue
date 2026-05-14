@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Studue;
 
@@ -10,9 +11,11 @@ using Studue;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    partial class StudueContextModelSnapshot : ModelSnapshot
+    [Migration("20260424085702_AddConfigsTable")]
+    partial class AddConfigsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -237,8 +240,8 @@ namespace StudueSharp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Duration")
-                        .HasColumnType("INTEGER");
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ModuleId")
                         .HasColumnType("INTEGER");

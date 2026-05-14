@@ -1,74 +1,5 @@
 .home-page {
-    min-height: 100vh;
-    padding: 1.5rem;
-}
-
-.home-shell {
-    max-width: 88rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-    border: 1px solid #d8e3ed;
-    border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(10px);
-}
-
-.home-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1.5rem;
-}
-
-.home-branding {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.home-brand-mark {
-    width: 4.5rem;
-    height: 4.5rem;
-    flex: 0 0 auto;
-}
-
-.home-brand-copy {
-    min-width: 0;
-}
-
-.home-eyebrow {
-    display: inline-block;
-    margin-bottom: 0.35rem;
-    color: #0061a2;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-}
-
-.home-brand-copy h1 {
-    margin: 0;
-    color: #0061a2;
-    font-size: clamp(2.3rem, 4vw, 3.1rem);
-    line-height: 0.95;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-}
-
-.home-brand-copy p {
-    margin: 0.65rem 0 0;
-    color: #4f6477;
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
-.home-identity {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.75rem;
+    display: grid;
 }
 
 .home-chip {
@@ -124,7 +55,7 @@
 .home-toolbar {
     display: flex;
     justify-content: end;
-    margin-top: 1.75rem;
+    gap: 1rem;
 }
 
 .home-filter-panel {
@@ -221,7 +152,6 @@
 .assignment-groups {
     display: grid;
     gap: 1.5rem;
-    margin-top: 1.5rem;
 }
 
 .assignment-group {
@@ -517,16 +447,6 @@
 }
 
 @media (max-width: 900px) {
-    .home-page {
-        padding: 0.75rem;
-    }
-
-    .home-shell {
-        padding: 1rem;
-        border-radius: 1.25rem;
-    }
-
-    .home-header,
     .home-toolbar {
         grid-template-columns: 1fr;
         display: grid;
@@ -534,26 +454,6 @@
 }
 
 @media (max-width: 640px) {
-    .home-page {
-        padding: 0;
-    }
-
-    .home-shell {
-        min-height: 100vh;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-    }
-
-    .home-branding {
-        align-items: flex-start;
-    }
-
-    .home-brand-mark {
-        width: 3.4rem;
-        height: 3.4rem;
-    }
-
     .home-chip,
     .home-chip-outline,
     .home-button,

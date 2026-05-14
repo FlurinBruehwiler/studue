@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Studue;
 
@@ -10,9 +11,11 @@ using Studue;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    partial class StudueContextModelSnapshot : ModelSnapshot
+    [Migration("20260424085313_BigExtensions")]
+    partial class BigExtensions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -93,20 +96,6 @@ namespace StudueSharp.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("Assignements");
-                });
-
-            modelBuilder.Entity("Studue.Config", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Configs");
                 });
 
             modelBuilder.Entity("Studue.EditLogEntry", b =>
@@ -237,8 +226,8 @@ namespace StudueSharp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Duration")
-                        .HasColumnType("INTEGER");
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ModuleId")
                         .HasColumnType("INTEGER");

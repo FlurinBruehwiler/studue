@@ -1,0 +1,23 @@
+﻿@page "/admin/students/{StudentId}"
+@using Microsoft.AspNetCore.Authorization
+@using Studue.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@attribute [StudentRequired]
+@layout AdminLayout
+@inject StudentContext StudentContext
+
+<h3>@StudentId</h3>
+
+<ScheduleComponent ScheduleEntries="_scheduleEntries"></ScheduleComponent>
+
+@code {
+    [Parameter] public string StudentId { get; set; } = null!;
+
+    private List<ScheduleEntry> _scheduleEntries = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _scheduleEntries = await StudentContext.GetScheduleEntriesForStudent(StudentId);
+    }
+}

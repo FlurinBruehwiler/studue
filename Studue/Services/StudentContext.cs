@@ -27,7 +27,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 .FirstOrDefaultAsync();
 
             //if not already exists, initialize
-            student ??= await InitializeStudentInternal(studentId);
+            student ??= await InitializeOrUpdateStudentInternal(null, studentId);
 
             if (student != null)
             {
@@ -165,7 +165,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         return document;
     }
 
-    private async Task<Student?> InitializeStudentInternal(string studentId)
+    public async Task<Student?> InitializeOrUpdateStudentInternal(Student? existingStudent, string studentId)
     {
         if (studentId.Length != 8)
             return null;
@@ -180,11 +180,19 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         if (document == null)
             return null;
 
+        var oldModuleInstances = await context.ModuleInstances.Where(x => x.Semester == "OLD" || x.Semester == null)
+            .Include(moduleInstance => moduleInstance.Module)
+            .Include(moduleInstance => moduleInstance.Students)
+            .Include(moduleInstance => moduleInstance.Assignements)
+            .ToListAsync();
+
         var searchHighlight = document.QuerySelector(".searchHighlight")!;
 
         var className = searchHighlight.NextSibling!.TextContent.Trim(',', ' ');
 
-        var allLessons = new List<Lesson>();
+        var cellToColumnMapping = GetCellToColumnMapping(document.QuerySelector("table")!.FirstElementChild!);
+
+        var allLessons = new List<ScheduleEntry>();
         foreach (var lessonElement in document.QuerySelectorAll(".left"))
         {
             var lesson = new Lesson();
@@ -203,14 +211,41 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             lesson.RoomCode = roomElement.TextContent;
 
             var tableDefinition = lessonElement.ParentElement!.ParentElement!.ParentElement!;
-            lesson.WeekdayNumber = tableDefinition.ParentElement!.IndexOf(tableDefinition);
+            lesson.WeekdayNumber = cellToColumnMapping[tableDefinition];
+            lesson.Duration = int.Parse(tableDefinition.GetAttribute("rowspan")!);
 
             lesson.FirstLessonTime = tableDefinition.ParentElement!.FirstElementChild!.TextContent;
 
-            allLessons.Add(lesson);
+            var startTime = TimeOnly.Parse(lesson.FirstLessonTime.Split("-").First().Trim());
+            var scheduleEntry = await context.ScheduleEntries.FirstOrDefaultAsync(x => x.Module.Code == lesson.ModuleCode
+                                                             && x.Semester == lesson.Semester
+                                                             && x.ZhawID == lesson.LessonId
+                                                             && x.Teacher == lesson.TeacherName
+                                                             && x.Room == lesson.RoomCode
+                                                             && x.Weekday == lesson.WeekdayNumber
+                                                             && x.StartTime == startTime
+                                                             && x.Duration == lesson.Duration);
+
+            if (scheduleEntry == null)
+            {
+                scheduleEntry = new ScheduleEntry
+                {
+                    Room = lesson.RoomCode,
+                    Semester = lesson.Semester,
+                    Weekday = lesson.WeekdayNumber,
+                    Teacher = lesson.TeacherName,
+                    ZhawID = lesson.LessonId,
+                    Module = await GetOrCreateModule(lesson.ModuleCode, lesson.ModuleName ?? ""),
+                    StartTime = startTime,
+                    Duration = lesson.Duration,
+                };
+                context.ScheduleEntries.Add(scheduleEntry);
+            }
+
+            allLessons.Add(scheduleEntry);
         }
 
-        var newStudent = new Student
+        var newStudent = existingStudent ?? new Student
         {
             WriteToken = GenerateWriteToken(),
             StudentId = studentId,
@@ -219,20 +254,66 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         if (studentId == "bruehflu")
             newStudent.IsAdmin = true;
 
-        foreach (var x in allLessons.GroupBy(x => x.ModuleCode))
+        foreach (var x in allLessons.GroupBy(x => x.Module))
         {
             var moduleInstance = await GetOrCreateModuleInstance(x.Key, x.ToArray());
             newStudent.ModuleInstances.Add(moduleInstance);
         }
 
-        context.Students.Add(newStudent);
+        if (existingStudent == null)
+            context.Students.Add(newStudent);
+
         await context.SaveChangesAsync();
 
         await SendMail("bruhwiler.flurin@gmail.com", $"Studue signup: {studentId}", $"Initialized student {studentId}", null, []);
 
         return newStudent;
 
-        async Task<ModuleInstance> GetOrCreateModuleInstance(string moduleCode, Lesson[] moduleLessons)
+        async Task<ModuleInstance> GetOrCreateModuleInstance(Module module, ScheduleEntry[] scheduleEntries)
+        {
+            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module)
+                .Include(moduleInstance => moduleInstance.ScheduleEntries).ToListAsync();
+            var moduleInstance =
+                moduleInstances.FirstOrDefault(x => x.ScheduleEntries.Any(y => scheduleEntries.Any(z => z.Id == y.Id)));
+            if (moduleInstance == null)
+            {
+                moduleInstance = new ModuleInstance
+                {
+                    Module = module,
+                    Semester = Helper.GetCurrentSemester(),
+                    ScheduleEntries = scheduleEntries.ToList()
+                };
+
+                context.ModuleInstances.Add(moduleInstance);
+
+                if (existingStudent != null)
+                {
+                    var oldModuleInstance = oldModuleInstances.FirstOrDefault(x => x.Module == module && x.Students.FirstOrDefault(y => y.Id == existingStudent.Id) != null);
+                    if (oldModuleInstance != null)
+                    {
+                        Console.WriteLine("Found old module instance");
+
+                        foreach (var assignement in oldModuleInstance.Assignements.ToList())
+                        {
+                            assignement.ModuleInstance = moduleInstance;
+                            moduleInstance.Assignements.Add(assignement);
+                        }
+
+                        oldModuleInstance.Students.Clear();
+
+                        context.ModuleInstances.Remove(oldModuleInstance);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not find old module instance");
+                    }
+                }
+            }
+
+            return moduleInstance;
+        }
+
+        async Task<Module> GetOrCreateModule(string moduleCode, string moduleName)
         {
             var module = await context.Modules.FirstOrDefaultAsync(x => x.Code == moduleCode);
             if (module == null)
@@ -240,27 +321,62 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 module = new Module
                 {
                     Code = moduleCode,
-                    Name = moduleLessons.First().ModuleName ?? string.Empty
+                    Name = moduleName
                 };
                 context.Modules.Add(module);
             }
 
-            var lessonsId = string.Join(',', moduleLessons.Select(x => $"({x.Semester},{x.LessonId},{x.TeacherName},{x.RoomCode},{x.WeekdayNumber},{x.FirstLessonTime})"));
-            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module).ToListAsync();
-            var moduleInstance = moduleInstances.FirstOrDefault(x => x.LessionsId.Split("#").Contains(lessonsId));
-            if (moduleInstance == null)
+            return module;
+        }
+    }
+
+    public async Task<List<ScheduleEntry>> GetScheduleEntriesForStudent(string studentId)
+    {
+        var currentSemester = Helper.GetCurrentSemester();
+
+        var student = await context.Students.Where(x => x.StudentId == studentId)
+            .Include(x => x.ModuleInstances)
+            .ThenInclude(x => x.ScheduleEntries)
+            .ThenInclude(x => x.Module)
+            .FirstAsync();
+
+        return student.ModuleInstances.Where(x => x.Semester == currentSemester).SelectMany(x => x.ScheduleEntries).ToList();
+    }
+
+    private static Dictionary<IElement, int> GetCellToColumnMapping(IElement htmlTable)
+    {
+        var result = new Dictionary<IElement, int>();
+
+        int[] columnSpans = new int[6];
+
+        foreach (var row in htmlTable.Children.Skip(1)) // skip header
+        {
+            var column = 0;
+
+            foreach (var cell in row.Children.Skip(1)) // skip time
             {
-                moduleInstance = new ModuleInstance
+                while (columnSpans[column] > 0)
                 {
-                    LessionsId = lessonsId,
-                    Module = module,
-                    ProfessorNames = string.Join(", ", moduleLessons.Select(x => x.TeacherName).Distinct()),
-                };
-                context.ModuleInstances.Add(moduleInstance);
+                    columnSpans[column]--;
+                    column++;
+                }
+
+                result.Add(cell, column);
+
+                var rowspan = int.Parse(cell.GetAttribute("rowspan")!);
+                columnSpans[column] = rowspan - 1;
+
+                column++;
             }
 
-            return moduleInstance;
+            for (var i = column; i < columnSpans.Length; i++) {
+                if (columnSpans[i] > 0) {
+                    columnSpans[i]--;
+                }
+            }
         }
+
+        return result;
     }
 
     private static string NormalizeModuleCode(string moduleCode)
@@ -295,5 +411,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         public string RoomCode = null!;
         public int WeekdayNumber;
         public string FirstLessonTime = null!;
+        public int Duration;
     }
 }

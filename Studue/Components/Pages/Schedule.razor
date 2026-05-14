@@ -1,0 +1,24 @@
+﻿@page "/schedule"
+@layout Layout.StudentLayout
+
+@using Studue.Services
+
+@attribute [StudentRequired]
+
+@inject StudentContext StudentContext
+
+<PageTitle>Schedule</PageTitle>
+
+<div class="schedule-page">
+    <ScheduleComponent ScheduleEntries="_scheduleEntries"></ScheduleComponent>
+</div>
+
+@code {
+
+    private List<ScheduleEntry> _scheduleEntries = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scheduleEntries = await StudentContext.GetScheduleEntriesForStudent(StudentContext.Student.StudentId);
+    }
+}

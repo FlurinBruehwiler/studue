@@ -1,0 +1,70 @@
+﻿@if (ScheduleEntries.Count == 0)
+{
+    <section class="schedule-board schedule-board-empty">
+        <div>
+            <span class="schedule-board-eyebrow">No timetable yet</span>
+        </div>
+    </section>
+}
+else
+{
+    <section class="schedule-board">
+        <div class="schedule-table-wrap">
+            <div class="schedule-grid" role="grid" aria-label="Weekly schedule">
+                <div class="schedule-corner-cell" role="columnheader">Time</div>
+
+                @foreach (var (weekdayIndex, weekday) in _weekdays.Index())
+                {
+                    <div class="schedule-day-cell" style="grid-column: @(weekdayIndex + 2); grid-row: 1;" role="columnheader">@weekday</div>
+                }
+
+                @foreach (var (lessonIndex, lesson) in _lessons.Index())
+                {
+                    <div class="schedule-time-cell" style="grid-column: 1; grid-row: @(lessonIndex + 2);" role="rowheader">
+                        <span>@lesson.Start.ToString("HH:mm")</span>
+                        <span>@lesson.End.ToString("HH:mm")</span>
+                    </div>
+
+                    @foreach (var (weekdayIndex, _) in _weekdays.Index())
+                    {
+                        <div class="schedule-slot-cell" style="grid-column: @(weekdayIndex + 2); grid-row: @(lessonIndex + 2);" aria-hidden="true"></div>
+                    }
+                }
+
+                @foreach (var entry in ScheduleEntries.OrderBy(x => x.Weekday).ThenBy(x => x.StartTime))
+                {
+                    <article class="schedule-entry-card"
+                             style="grid-column: @(entry.Weekday + 2); grid-row: @(GetLessonIndex(entry.StartTime) + 2) / span @entry.Duration;"
+                             aria-label="@entry.Module.Name in @entry.Room with @entry.Teacher">
+                        <span class="schedule-entry-code">@entry.Module.Code</span>
+                        <strong class="schedule-entry-title">@entry.Module.Name</strong>
+
+                        <div class="schedule-entry-meta">
+                            <span>@entry.Room</span>
+                            <span>@entry.Teacher</span>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public List<ScheduleEntry> ScheduleEntries { get; set; }
+
+    private static readonly List<Lesson> _lessons = new[] { "08:00", "08:50", "10:00", "10:50", "12:00", "12:50", "14:00", "14:50", "16:00", "16:50", "17:45", "18:40", "19:25", "20:20", "21:05" }
+        .Select(x => new Lesson(TimeOnly.Parse(x), TimeOnly.Parse(x).AddMinutes(45))).ToList();
+
+    private static readonly string[] _weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+
+    record struct Lesson(TimeOnly Start, TimeOnly End);
+
+    private int GetLessonIndex(TimeOnly startTime)
+    {
+        return _lessons.FindIndex(x => x.Start == startTime);
+    }
+}
