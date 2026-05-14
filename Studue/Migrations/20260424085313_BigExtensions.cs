@@ -15,10 +15,12 @@ namespace StudueSharp.Migrations
                 name: "LessionsId",
                 table: "ModuleInstances");
 
-            migrationBuilder.RenameColumn(
-                name: "ProfessorNames",
+            migrationBuilder.AddColumn<string>(
+                name: "Semester",
                 table: "ModuleInstances",
-                newName: "Semester");
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "OLD");
 
             migrationBuilder.AddColumn<int>(
                 name: "ScheduleEntryId",
@@ -135,6 +137,10 @@ namespace StudueSharp.Migrations
                 column: "ScheduleEntryId",
                 principalTable: "ScheduleEntries",
                 principalColumn: "Id");
+
+            migrationBuilder.DropColumn(
+                name: "ProfessorNames",
+                table: "ModuleInstances");
         }
 
         /// <inheritdoc />
@@ -161,10 +167,12 @@ namespace StudueSharp.Migrations
                 name: "ScheduleEntryId",
                 table: "Students");
 
-            migrationBuilder.RenameColumn(
-                name: "Semester",
+            migrationBuilder.AddColumn<string>(
+                name: "ProfessorNames",
                 table: "ModuleInstances",
-                newName: "ProfessorNames");
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
                 name: "LessionsId",
@@ -172,6 +180,10 @@ namespace StudueSharp.Migrations
                 type: "TEXT",
                 nullable: false,
                 defaultValue: "");
+
+            migrationBuilder.DropColumn(
+                name: "Semester",
+                table: "ModuleInstances");
         }
     }
 }

@@ -45,7 +45,7 @@
         </header>
 
         <section class="home-toolbar">
-            <button class="home-button home-button-secondary enable-notifications-button" style="display: none" onclick="enableNotifications()">Enable notifications</button>
+            @* <button class="home-button home-button-secondary enable-notifications-button" style="display: none" onclick="enableNotifications()">Enable notifications</button> *@
 
             @if (StudentContext.HasWriteAccess)
             {
@@ -267,11 +267,11 @@ async function enableNotifications() {
     window.location.href = "/";
 }
 
-areNotificationsEnabled().then(x => {
-    if (!x) {
-        document.querySelector(".enable-notifications-button").style.display = "block";
-    }
-})
+// areNotificationsEnabled().then(x => {
+//     if (!x) {
+//         document.querySelector(".enable-notifications-button").style.display = "block";
+//     }
+// })
 
 </script>
 

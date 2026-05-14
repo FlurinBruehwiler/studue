@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -15,7 +14,13 @@ try
     builder.Host.UseSerilog((context, config) => { config.ReadFrom.Configuration(context.Configuration); });
 
     builder.Services.Configure<Settings>(builder.Configuration.GetSection("Studue"));
+    builder.Services.PostConfigure<Settings>(settings =>
+    {
+        settings.DbFile = Path.GetFullPath(settings.DbFile, builder.Environment.ContentRootPath);
+        settings.DatabaseBackupDir = Path.GetFullPath(settings.DatabaseBackupDir, builder.Environment.ContentRootPath);
+    });
     builder.Services.AddScoped<StudentContext>();
+    builder.Services.AddScoped<MigrationService>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
         options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),
@@ -35,6 +40,8 @@ try
     builder.Services.AddHostedService<PushService>();
 
     var app = builder.Build();
+
+    Log.Information("Using SQLite database at {DbFile}", app.Services.GetRequiredService<IOptions<Settings>>().Value.DbFile);
 
     app.UseSerilogRequestLogging();
 
@@ -62,6 +69,8 @@ try
         var db = scope.ServiceProvider.GetRequiredService<StudueContext>();
 
         db.Database.Migrate();
+
+        //await scope.ServiceProvider.GetRequiredService<MigrationService>().Migrate();
     }
 
     if (!app.Environment.IsDevelopment())

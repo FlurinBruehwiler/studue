@@ -60,7 +60,7 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
     private async Task SendNotifications(StudueContext studueContext)
     {
         var lastNotificationTimeConfig = await studueContext.Configs.FirstAsync(x => x.Id == "LastNotificationTime");
-        var lastNotificationTime = DateTime.Parse(lastNotificationTimeConfig.Data);
+        var lastNotificationTime = DateTime.Parse(lastNotificationTimeConfig.Data, CultureInfo.InvariantCulture);
 
         var now = Helper.Now();
         lastNotificationTimeConfig.Data = now.ToString(CultureInfo.InvariantCulture);
