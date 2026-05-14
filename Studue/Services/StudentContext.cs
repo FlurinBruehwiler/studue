@@ -27,7 +27,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 .FirstOrDefaultAsync();
 
             //if not already exists, initialize
-            student ??= await InitializeOrUpdateStudentInternal(null, studentId);
+            student ??= await InitializeStudentInternal(studentId);
 
             if (student != null)
             {
@@ -165,7 +165,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         return document;
     }
 
-    public async Task<Student?> InitializeOrUpdateStudentInternal(Student? existingStudent, string studentId)
+    private async Task<Student?> InitializeStudentInternal(string studentId)
     {
         if (studentId.Length != 8)
             return null;
@@ -179,12 +179,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         if (document == null)
             return null;
-
-        var oldModuleInstances = await context.ModuleInstances.Where(x => x.Semester == "OLD" || x.Semester == null)
-            .Include(moduleInstance => moduleInstance.Module)
-            .Include(moduleInstance => moduleInstance.Students)
-            .Include(moduleInstance => moduleInstance.Assignements)
-            .ToListAsync();
 
         var searchHighlight = document.QuerySelector(".searchHighlight")!;
 
@@ -245,7 +239,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             allLessons.Add(scheduleEntry);
         }
 
-        var newStudent = existingStudent ?? new Student
+        var newStudent = new Student
         {
             WriteToken = GenerateWriteToken(),
             StudentId = studentId,
@@ -259,9 +253,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             var moduleInstance = await GetOrCreateModuleInstance(x.Key, x.ToArray());
             newStudent.ModuleInstances.Add(moduleInstance);
         }
-
-        if (existingStudent == null)
-            context.Students.Add(newStudent);
 
         await context.SaveChangesAsync();
 
@@ -285,29 +276,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 };
 
                 context.ModuleInstances.Add(moduleInstance);
-
-                if (existingStudent != null)
-                {
-                    var oldModuleInstance = oldModuleInstances.FirstOrDefault(x => x.Module == module && x.Students.FirstOrDefault(y => y.Id == existingStudent.Id) != null);
-                    if (oldModuleInstance != null)
-                    {
-                        Console.WriteLine("Found old module instance");
-
-                        foreach (var assignement in oldModuleInstance.Assignements.ToList())
-                        {
-                            assignement.ModuleInstance = moduleInstance;
-                            moduleInstance.Assignements.Add(assignement);
-                        }
-
-                        oldModuleInstance.Students.Clear();
-
-                        context.ModuleInstances.Remove(oldModuleInstance);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not find old module instance");
-                    }
-                }
             }
 
             return moduleInstance;

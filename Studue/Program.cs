@@ -20,7 +20,6 @@ try
         settings.DatabaseBackupDir = Path.GetFullPath(settings.DatabaseBackupDir, builder.Environment.ContentRootPath);
     });
     builder.Services.AddScoped<StudentContext>();
-    builder.Services.AddScoped<MigrationService>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
         options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),
@@ -69,8 +68,6 @@ try
         var db = scope.ServiceProvider.GetRequiredService<StudueContext>();
 
         db.Database.Migrate();
-
-        await scope.ServiceProvider.GetRequiredService<MigrationService>().Migrate();
     }
 
     if (!app.Environment.IsDevelopment())
