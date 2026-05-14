@@ -3,9 +3,14 @@
 @page "/admin"
 @layout AdminLayout
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.Data.Sqlite
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Options
+@using Studue.Services
 @rendermode InteractiveServer
 @inject StudueContext StudueContext;
+@inject IOptions<Settings> Settings;
+@inject ILogger<AdminPage> Logger;
 
 <section>
     <h2>Overview</h2>
@@ -17,7 +22,18 @@
         <p>Assignments: <b>@_assignmentCount</b></p>
     </div>
 
+    <br>
+    <br>
+    <br>
+
+    <h3>Database</h3>
+
     <a href="/admin/downloadDb" download>Download Database</a>
+    <div>
+        <p>Replace Database</p>
+        <p>@_dbReplacementStatus</p>
+        <InputFile OnChange="LoadFile" accept=".db"></InputFile>
+    </div>
 </section>
 
 @code {
@@ -25,6 +41,7 @@
     private int _moduleCount;
     private int _moduleInstanceCount;
     private int _assignmentCount;
+    private string _dbReplacementStatus = "";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -33,4 +50,43 @@
         _moduleInstanceCount = await StudueContext.ModuleInstances.CountAsync();
         _assignmentCount = await StudueContext.Assignements.CountAsync();
     }
+
+    private async Task LoadFile(InputFileChangeEventArgs fileEvent)
+    {
+        try
+        {
+            _dbReplacementStatus = "Upload";
+
+            // store in local file
+            var tempFilePath = Path.Combine(Settings.Value.DatabaseBackupDir, Path.GetRandomFileName() + ".db");
+            Directory.CreateDirectory(Settings.Value.DatabaseBackupDir);
+            await using FileStream fs = new(tempFilePath, FileMode.Create);
+            await fileEvent.File.OpenReadStream().CopyToAsync(fs);
+
+            _dbReplacementStatus = "Upload complete";
+
+            // open connection to current db
+            await using var destination = new SqliteConnection(BackupService.GetSqliteConnectionString(Settings.Value));
+            await destination.OpenAsync();
+
+            // open connection to new db file
+            await using var source = new SqliteConnection($"Data Source={tempFilePath}");
+            await source.OpenAsync();
+
+            _dbReplacementStatus = "Start replacement";
+
+            // copy new db into current db
+            source.BackupDatabase(destination);
+
+            await source.CloseAsync();
+
+            _dbReplacementStatus = "Database replacement successful, please reload the page";
+        }
+        catch (Exception e)
+        {
+            _dbReplacementStatus = e.Message;
+            Logger.LogError(e, "Error replacing db");
+        }
+    }
+
 }
