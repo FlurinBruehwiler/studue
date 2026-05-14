@@ -103,6 +103,11 @@
 
                                     @if (StudentContext.HasWriteAccess)
                                     {
+                                        <input class="assignment-complete-toggle"
+                                               type="checkbox"
+                                               checked="@assignment.CompletedByStudents.Contains(StudentContext.Student)"
+                                               onclick="event.stopPropagation()"
+                                               onchange="toggleAssignmentCompleted(@assignment.Id, event)"/>
                                         <a href="@Helper.CreateLink(_info, $"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
                                                 <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -200,6 +205,10 @@
 </div>
 
 <script>
+async function toggleAssignmentCompleted(assignmentId, event) {
+    await fetch(`/assignment/${assignmentId}/${event.target.checked}`);
+}
+
 async function areNotificationsEnabled() {
     const reg = await navigator.serviceWorker.getRegistration("/");
     return !!reg;
@@ -343,6 +352,7 @@ async function enableNotifications() {
             .OrderBy(x => x.DueDateTime)
             .Include(x => x.CreatedBy)
             .Include(x => x.UpdatedBy)
+            .Include(x => x.CompletedByStudents)
             .Include(x => x.ModuleInstance)
             .ThenInclude(x => x.Module)
             .ToListAsync();

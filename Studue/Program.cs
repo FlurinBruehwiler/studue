@@ -152,6 +152,21 @@ try
     }).WithMetadata(new StudentRequiredAttribute())
         .RequireAuthorization();
 
+    app.MapGet("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext) =>
+        {
+            var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstAsync(x => x.Id == assignmentId);
+            if (completed)
+            {
+                assignment.CompletedByStudents.Add(studentContext.Student);
+            }
+            else
+            {
+                assignment.CompletedByStudents.Remove(studentContext.Student);
+            }
+            await studueContext.SaveChangesAsync();
+        }).WithMetadata(new StudentRequiredAttribute())
+    .RequireAuthorization();
+
     app.Run();
 }
 catch (Exception e)
