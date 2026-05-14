@@ -6,10 +6,22 @@ public class MigrationService(StudueContext studueContext, StudentContext studen
 {
     public async Task Migrate()
     {
-        var students = await studueContext.Students.ToListAsync();
-        foreach (var student in students)
+        var version = await studueContext.Configs.FirstOrDefaultAsync(x => x.Id == "DbVersion");
+
+        if (version == null)
         {
-            await studentContext.InitializeOrUpdateStudentInternal(student, student.StudentId);
+            studueContext.Configs.Add(new Config
+            {
+                Id = "DbVersion",
+                Data = "2"
+            });
+            await studueContext.SaveChangesAsync();
+
+            var students = await studueContext.Students.ToListAsync();
+            foreach (var student in students)
+            {
+                await studentContext.InitializeOrUpdateStudentInternal(student, student.StudentId);
+            }
         }
     }
 }

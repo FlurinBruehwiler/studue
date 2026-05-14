@@ -35,7 +35,6 @@ else
                 {
                     <article class="schedule-entry-card"
                              style="grid-column: @(entry.Weekday + 2); grid-row: @(GetLessonIndex(entry.StartTime) + 2) / span @entry.Duration;"
-                             role="gridcell"
                              aria-label="@entry.Module.Name in @entry.Room with @entry.Teacher">
                         <span class="schedule-entry-code">@entry.Module.Code</span>
                         <strong class="schedule-entry-title">@entry.Module.Name</strong>
