@@ -152,15 +152,17 @@ try
     }).WithMetadata(new StudentRequiredAttribute())
         .RequireAuthorization();
 
-    app.MapGet("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext) =>
+    app.MapGet("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext, ILogger<Program> logger) =>
         {
             var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstAsync(x => x.Id == assignmentId);
             if (completed)
             {
+                logger.LogInformation("{0} marked '{1}' as completed", studentContext.Student.StudentId, assignment.Title);
                 assignment.CompletedByStudents.Add(studentContext.Student);
             }
             else
             {
+                logger.LogInformation("{0} marked '{1}' as not completed", studentContext.Student.StudentId, assignment.Title);
                 assignment.CompletedByStudents.Remove(studentContext.Student);
             }
             await studueContext.SaveChangesAsync();
