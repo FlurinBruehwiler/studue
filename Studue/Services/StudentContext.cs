@@ -235,6 +235,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                     StartTime = startTime,
                     EndTime = TimeOnly.Parse("08:00")
                 };
+                context.ScheduleEntries.Add(scheduleEntry);
             }
 
             allLessons.Add(scheduleEntry);
@@ -269,13 +270,14 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module)
                 .Include(moduleInstance => moduleInstance.ScheduleEntries).ToListAsync();
             var moduleInstance =
-                moduleInstances.FirstOrDefault(x => x.ScheduleEntries.Any(y => scheduleEntries.Contains(y)));
+                moduleInstances.FirstOrDefault(x => x.ScheduleEntries.Any(y => scheduleEntries.Any(z => z.Id == y.Id)));
             if (moduleInstance == null)
             {
                 moduleInstance = new ModuleInstance
                 {
                     Module = module,
-                    Semester = Helper.GetCurrentSemester()
+                    Semester = Helper.GetCurrentSemester(),
+                    ScheduleEntries = scheduleEntries.ToList()
                 };
 
                 context.ModuleInstances.Add(moduleInstance);
