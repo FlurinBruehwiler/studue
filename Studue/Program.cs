@@ -70,7 +70,7 @@ try
 
         db.Database.Migrate();
 
-        await scope.ServiceProvider.GetRequiredService<MigrationService>().Migrate();
+        //await scope.ServiceProvider.GetRequiredService<MigrationService>().Migrate();
     }
 
     if (!app.Environment.IsDevelopment())
