@@ -1,0 +1,56 @@
+﻿
+<table>
+    <tbody>
+    <tr>
+        <th></th>
+        @foreach (var weekday in _weekdays)
+        {
+            <th>@weekday</th>
+        }
+    </tr>
+
+    @foreach (var lesson in _lessons)
+    {
+        <tr>
+            <td>@lesson.Start - @lesson.End</td>
+
+            @foreach (var (index, _) in _weekdays.Index())
+            {
+                var entry = ScheduleEntries.FirstOrDefault(x => x.Weekday == index && x.StartTime == lesson.Start);
+                if (entry != null)
+                {
+                    <td rowspan="@entry.Duration"> <span>@entry.Module.Code</span> - <span>@entry.Room</span> - <span>@entry.Teacher</span> </td>
+                }
+                else
+                {
+                    var ongoingEntry = ScheduleEntries.FirstOrDefault(x => x.Weekday == index && x.StartTime < lesson.Start && GetEndTime(x.StartTime, x.Duration) >= lesson.End);
+                    if (ongoingEntry == null)
+                    {
+                        <td rowspan="1"></td>
+                    }
+                }
+            }
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public List<ScheduleEntry> ScheduleEntries { get; set; }
+
+    private static readonly List<Lesson> _lessons = new[] { "08:00", "08:50", "10:00", "10:50", "12:00", "12:50", "14:00", "14:50", "16:00", "16:50", "17:45", "18:40", "19:25", "20:20", "21:05" }
+        .Select(x => new Lesson(TimeOnly.Parse(x), TimeOnly.Parse(x).AddMinutes(45))).ToList();
+
+    private static readonly string[] _weekdays = ["Monday", "Thuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+
+    record struct Lesson(TimeOnly Start, TimeOnly End);
+
+    private TimeOnly GetEndTime(TimeOnly startTime, int duration)
+    {
+        var idx = _lessons.FindIndex(x => x.Start == startTime);
+        return _lessons[idx + (duration - 1)].End;
+    }
+}

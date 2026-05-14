@@ -1,12 +1,12 @@
 ﻿@page "/admin/modules/{ModuleCode}"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
 @attribute [Authorize]
 @attribute [StudentRequired]
 @layout AdminLayout
 @inject StudueContext StudueContext;
 @inject NavigationManager Navigation;
-@rendermode InteractiveServer
 
 <section>
     <h2>Module: @_module.Name</h2>

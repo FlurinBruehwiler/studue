@@ -190,6 +190,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         var className = searchHighlight.NextSibling!.TextContent.Trim(',', ' ');
 
+        var cellToColumnMapping = GetCellToColumnMapping(document.QuerySelector("table")!.FirstElementChild!);
+
         var allLessons = new List<ScheduleEntry>();
         foreach (var lessonElement in document.QuerySelectorAll(".left"))
         {
@@ -209,7 +211,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             lesson.RoomCode = roomElement.TextContent;
 
             var tableDefinition = lessonElement.ParentElement!.ParentElement!.ParentElement!;
-            lesson.WeekdayNumber = tableDefinition.ParentElement!.IndexOf(tableDefinition);
+            lesson.WeekdayNumber = cellToColumnMapping[tableDefinition];
+            lesson.Duration = int.Parse(tableDefinition.GetAttribute("rowspan")!);
 
             lesson.FirstLessonTime = tableDefinition.ParentElement!.FirstElementChild!.TextContent;
 
@@ -220,7 +223,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                                                              && x.Teacher == lesson.TeacherName
                                                              && x.Room == lesson.RoomCode
                                                              && x.Weekday == lesson.WeekdayNumber
-                                                             && x.StartTime == startTime);
+                                                             && x.StartTime == startTime
+                                                             && x.Duration == lesson.Duration);
 
             if (scheduleEntry == null)
             {
@@ -233,7 +237,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                     ZhawID = lesson.LessonId,
                     Module = await GetOrCreateModule(lesson.ModuleCode, lesson.ModuleName ?? ""),
                     StartTime = startTime,
-                    EndTime = TimeOnly.Parse("08:00")
+                    Duration = lesson.Duration,
                 };
                 context.ScheduleEntries.Add(scheduleEntry);
             }
@@ -326,6 +330,55 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         }
     }
 
+    public async Task<List<ScheduleEntry>> GetScheduleEntriesForStudent(string studentId)
+    {
+        var currentSemester = Helper.GetCurrentSemester();
+
+        var student = await context.Students.Where(x => x.StudentId == studentId)
+            .Include(x => x.ModuleInstances)
+            .ThenInclude(x => x.ScheduleEntries)
+            .ThenInclude(x => x.Module)
+            .FirstAsync();
+
+        return student.ModuleInstances.Where(x => x.Semester == currentSemester).SelectMany(x => x.ScheduleEntries).ToList();
+    }
+
+    private static Dictionary<IElement, int> GetCellToColumnMapping(IElement htmlTable)
+    {
+        var result = new Dictionary<IElement, int>();
+
+        int[] columnSpans = new int[6];
+
+        foreach (var row in htmlTable.Children.Skip(1)) // skip header
+        {
+            var column = 0;
+
+            foreach (var cell in row.Children.Skip(1)) // skip time
+            {
+                while (columnSpans[column] > 0)
+                {
+                    columnSpans[column]--;
+                    column++;
+                }
+
+                result.Add(cell, column);
+
+                var rowspan = int.Parse(cell.GetAttribute("rowspan")!);
+                columnSpans[column] = rowspan - 1;
+
+                column++;
+            }
+
+            for (var i = column; i < columnSpans.Length; i++) {
+                if (columnSpans[i] > 0) {
+                    columnSpans[i]--;
+                }
+            }
+        }
+
+        return result;
+    }
+
     private static string NormalizeModuleCode(string moduleCode)
     {
         //XXM1.AN2.V => XXM1.AN2
@@ -358,5 +411,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         public string RoomCode = null!;
         public int WeekdayNumber;
         public string FirstLessonTime = null!;
+        public int Duration;
     }
 }

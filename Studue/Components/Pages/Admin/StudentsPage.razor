@@ -25,7 +25,7 @@
                                 ])" InitialSortingColumn="Last Access">
             <RowTemplate Context="student">
                 <tr>
-                    <td>@student.StudentId</td>
+                    <td><a href="/admin/students/@student.StudentId">@student.StudentId</a></td>
                     <td>@student.Class</td>
                     <td><input type="checkbox" @bind="student.IsAdmin" @bind:after="Changed"></td>
                     <td><input type="checkbox" @bind="student.IsBanned" @bind:after="Changed"></td>

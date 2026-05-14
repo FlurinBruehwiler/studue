@@ -68,8 +68,6 @@ public class Student
     public List<PushSubscriptionRow> PushSubscriptions { get; set; } = new();
 }
 
-
-
 public class Module
 {
     public int Id { get; set; }
@@ -115,7 +113,7 @@ public class ScheduleEntry
     public string Room { get; set; } = null!;
     public int Weekday { get; set; }
     public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
+    public int Duration { get; set; }
     public List<Student> Students { get; set; } = new();
 }
 
