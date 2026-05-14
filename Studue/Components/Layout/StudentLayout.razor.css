@@ -16,10 +16,16 @@
 }
 
 .student-layout-header {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: flex-start;
     gap: 1.5rem;
+}
+
+.student-layout-branding {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
 }
 
 .student-layout-brand {
@@ -66,23 +72,85 @@
     line-height: 1.6;
 }
 
-.student-layout-actions {
+.student-layout-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 1.1rem;
+    background: #f6fafc;
+    width: fit-content;
+}
+
+.student-layout-tab {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 2.8rem;
+    padding: 0.75rem 1.15rem;
+    border: 1px solid transparent;
+    border-radius: 0.85rem;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 700;
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.student-layout-tab:hover {
+    transform: translateY(-1px);
+}
+
+.student-layout-tab-active {
+    background: #0061a2;
+    color: #ffffff;
+    box-shadow: 0 14px 24px rgba(0, 97, 162, 0.16);
+}
+
+.student-layout-tab-idle {
+    color: #345066;
+}
+
+.student-layout-tab:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.student-layout-account {
+    display: flex;
+    align-items: center;
+    min-width: min(100%, 17rem);
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #d8e3ed;
+    border-radius: 1.25rem;
+    background: #f8fbfd;
+}
+
+.student-layout-account-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.student-layout-account-actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    align-items: center;
-    gap: 0.75rem;
+    gap: 0.55rem;
 }
 
 .student-layout-chip {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    padding: 0.7rem 1rem;
+    padding: 0.6rem 0.9rem;
     border-radius: 999px;
     background: #0061a2;
     color: #ffffff;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 600;
 }
 
@@ -98,7 +166,7 @@
     align-items: center;
     gap: 0.5rem;
     min-height: 2.75rem;
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 0.95rem;
     border: 1px solid transparent;
     border-radius: 0.9rem;
     text-decoration: none;
@@ -131,6 +199,10 @@
     color: #111111;
 }
 
+.student-layout-body {
+    margin-top: 1.75rem;
+}
+
 @media (max-width: 900px) {
     .student-layout {
         padding: 0.75rem;
@@ -142,12 +214,11 @@
     }
 
     .student-layout-header {
-        display: grid;
         grid-template-columns: 1fr;
     }
 
-    .student-layout-actions {
-        justify-content: flex-start;
+    .student-layout-account {
+        min-width: 0;
     }
 }
 
@@ -176,8 +247,48 @@
         font-size: 2rem;
     }
 
-    .student-layout-chip,
-    .student-layout-button {
+    .student-layout-nav {
         width: 100%;
+    }
+
+    .student-layout-tab {
+        flex: 1 1 0;
+    }
+
+    .student-layout-account {
+        width: 100%;
+        padding: 0.7rem 0.75rem;
+        border-radius: 1rem;
+    }
+
+    .student-layout-account-bar {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .student-layout-account-actions {
+        min-width: 0;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+
+    .student-layout-button {
+        width: auto;
+        min-height: 2.35rem;
+        padding: 0.6rem 0.85rem;
+        border-radius: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .student-layout-chip {
+        width: auto;
+        min-height: 2.35rem;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.84rem;
+        line-height: 1;
+        white-space: nowrap;
     }
 }

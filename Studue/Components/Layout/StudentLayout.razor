@@ -7,34 +7,45 @@
 <div class="student-layout">
     <div class="student-layout-shell">
         <header class="student-layout-header">
-            <a href="/" class="student-layout-brand" aria-label="Go to home page">
-                <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
+            <div class="student-layout-branding">
+                <a href="/" class="student-layout-brand" aria-label="Go to home page">
+                    <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
 
-                <section class="student-layout-hero">
-                    <span class="student-layout-eyebrow">@HeaderEyebrow</span>
-                    <h1>@HeaderTitle</h1>
-                    <p>@HeaderDescription</p>
-                </section>
-            </a>
-
-            <div class="student-layout-actions">
-                <span class="student-layout-chip">@StudentContext.Student.StudentId</span>
-                <span class="student-layout-chip student-layout-chip-outline">@StudentContext.Student.Class</span>
-
-                <a href="/" class="student-layout-button @(IsScheduleRoute ? "student-layout-button-secondary" : "student-layout-button-primary")">
-                    Home
-                </a>
-                <a href="/schedule" class="student-layout-button @(IsScheduleRoute ? "student-layout-button-primary" : "student-layout-button-secondary")">
-                    Schedule
+                    <section class="student-layout-hero">
+                        <span class="student-layout-eyebrow">@HeaderEyebrow</span>
+                        <h1>@HeaderTitle</h1>
+                        <p>@HeaderDescription</p>
+                    </section>
                 </a>
 
-                @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
-                {
-                    <a href="/admin" class="student-layout-button student-layout-button-secondary">Admin</a>
-                }
-
-                <button type="button" class="student-layout-button student-layout-button-secondary" onclick="logout()">Logout</button>
+                <nav class="student-layout-nav" aria-label="Primary">
+                    <a href="/" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-idle" : "student-layout-tab-active")">Home</a>
+                    <a href="/schedule" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-active" : "student-layout-tab-idle")">Schedule</a>
+                </nav>
             </div>
+
+            <aside class="student-layout-account" aria-label="Student account">
+                <div class="student-layout-account-bar">
+                    <span class="student-layout-chip">@StudentContext.Student.StudentId</span>
+
+                    <div class="student-layout-account-actions">
+                    @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
+                    {
+                        <a href="/admin" class="student-layout-button student-layout-button-secondary">Admin</a>
+                    }
+
+                    @if (!StudentContext.HasWriteAccess)
+                    {
+                        <a href="/?requestEditLink=true" class="student-layout-button student-layout-button-primary">Authenticate to edit</a>
+                    }
+
+                    @if (StudentContext.HasWriteAccess)
+                    {
+                        <button type="button" class="student-layout-button student-layout-button-secondary" onclick="logout()">Logout</button>
+                    }
+                    </div>
+                </div>
+            </aside>
         </header>
 
         <div class="student-layout-body">
