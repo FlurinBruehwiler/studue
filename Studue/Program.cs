@@ -136,7 +136,7 @@ try
     app.MapStaticAssets();
 
     app.UseAuthentication();
-    app.UseAuthorization();  
+    app.UseAuthorization();
 
     app.UseAntiforgery();
 

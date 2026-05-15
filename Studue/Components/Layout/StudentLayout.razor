@@ -5,7 +5,7 @@
 @inherits LayoutComponentBase
 
 <div class="student-layout">
-    <div class="student-layout-shell">
+    <div class="student-layout-shell @(HasViewportOverlay ? "student-layout-shell-overlay-open" : null)">
         <header class="student-layout-header">
             <div class="student-layout-branding">
                 <a href="/" class="student-layout-brand" aria-label="Go to home page">
@@ -64,6 +64,21 @@ function logout() {
 
 @code {
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
+
+    private bool HasViewportOverlay
+    {
+        get
+        {
+            var route = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/');
+
+            if (string.IsNullOrEmpty(route) || IsScheduleRoute)
+                return false;
+
+            return route.Equals("create", StringComparison.OrdinalIgnoreCase)
+                || route.StartsWith("edit/", StringComparison.OrdinalIgnoreCase)
+                || int.TryParse(route, out _);
+        }
+    }
 
     private string HeaderEyebrow => IsScheduleRoute ? "Weekly timetable" : "Assignment overview";
 
