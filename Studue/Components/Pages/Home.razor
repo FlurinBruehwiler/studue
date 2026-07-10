@@ -1,11 +1,7 @@
 ﻿@page "/"
-@page "/create"
-@page "/edit/{Id:int}"
-@page "/{Id:int}"
 @attribute [StudentRequired]
 @layout Layout.StudentLayout
 @using System.Globalization
-@using System.Text.RegularExpressions
 @using System.Net.Http.Headers
 @using System.Web
 @using Microsoft.EntityFrameworkCore
@@ -15,7 +11,6 @@
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
 @inject IOptions<Settings> Settings
-@inject NavigationManager Navigation
 @inject IHostEnvironment Environment
 @inject ILogger<Home> Logger
 
@@ -27,7 +22,7 @@
 
         @if (StudentContext.HasWriteAccess)
         {
-            <a href="@Helper.CreateLink(_info, "/create")" class="home-button home-button-primary">Create assignment</a>
+            <a href="/create" class="home-button home-button-primary">Create assignment</a>
         }
     </section>
 
@@ -76,7 +71,7 @@
                     @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
                     {
                         <article class="assignment-card">
-                            <a class="assignment-card-link" href="@Helper.CreateLink(_info, $"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
+                            <a class="assignment-card-link" href="@($"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
 
                             <div class="assignment-card-header">
                                 <div class="assignment-card-copy">
@@ -108,7 +103,7 @@
                                                checked="@assignment.CompletedByStudents.Contains(StudentContext.Student)"
                                                onclick="event.stopPropagation()"
                                                onchange="toggleAssignmentCompleted(@assignment.Id, event)"/>
-                                        <a href="@Helper.CreateLink(_info, $"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
+                                        <a href="@($"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
                                                 <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                                 <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -135,73 +130,6 @@
             <a href="/">Don't show overdue assignments</a>
         }
     </section>
-
-    @if (IsCreateMode)
-    {
-        <div class="assignment-dialog-layer" >
-            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
-            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@((Assignment?)null)" Info="_info"></AssignmentComponent>
-        </div>
-    }
-
-    @if (IsEditMode)
-    {
-        <div class="assignment-dialog-layer">
-            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
-            <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment" Info="_info"></AssignmentComponent>
-        </div>
-    }
-
-    @if (IsDetailView && _selectedAssignment is not null)
-    {
-        <div class="assignment-dialog-layer assignment-detail-overlay">
-            <a href="@Helper.CreateLink(_info, "/")" class="assignment-dialog-backdrop" aria-label="Close dialog"></a>
-            <article class="assignment-detail-card assignment-detail-dialog">
-                <div class="assignment-detail-header">
-                    <div>
-                        <h2 class="assignment-detail-title">@_selectedAssignment.Title</h2>
-                        <p class="assignment-detail-subtitle">
-                            @_selectedAssignment.ModuleInstance.Module.Name - @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)
-                        </p>
-                    </div>
-
-                    <div class="assignment-detail-toolbar">
-                        @if (StudentContext.HasWriteAccess)
-                        {
-                            <a href="@Helper.CreateLink(_info, $"/edit/{_selectedAssignment.Id}")" class="assignment-detail-icon-button" aria-label="Edit assignment">
-                                <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-pencil">
-                                    <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </a>
-                        }
-
-                        <a href="@Helper.CreateLink(_info, "/")" class="assignment-detail-icon-button" aria-label="Close details">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-close">
-                                <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="assignment-detail-content">
-                    @foreach (var line in GetDetailLines(_selectedAssignment.Description))
-                    {
-                        <p>@RenderRichLine(line)</p>
-                    }
-                </div>
-
-                <div class="assignment-detail-footer">
-                    <div>Created by: @_selectedAssignment.CreatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.CreatedTime)</div>
-                    @if (_selectedAssignment.CreatedTime != _selectedAssignment.UpdatedTime)
-                    {
-                        <div>Last edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
-                    }
-                </div>
-            </article>
-        </div>
-    }
 </div>
 
 <script>
@@ -250,7 +178,6 @@ async function enableNotifications() {
 </script>
 
 @code {
-    private List<Module> _modules = [];
     private List<Assignment> _assignments = [];
 
     private readonly List<MarkupString> _statusMessages = [];
@@ -259,8 +186,6 @@ async function enableNotifications() {
     [SupplyParameterFromQuery(Name = "requestEditLink")]
     public bool RequestEditLink { get; set; }
 
-    [Parameter] public int? Id { get; set; }
-
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
@@ -268,28 +193,14 @@ async function enableNotifications() {
     [SupplyParameterFromQuery(Name = "overdue")]
     public bool ShowOverdue { get; set; }
 
-    private bool IsCreateMode => HttpContext?.Request.Path.StartsWithSegments("/create", StringComparison.OrdinalIgnoreCase) == true;
-    private bool IsEditMode => Id.HasValue && HttpContext?.Request.Path.Value?.Contains("/edit/") == true;
-    private bool IsDetailView => Id.HasValue && !IsEditMode;
-
-    private Assignment? _selectedAssignment;
-
     private int _totalAssignmentCount;
 
     private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-GB"); //we want english month/weekdays
-    private static readonly Regex UrlRegex = new(@"https?:\/\/\S+", RegexOptions.Compiled);
-
-    private Helper.HomePageUrlInfo _info = null!;
 
     private string _vapidPublicKey;
 
     protected override async Task OnInitializedAsync()
     {
-        _info = new Helper.HomePageUrlInfo
-        {
-            ShowOverdue = ShowOverdue
-        };
-
         if (RequestEditLink)
         {
             var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
@@ -327,22 +238,8 @@ async function enableNotifications() {
 
         _vapidPublicKey = (await StudueContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
 
-        _modules = (await StudueContext.ModuleInstances
-            .Where(x => x.Students.Contains(StudentContext.Student))
-            .Include(x => x.Module)
-            .ToListAsync()).Select(x => x.Module).ToList();
-
         _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted);
         _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : Helper.Now().Date);
-
-        if (Id.HasValue)
-        {
-            _selectedAssignment = _assignments.FirstOrDefault(x => x.Id == Id.Value);
-            if (_selectedAssignment == null)
-            {
-                Navigation.NotFound();
-            }
-        }
     }
 
     async Task<List<Assignment>> GetAssignments(DateTime today)
@@ -372,57 +269,4 @@ async function enableNotifications() {
     {
         return TimeOnly.FromDateTime(dueDateTime).ToString("HH:mm", DisplayCulture);
     }
-
-    private static string FormatDetailDateTime(DateTime dateTime)
-    {
-        return dateTime.ToString("dd.MM.yyyy HH:mm", DisplayCulture);
-    }
-
-    private static string FormatSwissDateAndTime(DateTime dueDateTime)
-    {
-        return HasDueTime(dueDateTime)
-            ? dueDateTime.ToString("dd.MM.yyyy HH:mm", DisplayCulture)
-            : dueDateTime.ToString("dd.MM.yyyy", DisplayCulture);
-    }
-
-    private static IEnumerable<string> GetDetailLines(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return [];
-        }
-
-        return text.Split('\n').Select(line => line.TrimEnd('\r')).Where(line => !string.IsNullOrWhiteSpace(line));
-    }
-
-    private static RenderFragment RenderRichLine(string line) => builder =>
-    {
-        var matches = UrlRegex.Matches(line);
-        var lastIndex = 0;
-        var sequence = 0;
-
-        foreach (Match match in matches)
-        {
-            if (match.Index > lastIndex)
-            {
-                builder.AddContent(sequence++, line[lastIndex..match.Index]);
-            }
-
-            builder.OpenElement(sequence++, "a");
-            builder.AddAttribute(sequence++, "href", match.Value);
-            builder.AddAttribute(sequence++, "target", "_blank");
-            builder.AddAttribute(sequence++, "rel", "noreferrer");
-            builder.AddAttribute(sequence++, "class", "assignment-detail-link");
-            builder.AddContent(sequence++, match.Value);
-            builder.CloseElement();
-
-            lastIndex = match.Index + match.Length;
-        }
-
-        if (lastIndex < line.Length)
-        {
-            builder.AddContent(sequence, line[lastIndex..]);
-        }
-    };
-
 }

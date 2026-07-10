@@ -1,0 +1,31 @@
+﻿@inject StudentContext StudentContext
+@inject StudueContext StudueContext
+@inject NavigationManager Navigation
+@attribute [StudentRequired]
+
+@page "/edit/{Id:int}"
+@using Microsoft.EntityFrameworkCore
+@using Studue.Services
+
+<AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
+
+@code {
+    private List<Module> _modules = [];
+    private Assignment? _selectedAssignment;
+    [Parameter] public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _modules = await StudentContext.GetStudentModules();
+
+        _selectedAssignment = await StudueContext.Assignements
+            .Include(x => x.ModuleInstance)
+            .ThenInclude(x => x.Module)
+            .FirstOrDefaultAsync(x => x.Id == Id);
+
+        if (_selectedAssignment == null)
+        {
+            Navigation.NotFound();
+        }
+    }
+}

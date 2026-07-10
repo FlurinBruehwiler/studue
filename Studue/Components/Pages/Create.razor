@@ -1,0 +1,17 @@
+﻿@inject StudueContext StudueContext
+@inject StudentContext StudentContext
+@attribute [StudentRequired]
+
+@page "/create"
+@using Studue.Services
+
+<AssignmentComponent Modules="@_modules" AssignmentToUpdate="@((Assignment?)null)"></AssignmentComponent>
+
+@code {
+    private List<Module> _modules = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _modules = await StudentContext.GetStudentModules();
+    }
+}

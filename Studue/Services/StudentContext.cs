@@ -15,6 +15,14 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     public Student Student { get; private set; } = null!;
     public bool HasWriteAccess { get; set; }
 
+    public async Task<List<Module>> GetStudentModules()
+    {
+        return (await context.ModuleInstances
+            .Where(x => x.Students.Contains(Student))
+            .Include(x => x.Module)
+            .ToListAsync()).Select(x => x.Module).ToList();
+    }
+
     public async Task<(Student?, string)> GetOrCreateStudent(string studentId)
     {
         studentId = studentId.ToLower().Trim();
