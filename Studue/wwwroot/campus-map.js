@@ -277,7 +277,12 @@ async function initCampusMap() {
     // no zoom buttons: scroll, pinch and double-click all zoom already.
     // zoomSnap allows fractional levels: snapping to whole ones rounds a fit down and
     // leaves a campus at roughly half the scale it could be shown at.
-    map = L.map(host, { attributionControl: false, zoomControl: false, zoomSnap: 0.25 });
+    map = L.map(host, {
+        attributionControl: false,
+        zoomControl: false,
+        zoomSnap: 0.25,
+        renderer: L.svg({ padding: 100 }),
+    });
     layers = L.layerGroup().addTo(map);
 
     const page = document.querySelector(".map-page");
