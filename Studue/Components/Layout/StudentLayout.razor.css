@@ -12,10 +12,8 @@
     max-width: 88rem;
     margin: 0 auto;
     padding: 1.5rem;
-    border: 1px solid #d8e3ed;
     border-radius: 1.5rem;
     background: #ffffff;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
 }
 
 .student-layout-header {
@@ -231,12 +229,6 @@
 @media (max-width: 640px) {
     .student-layout {
         padding: 0;
-    }
-
-    .student-layout-shell {
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
     }
 
     .student-layout-brand {
