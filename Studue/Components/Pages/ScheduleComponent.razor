@@ -62,7 +62,7 @@ else
                                         <span>
                                             @if (Helper.BuildingCode(room.Room) is { } building)
                                             {
-                                                <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                                <a href="@($"/map?building={building}")" data-enhance-nav="false" class="schedule-room">@room.Room</a>
                                             }
                                             else
                                             {
@@ -109,7 +109,7 @@ else
                                     <p>
                                     @if (Helper.BuildingCode(room.Room) is { } building)
                                     {
-                                        <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                        <a href="@($"/map?building={building}")" data-enhance-nav="false" class="schedule-room">@room.Room</a>
                                     }
                                     else
                                     {
