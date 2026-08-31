@@ -1,6 +1,5 @@
 .assignment-form-card {
     max-width: 42rem;
-    overflow-x: hidden;
 }
 
 .assignment-form-icon {
@@ -15,7 +14,6 @@
 .assignment-form-body {
     display: grid;
     gap: 1rem;
-    overflow-x: hidden;
     padding-bottom: 2rem;
 }
 
