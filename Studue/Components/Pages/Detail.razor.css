@@ -1,63 +1,57 @@
-﻿.assignment-detail-card {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    max-width: 64rem;
+﻿.assignment-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    align-items: stretch;
+    gap: 1.25rem;
 }
 
-.assignment-detail-heading {
-    margin-top: 1rem;
-}
-
-.assignment-detail-title {
-    max-width: 48rem;
-    margin: 0;
-    color: #111111;
-    font-size: clamp(1.4rem, 2.5vw, 1.75rem);
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-}
-
-.assignment-detail-subtitle {
-    margin: 0.5rem 0 0;
-    color: #4f6477;
+.assignment-detail-body {
+    color: #1e293b;
     font-size: 1.05rem;
-    line-height: 1.5;
+    line-height: 1.7;
 }
 
-.assignment-detail-content {
-    margin-top: 2rem;
-    color: #111111;
-    font-size: 1.125rem;
-    line-height: 1.78;
+.assignment-detail-body p {
+    margin: 0 0 1rem;
 }
 
-.assignment-detail-content p {
-    margin: 0 0 1.25rem;
+.assignment-detail-body p:last-child {
+    margin-bottom: 0;
 }
 
-.assignment-detail-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: auto;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e2eaf1;
-    color: #4f6477;
-    font-size: 0.9rem;
+.assignment-detail-empty {
+    color: #94a3b8;
 }
 
-@media (min-width: 640px) {
-    .assignment-detail-footer {
-        flex-direction: row;
-        gap: 2.5rem;
-    }
+.assignment-detail-meta dl {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0;
 }
 
-@media (max-width: 640px) {
-    .assignment-detail-subtitle,
-    .assignment-detail-content {
-        font-size: 1rem;
+.assignment-detail-meta dt {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.assignment-detail-meta dd {
+    margin: 0.15rem 0 0;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.assignment-detail-meta dd span {
+    display: block;
+    margin-top: 0.1rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+@media (max-width: 860px) {
+    .assignment-detail {
+        grid-template-columns: 1fr;
     }
 }

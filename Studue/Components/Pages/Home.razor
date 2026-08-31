@@ -8,7 +8,6 @@
 @using Microsoft.Extensions.Options
 @using QRCoder
 @using Studue.Services
-@using Studue.Components.Layout
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
 @inject IOptions<Settings> Settings
@@ -17,19 +16,20 @@
 
 <PageTitle>Studue</PageTitle>
 
-<SectionContent SectionName="@StudentLayout.PageTitleSection">
-    <h1>Assignments</h1>
-    <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
-</SectionContent>
+<header class="page-header">
+    <div>
+        <h1>Assignments</h1>
+        <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
+    </div>
 
-@if (StudentContext.HasWriteAccess)
-{
-    <SectionContent SectionName="@StudentLayout.PageActionsSection">
-        <a href="/create" class="app-button app-button-primary app-header-action">Create assignment</a>
-    </SectionContent>
-}
+    @if (StudentContext.HasWriteAccess)
+    {
+        <a href="/create" class="app-button app-button-primary">Create assignment</a>
+    }
+</header>
 
 <div class="home-page">
+
     @if (_statusMessages.Count > 0)
     {
         <section class="home-messages" aria-live="polite">

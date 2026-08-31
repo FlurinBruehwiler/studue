@@ -1,59 +1,41 @@
-﻿@layout MainLayout
+@layout MainLayout
 @using Studue.Services
 @inject StudentContext StudentContext
 @inject NavigationManager Navigation
 @inherits LayoutComponentBase
 
-<div class="student-layout">
-    <div class="student-layout-shell">
-        <header class="student-layout-header">
-            <aside class="student-layout-account" aria-label="Student account">
-                <div class="student-layout-account-bar">
-                    <span class="student-layout-chip">@StudentContext.Student.StudentId</span>
+<div class="app">
+    <header class="app-bar">
+        <a href="/" class="app-brand" aria-label="Studue home">
+            <img src="/studue-mark.svg" alt="" class="app-brand-mark"/>
+            <span>Studue</span>
+        </a>
 
-                    <div class="student-layout-account-actions">
-                    @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
-                    {
-                        <a href="/admin" class="app-button app-button-secondary">Admin</a>
-                    }
+        <nav class="app-nav" aria-label="Primary">
+            <a href="/" class="app-nav-link @(IsScheduleRoute ? null : "is-active")">Home</a>
+            <a href="/schedule" class="app-nav-link @(IsScheduleRoute ? "is-active" : null)">Schedule</a>
+        </nav>
 
-                    @if (!StudentContext.HasWriteAccess)
-                    {
-                        <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
-                    }
+        <div class="app-account">
+            <span class="app-account-name">@StudentContext.Student.StudentId</span>
 
-                        <button type="button" class="app-button app-button-secondary" onclick="logout()">Logout</button>
-                    </div>
-                </div>
-            </aside>
+            @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
+            {
+                <a href="/admin" class="app-button app-button-secondary">Admin</a>
+            }
 
-            <div class="student-layout-branding">
-                <a href="/" class="student-layout-brand-link" aria-label="Go to home page">
-                    <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
-                </a>
+            @if (!StudentContext.HasWriteAccess)
+            {
+                <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
+            }
 
-                <section class="student-layout-hero">
-                    <SectionOutlet SectionName="@PageTitleSection"/>
-                </section>
-            </div>
-
-            <div class="student-layout-navbar">
-                <nav class="student-layout-nav" aria-label="Primary">
-                    <a href="/" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-idle" : "student-layout-tab-active")">Home</a>
-                    <a href="/schedule" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-active" : "student-layout-tab-idle")">Schedule</a>
-                </nav>
-
-                <div class="student-layout-navbar-actions">
-                    <SectionOutlet SectionName="@PageActionsSection"/>
-                </div>
-            </div>
-
-        </header>
-
-        <div class="student-layout-body">
-            @Body
+            <button type="button" class="app-button app-button-secondary" onclick="logout()">Logout</button>
         </div>
-    </div>
+    </header>
+
+    <main class="app-main">
+        @Body
+    </main>
 </div>
 
 <script>
@@ -65,9 +47,5 @@ function logout() {
 </script>
 
 @code {
-    //pages fill these, so the header always describes the page you are actually on
-    public const string PageTitleSection = "page-title";
-    public const string PageActionsSection = "page-actions";
-
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
 }

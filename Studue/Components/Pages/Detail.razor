@@ -3,7 +3,6 @@
 @using System.Text.RegularExpressions
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
-@using Studue.Components.Layout
 @layout Layout.StudentLayout
 
 @inject StudentContext StudentContext
@@ -13,45 +12,57 @@
 
 <PageTitle>@_selectedAssignment.Title</PageTitle>
 
-<SectionContent SectionName="@StudentLayout.PageTitleSection">
-    <h1>Assignments</h1>
-    <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
-</SectionContent>
+<a href="/" class="page-back">&#8592; All assignments</a>
 
-<SectionContent SectionName="@StudentLayout.PageActionsSection">
+<header class="page-header">
+    <div>
+        <h1>@_selectedAssignment.Title</h1>
+        <p>Due @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</p>
+    </div>
+
     @if (StudentContext.HasWriteAccess)
     {
-        <a href="@($"/edit/{_selectedAssignment.Id}")" class="app-button app-button-secondary app-header-action">Edit</a>
+        <a href="@($"/edit/{_selectedAssignment.Id}")" class="app-button app-button-secondary">Edit</a>
     }
+</header>
 
-    <a href="/" class="app-button app-button-secondary app-header-action">Back</a>
-</SectionContent>
-
-<article class="assignment-detail-card">
-        <div class="assignment-detail-heading">
-            <h2 class="assignment-detail-title">@_selectedAssignment.Title</h2>
-            <p class="assignment-detail-subtitle">
-                @_selectedAssignment.ModuleInstance.Module.Name - @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)
-            </p>
-        </div>
-
-        <div class="assignment-detail-content">
+<div class="assignment-detail">
+    <article class="panel assignment-detail-body">
+        @if (GetDetailLines(_selectedAssignment.Description).Any())
+        {
             @foreach (var line in GetDetailLines(_selectedAssignment.Description))
             {
                 <p>@RenderRichLine(line)</p>
             }
-        </div>
+        }
+        else
+        {
+            <p class="assignment-detail-empty">No further details were added.</p>
+        }
+    </article>
 
-        <div class="assignment-detail-footer">
-            <div>Created
-                by: @_selectedAssignment.CreatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.CreatedTime)</div>
+    <aside class="panel assignment-detail-meta">
+        <dl>
+            <dt>Module</dt>
+            <dd>@_selectedAssignment.ModuleInstance.Module.Name</dd>
+
+            <dt>Due</dt>
+            <dd>@FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</dd>
+
+            <dt>Type</dt>
+            <dd>@(_selectedAssignment.Mandatory ? "Mandatory" : "Optional")</dd>
+
+            <dt>Created</dt>
+            <dd>@_selectedAssignment.CreatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.CreatedTime)</span></dd>
+
             @if (_selectedAssignment.CreatedTime != _selectedAssignment.UpdatedTime)
             {
-                <div>Last
-                    edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
+                <dt>Last edited</dt>
+                <dd>@_selectedAssignment.UpdatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.UpdatedTime)</span></dd>
             }
-        </div>
-</article>
+        </dl>
+    </aside>
+</div>
 
 @code {
     private Assignment _selectedAssignment = null!;

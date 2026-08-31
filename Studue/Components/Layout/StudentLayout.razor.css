@@ -1,244 +1,111 @@
-.student-layout {
-    display: flex;
-    min-height: 100vh;
-    padding: 1.5rem;
-}
-
-.student-layout-shell {
-    /* stretches to fill the flex parent, so the card is never a short strip */
-    flex: 1;
+.app {
     display: flex;
     flex-direction: column;
-    max-width: 88rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-    border-radius: 1.5rem;
-    background: #ffffff;
+    min-height: 100vh;
+    background: #f1f5f9;
 }
 
-.student-layout-header {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: flex-start;
-    gap: 1rem 1.5rem;
-}
-
-.student-layout-branding {
-    grid-column: 1;
-    grid-row: 1;
+.app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    min-width: 0;
-}
-
-.student-layout-brand-link {
-    display: flex;
-    flex: 0 0 auto;
-    text-decoration: none;
-}
-
-.student-layout-brand-mark {
-    width: 3.5rem;
+    gap: 1.75rem;
     height: 3.5rem;
-    flex: 0 0 auto;
-}
-
-.student-layout-hero {
-    min-width: 0;
-}
-
-.student-layout-navbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.student-layout-navbar {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    /* button min-height (2.75rem) + its lift off the rail (0.6rem), so the bar
-       keeps the same height on pages that do not render the action */
-    min-height: 3.35rem;
+    padding: 0 1.25rem;
+    background: #ffffff;
     border-bottom: 1px solid #dbe5ee;
 }
 
-.student-layout-nav {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.25rem;
-}
-
-.student-layout-tab {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: -1px;
-    padding: 0.7rem 1rem;
-    border-bottom: 2px solid transparent;
-    text-decoration: none;
-    font: inherit;
-    font-weight: 600;
-    transition: color 160ms ease, border-color 160ms ease;
-}
-
-.student-layout-tab-active {
-    border-bottom-color: #0061a2;
-    color: #0061a2;
-    font-weight: 700;
-}
-
-.student-layout-tab-idle {
-    color: #4f6477;
-}
-
-.student-layout-tab-idle:hover {
-    color: #0061a2;
-}
-
-.student-layout-tab:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
-}
-
-.student-layout-account {
-    grid-column: 2;
-    grid-row: 1;
+.app-brand {
     display: flex;
     align-items: center;
-    min-width: min(100%, 17rem);
-}
-
-.student-layout-account-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 0.5rem;
-}
-
-.student-layout-account-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
     gap: 0.55rem;
+    flex: 0 0 auto;
+    color: #0061a2;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
 }
 
-.student-layout-chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.75rem;
-    padding: 0.6rem 0.9rem;
-    border: 1px solid #c8d6e4;
-    border-radius: 999px;
-    background: #ffffff;
-    color: #111111;
-    font-size: 0.88rem;
-    font-weight: 600;
+.app-brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
 }
 
-.student-layout-brand-link:focus-visible {
-    outline: none;
-    border-color: #0061a2;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
-}
-
-.student-layout-body {
-    /* grows into the card's spare height so a page can push content to the bottom */
-    flex: 1;
+.app-nav {
     display: flex;
-    flex-direction: column;
-    margin-top: 10px;
+    align-items: center;
+    gap: 0.25rem;
+    margin-right: auto;
+    min-width: 0;
 }
 
-@media (max-width: 900px) {
-    .student-layout {
-        padding: 0.75rem;
-    }
-
-    .student-layout-shell {
-        padding: 1rem;
-        border-radius: 1.25rem;
-    }
-
-    .student-layout-header {
-        grid-template-columns: 1fr;
-    }
-
-    .student-layout-branding,
-    .student-layout-navbar,
-    .student-layout-account {
-        grid-column: 1;
-        grid-row: auto;
-    }
-
-    .student-layout-account {
-        min-width: 0;
-    }
+.app-nav-link {
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
+    color: #4f6477;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-    .student-layout {
-        padding: 0;
-    }
+.app-nav-link:hover {
+    background: #f1f6fa;
+    color: #0061a2;
+}
 
-    .student-layout-branding {
-        align-items: flex-start;
-    }
+.app-nav-link.is-active {
+    background: #eaf4fb;
+    color: #0061a2;
+}
 
-    .student-layout-brand-mark {
-        width: 3rem;
-        height: 3rem;
-    }
+.app-account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+}
 
-    .student-layout-hero h1 {
-        font-size: 1.6rem;
-    }
+.app-account-name {
+    color: #4f6477;
+    font-weight: 600;
+    white-space: nowrap;
+}
 
-    .student-layout-navbar {
-        flex-direction: column;
-        align-items: stretch;
+.app-main {
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+@media (max-width: 720px) {
+    .app-bar {
+        flex-wrap: wrap;
+        height: auto;
         gap: 0.75rem;
-        min-height: 0;
+        padding: 0.7rem 1rem;
     }
 
-
-    .student-layout-nav {
+    .app-nav {
+        order: 3;
         width: 100%;
+        margin-right: 0;
     }
 
-    .student-layout-tab {
-        flex: 1 1 0;
+    .app-nav-link {
+        flex: 1;
+        text-align: center;
     }
 
-    .student-layout-account {
-        width: 100%;
+    .app-account-name {
+        margin-right: auto;
     }
 
-    .student-layout-account-bar {
-        display: grid;
-        grid-template-columns: max-content minmax(0, 1fr);
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .student-layout-account-actions {
-        min-width: 0;
-        gap: 0.4rem;
-        flex-wrap: nowrap;
-        justify-content: flex-end;
-    }
-
-    .student-layout-chip {
-        width: auto;
-        min-height: 2.35rem;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.84rem;
-        line-height: 1;
-        white-space: nowrap;
+    .app-main {
+        padding: 1.25rem 1rem 3rem;
     }
 }

@@ -1,22 +1,21 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using Studue.Services
-@using Studue.Components.Layout
 @inject StudueContext studueContext
 @inject StudentContext studentContext
 @inject NavigationManager Navigation
 
 <PageTitle>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</PageTitle>
 
-<SectionContent SectionName="@StudentLayout.PageTitleSection">
-    <h1>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h1>
-    <p>@(AssignmentToUpdate != null ? "Update the details for your class." : "Add an assignment for your class.")</p>
-</SectionContent>
+<a href="/" class="page-back">&#8592; All assignments</a>
 
-<SectionContent SectionName="@StudentLayout.PageActionsSection">
-    <a href="/" class="app-button app-button-secondary app-header-action">Back</a>
-</SectionContent>
+<header class="page-header">
+    <div>
+        <h1>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h1>
+        <p>@(AssignmentToUpdate != null ? "Update this assignment for " : "Add an assignment for ")@studentContext.Student.Class.</p>
+    </div>
+</header>
 
-<div class="assignment-form-card">
+<div class="panel assignment-form-card">
         <form method="post" class="assignment-form-body" @formname="assignment-form" @onsubmit="Submit">
             <AntiforgeryToken/>
 

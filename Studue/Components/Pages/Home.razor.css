@@ -297,6 +297,12 @@
 
 }
 
+.home-toolbar {
+    display: flex;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
 .home-footer {
     /* sits at the bottom of the card when there is little content */
     margin-top: auto;

@@ -196,11 +196,6 @@ h1:focus {
     color: #111111;
 }
 
-/* sits on the tab rail */
-.app-header-action {
-    margin-bottom: 0.6rem;
-}
-
 @media (max-width: 640px) {
     .app-button {
         width: auto;
@@ -209,31 +204,60 @@ h1:focus {
         border-radius: 0.8rem;
         white-space: nowrap;
     }
-
-    .app-header-action {
-        margin-bottom: 0.25rem;
-    }
-
-    /* actions share the row like the tabs above them, instead of hugging the left edge.
-       Global, because the buttons are rendered by pages into the layout's outlet. */
-    .student-layout-navbar-actions > * {
-        flex: 1;
-    }
 }
 
-/* Page header typography. Global because pages render these into the layout's outlet. */
-.student-layout-hero h1 {
+/* Page header. Every page renders its own, so these are global. */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.page-header h1 {
     margin: 0;
-    color: #0061a2;
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
-    line-height: 0.95;
+    color: #0f172a;
+    font-size: 1.75rem;
     font-weight: 700;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
 }
 
-.student-layout-hero p {
-    margin: 0.65rem 0 0;
-    color: #4f6477;
-    font-size: 1rem;
-    line-height: 1.6;
+.page-header p {
+    margin: 0.3rem 0 0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.page-back {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    color: #0061a2;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.page-back:hover {
+    text-decoration: underline;
+}
+
+/* The surface page content sits on. */
+.panel {
+    padding: 1.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.9rem;
+}
+
+@media (max-width: 720px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .panel {
+        padding: 1.1rem;
+    }
 }

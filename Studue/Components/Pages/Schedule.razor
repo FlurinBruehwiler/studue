@@ -2,7 +2,6 @@
 @layout Layout.StudentLayout
 
 @using Studue.Services
-@using Studue.Components.Layout
 
 @attribute [StudentRequired]
 
@@ -10,10 +9,12 @@
 
 <PageTitle>Schedule</PageTitle>
 
-<SectionContent SectionName="@StudentLayout.PageTitleSection">
-    <h1>Schedule</h1>
-    <p>Current semester lessons for @StudentContext.Student.Class.</p>
-</SectionContent>
+<header class="page-header">
+    <div>
+        <h1>Schedule</h1>
+        <p>Current semester lessons for @StudentContext.Student.Class.</p>
+    </div>
+</header>
 
 <div class="schedule-page">
     <ScheduleComponent ScheduleEntries="_scheduleEntries"></ScheduleComponent>
