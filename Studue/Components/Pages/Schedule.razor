@@ -17,15 +17,17 @@
 </header>
 
 <div class="schedule-page">
-    <ScheduleComponent ScheduleEntries="_scheduleEntries"></ScheduleComponent>
+    <ScheduleComponent ScheduleEntries="_scheduleEntries" ModuleAccents="_moduleAccents"></ScheduleComponent>
 </div>
 
 @code {
 
     private List<ScheduleEntry> _scheduleEntries = [];
+    private IReadOnlyDictionary<string, string> _moduleAccents = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
     {
         _scheduleEntries = await StudentContext.GetScheduleEntriesForStudent(StudentContext.Student.StudentId);
+        _moduleAccents = await StudentContext.GetModuleAccents();
     }
 }

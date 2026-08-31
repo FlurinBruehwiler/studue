@@ -57,7 +57,8 @@
                 <div class="assignment-list">
                     @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
                     {
-                        <article class="assignment-card @(StudentContext.HasWriteAccess ? "is-editable" : null)">
+                        <article class="assignment-card @(StudentContext.HasWriteAccess ? "is-editable" : null)"
+                                 style="--accent: @AccentFor(assignment.ModuleInstance.Module.Code);">
                             <a class="assignment-card-link" href="@($"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
 
                             @if (StudentContext.HasWriteAccess)
@@ -141,11 +142,21 @@ async function toggleAssignmentCompleted(assignmentId, event) {
 
     private int _totalAssignmentCount;
 
+    private IReadOnlyDictionary<string, string> _moduleAccents = new Dictionary<string, string>();
+
+    //the schedule colours the same module the same way
+    private string AccentFor(string moduleCode)
+    {
+        return _moduleAccents.TryGetValue(moduleCode, out var accent) ? accent : "#94a3b8";
+    }
+
     private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-GB"); //we want english month/weekdays
 
     protected override async Task OnInitializedAsync()
     {
         var currentSemester = Helper.GetCurrentSemester();
+        _moduleAccents = await StudentContext.GetModuleAccents();
+
         _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.ModuleInstance.Semester == currentSemester);
         _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : Helper.Now().Date);
     }

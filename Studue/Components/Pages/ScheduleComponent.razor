@@ -9,17 +9,23 @@
 }
 else
 {
+    var firstSlot = ScheduleEntries.Min(x => GetLessonIndex(x.StartTime));
+    var lastSlot = ScheduleEntries.Max(x => GetLessonIndex(x.StartTime) + x.Duration - 1);
+    var slots = Enumerable.Range(firstSlot, lastSlot - firstSlot + 1).ToList();
+
+    var accents = ModuleAccents ?? FallbackAccents();
+
     <section class="panel schedule-board">
         <div class="schedule-table-wrap">
-            <div class="schedule-week" role="grid" aria-label="Weekly schedule">
+            <div class="schedule-week">
                 <div class="schedule-time-column">
-                    <div class="schedule-corner-cell" role="columnheader">Time</div>
+                    <div class="schedule-corner-cell">Time</div>
 
-                    @foreach (var lesson in _lessons)
+                    @foreach (var slot in slots)
                     {
-                        <div class="schedule-time-cell" role="rowheader">
-                            <span>@lesson.Start.ToString("HH:mm")</span>
-                            <span>@lesson.End.ToString("HH:mm")</span>
+                        <div class="schedule-time-cell">
+                            <span>@_lessons[slot].Start.ToString("HH:mm")</span>
+                            <span>@_lessons[slot].End.ToString("HH:mm")</span>
                         </div>
                     }
                 </div>
@@ -30,32 +36,73 @@ else
                     var collapsible = entries.Count == 0 ? "true" : null;
 
                     <div class="schedule-day-column" data-collapsible="@collapsible">
-                        <div class="schedule-day-cell" role="columnheader" title="@(collapsible != null ? $"No lessons on {weekday}" : null)">
+                        <div class="schedule-day-cell" title="@(collapsible != null ? $"No lessons on {weekday}" : null)">
                             @(collapsible != null ? weekday[..3] : weekday)
                         </div>
 
-                        @foreach (var (lessonIndex, _) in _lessons.Index())
+                        @foreach (var (rowIndex, _) in slots.Index())
                         {
-                            <div class="schedule-slot-cell" style="grid-row: @(lessonIndex + 2);" aria-hidden="true"></div>
+                            <div class="schedule-slot-line" style="grid-row: @(rowIndex + 2);" aria-hidden="true"></div>
                         }
 
-                        @foreach (var entry in entries)
+                        @* the same lesson can run in several rooms at once; one card, every room *@
+                        @foreach (var slot in GroupBySlot(entries))
                         {
+                            var lesson = slot.First();
+
                             <article class="schedule-entry-card"
-                                     style="grid-row: @(GetLessonIndex(entry.StartTime) + 2) / span @entry.Duration;"
-                                     aria-label="@entry.Module.Name in @entry.Room with @entry.Teacher">
-                                <span class="schedule-entry-code">@entry.Module.Code</span>
-                                <strong class="schedule-entry-title">@entry.Module.Name</strong>
+                                     style="grid-row: @(GetLessonIndex(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --accent: @accents[lesson.Module.Code];"
+                                     aria-label="@lesson.Module.Name in @string.Join(", ", slot.Select(x => x.Room))">
+                                <span class="schedule-entry-code">@lesson.Module.Code</span>
+                                <strong class="schedule-entry-title">@lesson.Module.Name</strong>
 
                                 <div class="schedule-entry-meta">
-                                    <span>@entry.Room</span>
-                                    <span>@entry.Teacher</span>
+                                    @foreach (var room in slot)
+                                    {
+                                        <span>@room.Room · @room.Teacher</span>
+                                    }
                                 </div>
                             </article>
                         }
                     </div>
                 }
             </div>
+        </div>
+
+        @* a phone wants "what do I have today", not a six-day grid to pan around *@
+        <div class="schedule-agenda">
+            @foreach (var (weekdayIndex, weekday) in _weekdays.Index())
+            {
+                var entries = ScheduleEntries.Where(x => x.Weekday == weekdayIndex).OrderBy(x => x.StartTime).ToList();
+                if (entries.Count == 0)
+                {
+                    continue;
+                }
+
+                <section class="schedule-agenda-day">
+                    <h3>@weekday</h3>
+
+                    @foreach (var slot in GroupBySlot(entries))
+                    {
+                        var lesson = slot.First();
+
+                        <article class="schedule-agenda-item" style="--accent: @accents[lesson.Module.Code];">
+                            <div class="schedule-agenda-time">
+                                <span>@lesson.StartTime.ToString("HH:mm")</span>
+                                <span>@EndTimeOf(lesson).ToString("HH:mm")</span>
+                            </div>
+
+                            <div class="schedule-agenda-copy">
+                                <strong>@lesson.Module.Name</strong>
+                                @foreach (var room in slot)
+                                {
+                                    <p>@room.Room · @room.Teacher</p>
+                                }
+                            </div>
+                        </article>
+                    }
+                </section>
+            }
         </div>
     </section>
 }
@@ -65,16 +112,47 @@ else
     [EditorRequired]
     public List<ScheduleEntry> ScheduleEntries { get; set; }
 
+    //supplied by the student's own pages so the schedule and the assignment list agree;
+    //the admin view has no student context and falls back to the entries themselves
+    [Parameter]
+    public IReadOnlyDictionary<string, string>? ModuleAccents { get; set; }
+
     private static readonly List<Lesson> _lessons = new[] { "08:15", "09:05", "10:15", "11:05", "13:00", "13:50", "14:50", "15:40", "16:40", "17:30", "18:40", "19:30", "20:25", "21:15" }
         .Select(x => new Lesson(TimeOnly.Parse(x), TimeOnly.Parse(x).AddMinutes(45))).ToList();
 
     private static readonly string[] _weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+    //a stable colour per module, so a subject is recognisable without reading it
+    private static readonly string[] _accents = ["#0061a2", "#0f766e", "#7c3aed", "#b45309", "#be123c", "#4338ca"];
 
     record struct Lesson(TimeOnly Start, TimeOnly End);
+
+    private IEnumerable<List<ScheduleEntry>> GroupBySlot(List<ScheduleEntry> entries)
+    {
+        return entries
+            .GroupBy(x => (x.StartTime, x.Duration, x.Module.Code))
+            .OrderBy(x => x.Key.StartTime)
+            .Select(x => x.OrderBy(y => y.Room, StringComparer.Ordinal).ToList());
+    }
+
+    private Dictionary<string, string> FallbackAccents()
+    {
+        return ScheduleEntries
+            .Select(x => x.Module.Code)
+            .Distinct()
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Select((code, index) => (code, accent: _accents[index % _accents.Length]))
+            .ToDictionary(x => x.code, x => x.accent);
+    }
 
     private int GetLessonIndex(TimeOnly startTime)
     {
         return _lessons.FindIndex(x => x.Start == startTime);
+    }
+
+    private TimeOnly EndTimeOf(ScheduleEntry entry)
+    {
+        var lastSlot = Math.Min(GetLessonIndex(entry.StartTime) + entry.Duration - 1, _lessons.Count - 1);
+        return _lessons[lastSlot].End;
     }
 }

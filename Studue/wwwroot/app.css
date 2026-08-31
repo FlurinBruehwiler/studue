@@ -12,6 +12,9 @@ html {
 body {
     min-height: 100vh;
     margin: 0;
+    /* on body, not on a div: it propagates to the canvas, so the reserved
+       scrollbar gutter is painted too instead of showing a white strip */
+    background: #f1f5f9;
     color: #111111;
     font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;

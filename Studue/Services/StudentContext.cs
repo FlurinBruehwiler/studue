@@ -15,6 +15,37 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     public Student Student { get; private set; } = null!;
     public bool HasWriteAccess { get; set; }
 
+    //A colour belongs to the student's current module set, not to the module itself: the set is
+    //small enough for distinct colours, it needs no storage, and both views derive the same map.
+    private static readonly string[] ModuleAccents =
+    [
+        "#0061a2", "#0f766e", "#7c3aed", "#b45309", "#be123c",
+        "#4338ca", "#0369a1", "#15803d", "#c2410c", "#9333ea"
+    ];
+
+    private IReadOnlyDictionary<string, string>? _moduleAccents;
+
+    public async Task<IReadOnlyDictionary<string, string>> GetModuleAccents()
+    {
+        if (_moduleAccents != null)
+            return _moduleAccents;
+
+        var semester = Helper.GetCurrentSemester();
+
+        var codes = await context.ModuleInstances
+            .Where(x => x.Students.Contains(Student) && x.Semester == semester)
+            .Select(x => x.Module.Code)
+            .Distinct()
+            .ToListAsync();
+
+        _moduleAccents = codes
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Select((code, index) => (code, accent: ModuleAccents[index % ModuleAccents.Length]))
+            .ToDictionary(x => x.code, x => x.accent);
+
+        return _moduleAccents;
+    }
+
     public async Task<List<Module>> GetStudentModules()
     {
         var currentSemster = Helper.GetCurrentSemester();
