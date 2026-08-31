@@ -90,6 +90,7 @@ public class ModuleInstance
     public List<Assignment> Assignements { get; set; } = new();
 }
 
+[Index(nameof(Endpoint), IsUnique = true)]
 public class PushSubscriptionRow
 {
     public int Id { get; set; }

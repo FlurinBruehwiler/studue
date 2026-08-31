@@ -109,17 +109,26 @@
             </section>
         }
 
-        @if (!ShowOverdue)
-        {
-            if (_totalAssignmentCount > _assignments.Count)
+        <div class="home-footer">
+            @if (!ShowOverdue)
             {
-                <a href="/?overdue=true">Show overdue assignments</a>
+                if (_totalAssignmentCount > _assignments.Count)
+                {
+                    <a href="/?overdue=true">Show overdue assignments</a>
+                }
             }
-        }
-        else
-        {
-            <a href="/">Don't show overdue assignments</a>
-        }
+            else
+            {
+                <a href="/">Don't show overdue assignments</a>
+            }
+
+            <button type="button" class="enable-notifications-button" style="display: none" data-vapid-key="@_vapidPublicKey" onclick="enableNotifications()">Enable notifications</button>
+            <button type="button" class="disable-notifications-button" style="display: none" onclick="disableNotifications()">Disable notifications</button>
+        </div>
+
+        <p class="ios-notifications-hint" style="display: none">
+            To get notifications on your iPhone, tap Share and then <strong>Add to Home Screen</strong>. Open Studue from there and this option will appear.
+        </p>
     </section>
 </div>
 
@@ -127,45 +136,6 @@
 async function toggleAssignmentCompleted(assignmentId, event) {
     await fetch(`/assignment/${assignmentId}/${event.target.checked}`);
 }
-
-async function areNotificationsEnabled() {
-    const reg = await navigator.serviceWorker.getRegistration("/");
-    return !!reg;
-}
-
-async function enableNotifications() {
-    // TODO this is not good, yet, if someone disables notifications, the service worker is still registered.
-    // If someone wants to disable the notification they don't have a button right now.
-    // If someone wants to customize when to receive notifications, this is also not possible currently
-    if (!("serviceWorker" in navigator)) return;
-    if (!("PushManager" in window)) return;
-
-    const registration = await navigator.serviceWorker.register("/ServiceWorker.js");
-
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return;
-
-    const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: "@(_vapidPublicKey)"
-    });
-
-    // send subscription to your server
-    await fetch("/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription)
-    });
-
-    window.location.href = "/";
-}
-
-// areNotificationsEnabled().then(x => {
-//     if (!x) {
-//         document.querySelector(".enable-notifications-button").style.display = "block";
-//     }
-// })
-
 </script>
 
 @code {

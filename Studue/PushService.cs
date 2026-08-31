@@ -11,8 +11,18 @@ namespace Studue;
 public class PushSubscriptionDto
 {
     public required string Endpoint { get; set; }
-    public required string P256DH { get; set; }
+    public required PushSubscriptionKeysDto Keys { get; set; }
+}
+
+public class PushSubscriptionKeysDto
+{
+    public required string P256dh { get; set; }
     public required string Auth { get; set; }
+}
+
+public class PushUnsubscribeDto
+{
+    public required string Endpoint { get; set; }
 }
 
 public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptions<Settings> settings, ILogger<PushService> logger) : BackgroundService
@@ -21,14 +31,36 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
     {
         webApplication.MapPost("/push/subscribe", async ([FromBody] PushSubscriptionDto subscriptionDto, StudueContext studueContext, StudentContext studentContext) =>
         {
-            await studueContext.PushSubscriptions.AddAsync(new PushSubscriptionRow
+            var existing = await studueContext.PushSubscriptions
+                .FirstOrDefaultAsync(x => x.Endpoint == subscriptionDto.Endpoint);
+
+            if (existing == null)
             {
-                Auth = subscriptionDto.Auth,
-                Endpoint = subscriptionDto.Endpoint,
-                P256DH = subscriptionDto.P256DH,
-                Student = studentContext.Student
-            });
+                studueContext.PushSubscriptions.Add(new PushSubscriptionRow
+                {
+                    Auth = subscriptionDto.Keys.Auth,
+                    Endpoint = subscriptionDto.Endpoint,
+                    P256DH = subscriptionDto.Keys.P256dh,
+                    Student = studentContext.Student
+                });
+            }
+            else
+            {
+                existing.Auth = subscriptionDto.Keys.Auth;
+                existing.P256DH = subscriptionDto.Keys.P256dh;
+                existing.Student = studentContext.Student;
+            }
+
             await studueContext.SaveChangesAsync();
+
+            return Results.Ok();
+        }).WithMetadata(new StudentRequiredAttribute());
+
+        webApplication.MapPost("/push/unsubscribe", async ([FromBody] PushUnsubscribeDto unsubscribeDto, StudueContext studueContext) =>
+        {
+            await studueContext.PushSubscriptions
+                .Where(x => x.Endpoint == unsubscribeDto.Endpoint)
+                .ExecuteDeleteAsync();
 
             return Results.Ok();
         }).WithMetadata(new StudentRequiredAttribute());
@@ -36,7 +68,7 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
@@ -65,7 +97,11 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
         var now = Helper.Now();
         lastNotificationTimeConfig.Data = now.ToString(CultureInfo.InvariantCulture);
 
-        var futureAssignments = await studueContext.Assignements.Where(x => x.DueDateTime > now).ToListAsync();
+        var futureAssignments = await studueContext.Assignements
+            .Include(x => x.ModuleInstance)
+            .ThenInclude(x => x.Module)
+            .Where(x => x.DueDateTime > now && !x.IsDeleted)
+            .ToListAsync();
 
         (TimeSpan timespan, string dueInString)[] relevantTimes = [(TimeSpan.FromHours(1), "1 hour"), (TimeSpan.FromDays(1), "1 day")];
 
@@ -102,8 +138,9 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
 
         var payload = JsonSerializer.Serialize(new
         {
-            Title = $"{assignment.Title} is due in {dueIn}",
-            Url = new Uri(new Uri(settings.Value.FrontendUrl), assignment.Id.ToString()).ToString()
+            title = $"{assignment.Title} is due in {dueIn}",
+            body = assignment.ModuleInstance.Module.Name,
+            url = new Uri(new Uri(settings.Value.FrontendUrl), assignment.Id.ToString()).ToString()
         });
 
         foreach (var batch in subscriptions.Chunk(10))
@@ -122,7 +159,12 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
                 }
                 catch (WebPushException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Gone or System.Net.HttpStatusCode.NotFound)
                 {
+                    logger.LogInformation("Dropping expired push subscription #{SubscriptionId} ({StatusCode})", sub.Id, ex.StatusCode);
                     studueContext.PushSubscriptions.Remove(sub);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Push to subscription #{SubscriptionId} failed", sub.Id);
                 }
             });
             await Task.WhenAll(tasks);

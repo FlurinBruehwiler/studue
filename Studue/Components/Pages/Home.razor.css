@@ -292,3 +292,28 @@
     }
 
 }
+
+.home-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+}
+
+.enable-notifications-button,
+.disable-notifications-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.ios-notifications-hint {
+    margin: 0;
+    color: #4f6477;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
