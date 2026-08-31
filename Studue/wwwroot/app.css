@@ -368,3 +368,16 @@ h1:focus {
     color: #94a3b8;
     font-size: 0.9rem;
 }
+
+/* iOS sizes date and time inputs from their native control, not the container, so they
+   overflow a narrow column unless the native appearance is switched off. Only shows up
+   on a real device - desktop emulation renders these fine. */
+.assignment-form-card input[type="date"],
+.assignment-form-card input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}

@@ -88,19 +88,17 @@ function draw(campus, highlight) {
         // a fixed padding with a zoom cap keeps every building at a comparable scale,
         // where a proportional pad would frame a small building far too wide
         map.fitBounds(target.getBounds(), {
-            maxZoom: 18,
+            maxZoom: 19,
             paddingTopLeft: panelOffset(),
             paddingBottomRight: [30, 30],
         });
     } else {
         // the ZHAW buildings, not campus.bounds: that is the padded query box and
-        // frames the whole town rather than the campus
+        // frames the whole town rather than the campus. Modest even padding here, not
+        // panelOffset: reserving the panel's full width zooms the campus right out,
+        // and a campus fills the view anyway so a corner overlap costs nothing.
         const extent = L.latLngBounds(campus.buildings.map(b => [b.lat, b.lon]));
-        map.fitBounds(extent, {
-            maxZoom: 17,
-            paddingTopLeft: panelOffset(),
-            paddingBottomRight: [40, 40],
-        });
+        map.fitBounds(extent, { maxZoom: 18, padding: [50, 50] });
     }
 }
 
@@ -262,8 +260,10 @@ async function initCampusMap() {
         return;
     }
 
-    // no zoom buttons: scroll, pinch and double-click all zoom already
-    map = L.map(host, { attributionControl: false, zoomControl: false });
+    // no zoom buttons: scroll, pinch and double-click all zoom already.
+    // zoomSnap allows fractional levels: snapping to whole ones rounds a fit down and
+    // leaves a campus at roughly half the scale it could be shown at.
+    map = L.map(host, { attributionControl: false, zoomControl: false, zoomSnap: 0.25 });
     layers = L.layerGroup().addTo(map);
 
     const page = document.querySelector(".map-page");

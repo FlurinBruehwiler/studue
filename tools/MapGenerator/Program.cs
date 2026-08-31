@@ -30,7 +30,8 @@ var campusByCode = new Dictionary<string, string>
     ["ZL"] = "Campus Zentrum, Lagerstrasse",
 };
 
-// OSM does not name these as ZHAW buildings, so they are matched by address instead
+// Hand-verified addresses. These win over whatever OSM has named: an entry here is
+// used both to add a building OSM does not label and to correct one it labels wrongly.
 var buildingsByAddress = new Dictionary<string, (string Street, string Number, double South, double West, double North, double East)>
 {
     ["ZA"] = ("Militärstrasse", "48", 47.36, 8.50, 47.40, 8.56),
@@ -172,9 +173,6 @@ async Task<List<Building>> FindZhawBuildings()
 
     foreach (var (code, address) in buildingsByAddress)
     {
-        if (found.ContainsKey(code))
-            continue;
-
         var addressBox = $"{F(address.South)},{F(address.West)},{F(address.North)},{F(address.East)}";
         using var located = await Query(
             "[out:json][timeout:60];(" +
@@ -216,9 +214,15 @@ async Task<Campus> FetchCampus(string id, string name, List<Building> members)
         $"way[\"natural\"=\"water\"]({box});" +
         ");out geom;");
 
-    var codesByName = members.ToDictionary(x => x.Name, x => x.Code);
+    //a code with a hand-verified address is matched on that alone, never on the OSM name
+    var corrected = buildingsByAddress.Keys.ToHashSet();
+
+    var codesByName = members
+        .Where(x => !corrected.Contains(x.Code))
+        .ToDictionary(x => x.Name, x => x.Code);
+
     var codesByAddress = members
-        .Where(x => x.Street != null && x.Number != null)
+        .Where(x => corrected.Contains(x.Code) && x.Street != null && x.Number != null)
         .ToDictionary(x => $"{x.Street}|{x.Number}", x => x.Code);
     var features = new List<object>();
 

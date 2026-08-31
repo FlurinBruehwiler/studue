@@ -33,7 +33,7 @@
     top: 1rem;
     left: 1rem;
     z-index: 600;
-    width: 15rem;
+    width: 18rem;
 }
 
 .map-picker-toggle {
@@ -138,18 +138,17 @@
 }
 
 @media (max-width: 720px) {
-    .map-picker {
-        top: 0.6rem;
-        left: 0.6rem;
-        width: 9rem;
-    }
-
+    /* stacked, not side by side: a long campus name and the dropdown cannot share a row */
     .map-campus {
         top: 0.6rem;
-        right: 0.6rem;
-        left: auto;
-        transform: none;
         font-size: 0.8rem;
+    }
+
+    .map-picker {
+        top: 2.9rem;
+        left: 0.6rem;
+        right: 0.6rem;
+        width: auto;
     }
 
     .map-results {
