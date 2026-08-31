@@ -1,9 +1,14 @@
 .student-layout {
+    display: flex;
     min-height: 100vh;
     padding: 1.5rem;
 }
 
 .student-layout-shell {
+    /* stretches to fill the flex parent, so the card is never a short strip */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     max-width: 88rem;
     margin: 0 auto;
     padding: 1.5rem;
@@ -190,6 +195,10 @@
 }
 
 .student-layout-body {
+    /* grows into the card's spare height so a page can push content to the bottom */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     margin-top: 10px;
 }
 
@@ -225,7 +234,6 @@
     }
 
     .student-layout-shell {
-        min-height: 100vh;
         border: 0;
         border-radius: 0;
         box-shadow: none;
