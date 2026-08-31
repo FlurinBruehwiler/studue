@@ -1,4 +1,4 @@
-@layout MainLayout
+﻿@layout MainLayout
 @using Studue.Services
 @inject StudentContext StudentContext
 @inject NavigationManager Navigation
@@ -12,7 +12,6 @@
                     <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
 
                     <section class="student-layout-hero">
-                        <span class="student-layout-eyebrow">@HeaderEyebrow</span>
                         <h1>@HeaderTitle</h1>
                         <p>@HeaderDescription</p>
                     </section>
@@ -77,7 +76,6 @@ function logout() {
         }
     }
 
-    private string HeaderEyebrow => IsScheduleRoute ? "Weekly timetable" : "Assignment overview";
 
     private string HeaderTitle => IsScheduleRoute ? "Schedule" : "Assignments";
 

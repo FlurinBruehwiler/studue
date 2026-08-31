@@ -1,12 +1,8 @@
 .schedule-board {
     --schedule-slot-height: 5.5rem;
     --schedule-slot-gap: 0.55rem;
+    --schedule-head-height: 3.1rem;
     display: grid;
-    padding: 1.25rem;
-    border: 1px solid #d8e3ed;
-    border-radius: 1.5rem;
-    background: #ffffff;
-    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
 }
 
 .schedule-board-empty {
@@ -29,13 +25,36 @@
     padding-bottom: 0.25rem;
 }
 
-.schedule-grid {
+.schedule-week {
+    display: flex;
+    align-items: start;
+    gap: var(--schedule-slot-gap);
+}
+
+.schedule-time-column,
+.schedule-day-column {
     display: grid;
-    grid-template-columns: 7rem repeat(6, minmax(12rem, 1fr));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--schedule-head-height);
     grid-auto-rows: var(--schedule-slot-height);
     gap: var(--schedule-slot-gap);
-    min-width: 82rem;
-    align-items: stretch;
+}
+
+/* Entry cards carry an explicit grid-row but no grid-column. Without this they
+   would be auto-placed beside the slot cell already sitting in that row, which
+   creates implicit columns instead of stacking on top of it. */
+.schedule-time-column > *,
+.schedule-day-column > * {
+    grid-column: 1;
+}
+
+.schedule-time-column {
+    flex: 0 0 4.5rem;
+}
+
+.schedule-day-column {
+    flex: 1 1 12rem;
+    min-width: 12rem;
 }
 
 .schedule-corner-cell,
@@ -61,15 +80,20 @@
     text-transform: uppercase;
 }
 
-.schedule-corner-cell {
-    grid-column: 1;
+.schedule-corner-cell,
+.schedule-day-cell {
     grid-row: 1;
+}
+
+.schedule-corner-cell {
+    padding-inline: 0.4rem;
+    letter-spacing: 0.08em;
 }
 
 .schedule-time-cell {
     display: grid;
     align-content: space-between;
-    padding: 0.85rem 0.75rem;
+    padding: 0.85rem 0.4rem;
     background: #f8fbfd;
     color: #4f6477;
     font-size: 0.82rem;
@@ -124,13 +148,10 @@
     line-height: 1.35;
 }
 
-@media (max-width: 640px) {
-    .schedule-board {
-        padding: 1rem;
-        border-radius: 1.25rem;
-    }
-
-    .schedule-grid {
-        min-width: 72rem;
+/* The full six-day week needs ~79.8rem of grid plus 6rem of layout padding.
+   Below that, drop the weekdays the student has no lessons on. */
+@media (max-width: 86rem) {
+    .schedule-day-column[data-collapsible] {
+        display: none;
     }
 }

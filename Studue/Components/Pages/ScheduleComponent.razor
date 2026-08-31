@@ -10,40 +10,47 @@ else
 {
     <section class="schedule-board">
         <div class="schedule-table-wrap">
-            <div class="schedule-grid" role="grid" aria-label="Weekly schedule">
-                <div class="schedule-corner-cell" role="columnheader">Time</div>
+            <div class="schedule-week" role="grid" aria-label="Weekly schedule">
+                <div class="schedule-time-column">
+                    <div class="schedule-corner-cell" role="columnheader">Time</div>
+
+                    @foreach (var lesson in _lessons)
+                    {
+                        <div class="schedule-time-cell" role="rowheader">
+                            <span>@lesson.Start.ToString("HH:mm")</span>
+                            <span>@lesson.End.ToString("HH:mm")</span>
+                        </div>
+                    }
+                </div>
 
                 @foreach (var (weekdayIndex, weekday) in _weekdays.Index())
                 {
-                    <div class="schedule-day-cell" style="grid-column: @(weekdayIndex + 2); grid-row: 1;" role="columnheader">@weekday</div>
-                }
+                    var entries = ScheduleEntries.Where(x => x.Weekday == weekdayIndex).OrderBy(x => x.StartTime).ToList();
+                    var collapsible = entries.Count == 0 ? "true" : null;
 
-                @foreach (var (lessonIndex, lesson) in _lessons.Index())
-                {
-                    <div class="schedule-time-cell" style="grid-column: 1; grid-row: @(lessonIndex + 2);" role="rowheader">
-                        <span>@lesson.Start.ToString("HH:mm")</span>
-                        <span>@lesson.End.ToString("HH:mm")</span>
+                    <div class="schedule-day-column" data-collapsible="@collapsible">
+                        <div class="schedule-day-cell" role="columnheader">@weekday</div>
+
+                        @foreach (var (lessonIndex, _) in _lessons.Index())
+                        {
+                            <div class="schedule-slot-cell" style="grid-row: @(lessonIndex + 2);" aria-hidden="true"></div>
+                        }
+
+                        @foreach (var entry in entries)
+                        {
+                            <article class="schedule-entry-card"
+                                     style="grid-row: @(GetLessonIndex(entry.StartTime) + 2) / span @entry.Duration;"
+                                     aria-label="@entry.Module.Name in @entry.Room with @entry.Teacher">
+                                <span class="schedule-entry-code">@entry.Module.Code</span>
+                                <strong class="schedule-entry-title">@entry.Module.Name</strong>
+
+                                <div class="schedule-entry-meta">
+                                    <span>@entry.Room</span>
+                                    <span>@entry.Teacher</span>
+                                </div>
+                            </article>
+                        }
                     </div>
-
-                    @foreach (var (weekdayIndex, _) in _weekdays.Index())
-                    {
-                        <div class="schedule-slot-cell" style="grid-column: @(weekdayIndex + 2); grid-row: @(lessonIndex + 2);" aria-hidden="true"></div>
-                    }
-                }
-
-                @foreach (var entry in ScheduleEntries.OrderBy(x => x.Weekday).ThenBy(x => x.StartTime))
-                {
-                    <article class="schedule-entry-card"
-                             style="grid-column: @(entry.Weekday + 2); grid-row: @(GetLessonIndex(entry.StartTime) + 2) / span @entry.Duration;"
-                             aria-label="@entry.Module.Name in @entry.Room with @entry.Teacher">
-                        <span class="schedule-entry-code">@entry.Module.Code</span>
-                        <strong class="schedule-entry-title">@entry.Module.Name</strong>
-
-                        <div class="schedule-entry-meta">
-                            <span>@entry.Room</span>
-                            <span>@entry.Teacher</span>
-                        </div>
-                    </article>
                 }
             </div>
         </div>
