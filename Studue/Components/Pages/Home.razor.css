@@ -3,27 +3,7 @@
     gap: 10px;
 }
 
-.home-chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.75rem;
-    padding: 0.7rem 1rem;
-    border-radius: 999px;
-    background: #0061a2;
-    color: #ffffff;
-    font-size: 0.92rem;
-    font-weight: 600;
-    box-sizing: border-box;
-}
 
-.home-chip-outline {
-    border: 1px solid #c8d6e4;
-    background: #ffffff;
-    color: #111111;
-}
-
-.home-icon-button,
-.home-button,
 .assignment-edit-link {
     display: inline-flex;
     justify-content: center;
@@ -40,23 +20,8 @@
     transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
-.home-icon-button:hover,
-.home-button:hover,
 .assignment-edit-link:hover {
     transform: translateY(-1px);
-}
-
-.home-icon-button {
-    padding-inline: 1rem;
-    border-color: #c8d6e4;
-    background: #ffffff;
-    color: #111111;
-}
-
-.home-toolbar {
-    display: flex;
-    justify-content: end;
-    gap: 1rem;
 }
 
 .home-filter-panel {
@@ -89,8 +54,6 @@
 }
 
 .home-select:focus,
-.home-icon-button:focus-visible,
-.home-button:focus-visible,
 .assignment-edit-link:focus-visible {
     outline: none;
     border-color: #0061a2;
@@ -107,13 +70,6 @@
     pointer-events: none;
 }
 
-.home-button-primary {
-    background: #0061a2;
-    color: #ffffff;
-    box-shadow: 0 16px 28px rgba(0, 97, 162, 0.18);
-}
-
-.home-button-secondary,
 .assignment-edit-link {
     border-color: #c8d6e4;
     background: #ffffff;
@@ -256,10 +212,8 @@
     gap: 0.25rem 0.5rem;
     margin-bottom: 0.5rem;
     color: #0061a2;
-    font-size: 0.64rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 0.78rem;
+    font-weight: 500;
 }
 
 .assignment-card-title {
@@ -328,21 +282,7 @@
 
 
 
-@media (max-width: 900px) {
-    .home-toolbar {
-        grid-template-columns: 1fr;
-        display: grid;
-    }
-}
-
 @media (max-width: 640px) {
-    .home-chip,
-    .home-chip-outline,
-    .home-button,
-    .home-icon-button {
-        width: 100%;
-    }
-
     .assignment-card-header {
         gap: 0.75rem;
     }

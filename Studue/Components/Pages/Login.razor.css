@@ -72,15 +72,6 @@
     text-align: left;
 }
 
-.login-eyebrow {
-    display: inline-block;
-    color: #0061a2;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-}
-
 .login-copy h2 {
     margin: 0.8rem 0 0;
     color: #111111;

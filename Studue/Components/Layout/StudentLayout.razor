@@ -5,24 +5,8 @@
 @inherits LayoutComponentBase
 
 <div class="student-layout">
-    <div class="student-layout-shell @(HasViewportOverlay ? "student-layout-shell-overlay-open" : null)">
+    <div class="student-layout-shell">
         <header class="student-layout-header">
-            <div class="student-layout-branding">
-                <a href="/" class="student-layout-brand" aria-label="Go to home page">
-                    <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
-
-                    <section class="student-layout-hero">
-                        <h1>@HeaderTitle</h1>
-                        <p>@HeaderDescription</p>
-                    </section>
-                </a>
-
-                <nav class="student-layout-nav" aria-label="Primary">
-                    <a href="/" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-idle" : "student-layout-tab-active")">Home</a>
-                    <a href="/schedule" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-active" : "student-layout-tab-idle")">Schedule</a>
-                </nav>
-            </div>
-
             <aside class="student-layout-account" aria-label="Student account">
                 <div class="student-layout-account-bar">
                     <span class="student-layout-chip">@StudentContext.Student.StudentId</span>
@@ -42,6 +26,30 @@
                     </div>
                 </div>
             </aside>
+
+            <div class="student-layout-branding">
+                <a href="/" class="student-layout-brand" aria-label="Go to home page">
+                    <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
+
+                    <section class="student-layout-hero">
+                        <h1>@HeaderTitle</h1>
+                        <p>@HeaderDescription</p>
+                    </section>
+                </a>
+            </div>
+
+            <div class="student-layout-navbar">
+                <nav class="student-layout-nav" aria-label="Primary">
+                    <a href="/" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-idle" : "student-layout-tab-active")">Home</a>
+                    <a href="/schedule" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-active" : "student-layout-tab-idle")">Schedule</a>
+                </nav>
+
+                @if (!IsScheduleRoute && StudentContext.HasWriteAccess)
+                {
+                    <a href="/create" class="student-layout-button student-layout-button-primary student-layout-navbar-action">Create assignment</a>
+                }
+            </div>
+
         </header>
 
         <div class="student-layout-body">
@@ -60,22 +68,6 @@ function logout() {
 
 @code {
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
-
-    private bool HasViewportOverlay
-    {
-        get
-        {
-            var route = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/');
-
-            if (string.IsNullOrEmpty(route) || IsScheduleRoute)
-                return false;
-
-            return route.Equals("create", StringComparison.OrdinalIgnoreCase)
-                || route.StartsWith("edit/", StringComparison.OrdinalIgnoreCase)
-                || int.TryParse(route, out _);
-        }
-    }
-
 
     private string HeaderTitle => IsScheduleRoute ? "Schedule" : "Assignments";
 

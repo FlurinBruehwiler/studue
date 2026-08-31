@@ -9,9 +9,8 @@
     padding: 1.5rem;
     border: 1px solid #d8e3ed;
     border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.94);
+    background: #ffffff;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(10px);
 }
 
 .admin-header {
@@ -43,16 +42,6 @@
     margin: 0.65rem 0 0;
     color: #4f6477;
     line-height: 1.6;
-}
-
-.admin-eyebrow {
-    display: inline-block;
-    margin-bottom: 0.35rem;
-    color: #0061a2;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
 }
 
 .admin-nav {

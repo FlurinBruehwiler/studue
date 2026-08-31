@@ -1,7 +1,6 @@
 .student-layout {
     min-height: 100vh;
     padding: 1.5rem;
-    background: #eef4f8;
 }
 
 .student-layout-shell {
@@ -10,25 +9,20 @@
     padding: 1.5rem;
     border: 1px solid #d8e3ed;
     border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.94);
+    background: #ffffff;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(10px);
-}
-
-.student-layout-shell-overlay-open {
-    backdrop-filter: none;
 }
 
 .student-layout-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1rem 1.5rem;
 }
 
 .student-layout-branding {
-    display: grid;
-    gap: 1rem;
+    grid-column: 1;
+    grid-row: 1;
     min-width: 0;
 }
 
@@ -41,8 +35,8 @@
 }
 
 .student-layout-brand-mark {
-    width: 4.5rem;
-    height: 4.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
     flex: 0 0 auto;
 }
 
@@ -53,7 +47,7 @@
 .student-layout-hero h1 {
     margin: 0;
     color: #0061a2;
-    font-size: clamp(2.3rem, 4vw, 3.1rem);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
     line-height: 0.95;
     font-weight: 700;
     letter-spacing: -0.04em;
@@ -66,44 +60,54 @@
     line-height: 1.6;
 }
 
+.student-layout-navbar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    /* button min-height (2.75rem) + its lift off the rail (0.6rem), so the bar
+       keeps the same height on pages that do not render the action */
+    min-height: 3.35rem;
+    border-bottom: 1px solid #dbe5ee;
+}
+
+.student-layout-navbar-action {
+    margin-bottom: 0.6rem;
+}
+
 .student-layout-nav {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem;
-    border: 1px solid #d8e3ed;
-    border-radius: 1.1rem;
-    background: #f6fafc;
-    width: fit-content;
+    align-items: flex-end;
+    gap: 0.25rem;
 }
 
 .student-layout-tab {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    min-height: 2.8rem;
-    padding: 0.75rem 1.15rem;
-    border: 1px solid transparent;
-    border-radius: 0.85rem;
+    margin-bottom: -1px;
+    padding: 0.7rem 1rem;
+    border-bottom: 2px solid transparent;
     text-decoration: none;
     font: inherit;
-    font-weight: 700;
-    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.student-layout-tab:hover {
-    transform: translateY(-1px);
+    font-weight: 600;
+    transition: color 160ms ease, border-color 160ms ease;
 }
 
 .student-layout-tab-active {
-    background: #0061a2;
-    color: #ffffff;
-    box-shadow: 0 14px 24px rgba(0, 97, 162, 0.16);
+    border-bottom-color: #0061a2;
+    color: #0061a2;
+    font-weight: 700;
 }
 
 .student-layout-tab-idle {
-    color: #345066;
+    color: #4f6477;
+}
+
+.student-layout-tab-idle:hover {
+    color: #0061a2;
 }
 
 .student-layout-tab:focus-visible {
@@ -112,13 +116,11 @@
 }
 
 .student-layout-account {
+    grid-column: 2;
+    grid-row: 1;
     display: flex;
     align-items: center;
     min-width: min(100%, 17rem);
-    padding: 0.75rem 0.85rem;
-    border: 1px solid #d8e3ed;
-    border-radius: 1.25rem;
-    background: #f8fbfd;
 }
 
 .student-layout-account-bar {
@@ -141,17 +143,12 @@
     align-items: center;
     min-height: 2.75rem;
     padding: 0.6rem 0.9rem;
-    border-radius: 999px;
-    background: #0061a2;
-    color: #ffffff;
-    font-size: 0.88rem;
-    font-weight: 600;
-}
-
-.student-layout-chip-outline {
     border: 1px solid #c8d6e4;
+    border-radius: 999px;
     background: #ffffff;
     color: #111111;
+    font-size: 0.88rem;
+    font-weight: 600;
 }
 
 .student-layout-button {
@@ -184,7 +181,6 @@
 .student-layout-button-primary {
     background: #0061a2;
     color: #ffffff;
-    box-shadow: 0 16px 28px rgba(0, 97, 162, 0.18);
 }
 
 .student-layout-button-secondary {
@@ -211,6 +207,13 @@
         grid-template-columns: 1fr;
     }
 
+    .student-layout-branding,
+    .student-layout-navbar,
+    .student-layout-account {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
     .student-layout-account {
         min-width: 0;
     }
@@ -233,12 +236,19 @@
     }
 
     .student-layout-brand-mark {
-        width: 3.4rem;
-        height: 3.4rem;
+        width: 3rem;
+        height: 3rem;
     }
 
     .student-layout-hero h1 {
-        font-size: 2rem;
+        font-size: 1.6rem;
+    }
+
+    .student-layout-navbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        min-height: 0;
     }
 
     .student-layout-nav {
@@ -249,10 +259,12 @@
         flex: 1 1 0;
     }
 
+    .student-layout-navbar-action {
+        margin-bottom: 0.25rem;
+    }
+
     .student-layout-account {
         width: 100%;
-        padding: 0.7rem 0.75rem;
-        border-radius: 1rem;
     }
 
     .student-layout-account-bar {

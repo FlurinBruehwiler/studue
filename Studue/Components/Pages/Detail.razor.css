@@ -1,12 +1,4 @@
-﻿.assignment-detail-overlay {
-    z-index: 40;
-    justify-content: center;
-    align-items: center;
-    background: rgba(11, 26, 38, 0.2);
-    backdrop-filter: blur(4px);
-}
-
-.assignment-detail-shell {
+﻿.assignment-detail-shell {
     display: flex;
     align-items: center;
     justify-content: center;

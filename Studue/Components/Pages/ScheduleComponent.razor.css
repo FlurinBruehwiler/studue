@@ -7,17 +7,26 @@
 
 .schedule-board-empty {
     min-height: 18rem;
+    padding: 2rem;
     place-items: center;
+    border: 1px dashed #cddae5;
+    border-radius: 1.5rem;
+    background: #f9fbfd;
     text-align: center;
 }
 
-.schedule-board-eyebrow {
-    display: inline-block;
-    color: #0061a2;
-    font-size: 0.72rem;
+.schedule-board-empty h2 {
+    margin: 0;
+    color: #111111;
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
     font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    letter-spacing: -0.03em;
+}
+
+.schedule-board-empty p {
+    margin: 0.65rem 0 0;
+    color: #4f6477;
+    line-height: 1.6;
 }
 
 .schedule-table-wrap {

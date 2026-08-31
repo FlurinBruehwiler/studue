@@ -17,15 +17,6 @@
 <PageTitle>Studue</PageTitle>
 
 <div class="home-page">
-    <section class="home-toolbar">
-        @* <button class="home-button home-button-secondary enable-notifications-button" style="display: none" onclick="enableNotifications()">Enable notifications</button> *@
-
-        @if (StudentContext.HasWriteAccess)
-        {
-            <a href="/create" class="home-button home-button-primary">Create assignment</a>
-        }
-    </section>
-
     @if (_statusMessages.Count > 0)
     {
         <section class="home-messages" aria-live="polite">
