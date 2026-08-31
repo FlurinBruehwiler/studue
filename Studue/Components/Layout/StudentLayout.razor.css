@@ -26,14 +26,15 @@
 .student-layout-branding {
     grid-column: 1;
     grid-row: 1;
-    min-width: 0;
-}
-
-.student-layout-brand {
     display: flex;
     align-items: center;
     gap: 1rem;
     min-width: 0;
+}
+
+.student-layout-brand-link {
+    display: flex;
+    flex: 0 0 auto;
     text-decoration: none;
 }
 
@@ -47,20 +48,10 @@
     min-width: 0;
 }
 
-.student-layout-hero h1 {
-    margin: 0;
-    color: #0061a2;
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
-    line-height: 0.95;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-}
-
-.student-layout-hero p {
-    margin: 0.65rem 0 0;
-    color: #4f6477;
-    font-size: 1rem;
-    line-height: 1.6;
+.student-layout-navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .student-layout-navbar {
@@ -74,10 +65,6 @@
        keeps the same height on pages that do not render the action */
     min-height: 3.35rem;
     border-bottom: 1px solid #dbe5ee;
-}
-
-.student-layout-navbar-action {
-    margin-bottom: 0.6rem;
 }
 
 .student-layout-nav {
@@ -154,42 +141,10 @@
     font-weight: 600;
 }
 
-.student-layout-button {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.7rem 0.95rem;
-    border: 1px solid transparent;
-    border-radius: 0.9rem;
-    text-decoration: none;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
-}
-
-.student-layout-button:hover {
-    transform: translateY(-1px);
-}
-
-.student-layout-button:focus-visible,
-.student-layout-brand:focus-visible {
+.student-layout-brand-link:focus-visible {
     outline: none;
     border-color: #0061a2;
     box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
-}
-
-.student-layout-button-primary {
-    background: #0061a2;
-    color: #ffffff;
-}
-
-.student-layout-button-secondary {
-    border-color: #c8d6e4;
-    background: #ffffff;
-    color: #111111;
 }
 
 .student-layout-body {
@@ -231,7 +186,7 @@
         padding: 0;
     }
 
-    .student-layout-brand {
+    .student-layout-branding {
         align-items: flex-start;
     }
 
@@ -251,16 +206,13 @@
         min-height: 0;
     }
 
+
     .student-layout-nav {
         width: 100%;
     }
 
     .student-layout-tab {
         flex: 1 1 0;
-    }
-
-    .student-layout-navbar-action {
-        margin-bottom: 0.25rem;
     }
 
     .student-layout-account {
@@ -279,14 +231,6 @@
         gap: 0.4rem;
         flex-wrap: nowrap;
         justify-content: flex-end;
-    }
-
-    .student-layout-button {
-        width: auto;
-        min-height: 2.35rem;
-        padding: 0.6rem 0.85rem;
-        border-radius: 0.8rem;
-        white-space: nowrap;
     }
 
     .student-layout-chip {

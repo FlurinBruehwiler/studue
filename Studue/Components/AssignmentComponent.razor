@@ -1,28 +1,22 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using Studue.Services
+@using Studue.Components.Layout
 @inject StudueContext studueContext
 @inject StudentContext studentContext
 @inject NavigationManager Navigation
 
 <PageTitle>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</PageTitle>
 
-<div class="assignment-form-shell">
-    <div class="assignment-form-card assignment-form-dialog">
-        <div class="assignment-form-header">
-            <div>
-                <h2>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h2>
-            </div>
+<SectionContent SectionName="@StudentLayout.PageTitleSection">
+    <h1>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</h1>
+    <p>@(AssignmentToUpdate != null ? "Update the details for your class." : "Add an assignment for your class.")</p>
+</SectionContent>
 
-            <a href="/" class="assignment-form-icon-link" aria-label="Close form">
-                <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-form-icon assignment-form-icon-close">
-                    <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round"></path>
-                    <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round"></path>
-                </svg>
-            </a>
-        </div>
+<SectionContent SectionName="@StudentLayout.PageActionsSection">
+    <a href="/" class="app-button app-button-secondary app-header-action">Back</a>
+</SectionContent>
 
+<div class="assignment-form-card">
         <form method="post" class="assignment-form-body" @formname="assignment-form" @onsubmit="Submit">
             <AntiforgeryToken/>
 
@@ -70,15 +64,17 @@
             <div class="assignment-form-field">
                 <span>Type</span>
 
-                <InputRadioGroup class="assignment-form-radio-group" @bind-Value="AssignmentModel!.Type">
-                    <label class="assignment-form-radio-option assignment-form-radio-option-optional">
-                        <InputRadio class="assignment-form-radio" Value="AssignmentType.Optional"/>
-                        Optional
-                    </label>
-                    <label class="assignment-form-radio-option assignment-form-radio-option-mandatory">
-                        <InputRadio class="assignment-form-radio" Value="AssignmentType.Mandatory"/>
-                        Mandatory
-                    </label>
+                <InputRadioGroup @bind-Value="AssignmentModel!.Type">
+                    <div class="assignment-form-radio-group">
+                        <label class="assignment-form-radio-option assignment-form-radio-option-optional">
+                            <InputRadio class="assignment-form-radio" Value="AssignmentType.Optional"/>
+                            Optional
+                        </label>
+                        <label class="assignment-form-radio-option assignment-form-radio-option-mandatory">
+                            <InputRadio class="assignment-form-radio" Value="AssignmentType.Mandatory"/>
+                            Mandatory
+                        </label>
+                    </div>
                 </InputRadioGroup>
             </div>
 
@@ -123,7 +119,6 @@
                 <AntiforgeryToken/>
             </form>
         }
-    </div>
 </div>
 
 

@@ -14,28 +14,27 @@
                     <div class="student-layout-account-actions">
                     @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
                     {
-                        <a href="/admin" class="student-layout-button student-layout-button-secondary">Admin</a>
+                        <a href="/admin" class="app-button app-button-secondary">Admin</a>
                     }
 
                     @if (!StudentContext.HasWriteAccess)
                     {
-                        <a href="/?requestEditLink=true" class="student-layout-button student-layout-button-primary">Authenticate to edit</a>
+                        <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
                     }
 
-                        <button type="button" class="student-layout-button student-layout-button-secondary" onclick="logout()">Logout</button>
+                        <button type="button" class="app-button app-button-secondary" onclick="logout()">Logout</button>
                     </div>
                 </div>
             </aside>
 
             <div class="student-layout-branding">
-                <a href="/" class="student-layout-brand" aria-label="Go to home page">
+                <a href="/" class="student-layout-brand-link" aria-label="Go to home page">
                     <img src="/studue-mark.svg" alt="Studue logo" class="student-layout-brand-mark"/>
-
-                    <section class="student-layout-hero">
-                        <h1>@HeaderTitle</h1>
-                        <p>@HeaderDescription</p>
-                    </section>
                 </a>
+
+                <section class="student-layout-hero">
+                    <SectionOutlet SectionName="@PageTitleSection"/>
+                </section>
             </div>
 
             <div class="student-layout-navbar">
@@ -44,10 +43,9 @@
                     <a href="/schedule" class="student-layout-tab @(IsScheduleRoute ? "student-layout-tab-active" : "student-layout-tab-idle")">Schedule</a>
                 </nav>
 
-                @if (!IsScheduleRoute && StudentContext.HasWriteAccess)
-                {
-                    <a href="/create" class="student-layout-button student-layout-button-primary student-layout-navbar-action">Create assignment</a>
-                }
+                <div class="student-layout-navbar-actions">
+                    <SectionOutlet SectionName="@PageActionsSection"/>
+                </div>
             </div>
 
         </header>
@@ -67,11 +65,9 @@ function logout() {
 </script>
 
 @code {
+    //pages fill these, so the header always describes the page you are actually on
+    public const string PageTitleSection = "page-title";
+    public const string PageActionsSection = "page-actions";
+
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
-
-    private string HeaderTitle => IsScheduleRoute ? "Schedule" : "Assignments";
-
-    private string HeaderDescription => IsScheduleRoute
-        ? $"Current semester lessons for {StudentContext.Student.Class}."
-        : $"Shared assignment calendar for {StudentContext.Student.Class}.";
 }

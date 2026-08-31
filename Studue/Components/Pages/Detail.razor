@@ -3,6 +3,8 @@
 @using System.Text.RegularExpressions
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
+@using Studue.Components.Layout
+@layout Layout.StudentLayout
 
 @inject StudentContext StudentContext
 @inject StudueContext StudueContext
@@ -10,41 +12,27 @@
 @attribute [StudentRequired]
 
 <PageTitle>@_selectedAssignment.Title</PageTitle>
-<div class="assignment-detail-shell">
-    <article class="assignment-detail-card assignment-detail-dialog">
-        <div class="assignment-detail-header">
-            <div>
-                <h2 class="assignment-detail-title">@_selectedAssignment.Title</h2>
-                <p class="assignment-detail-subtitle">
-                    @_selectedAssignment.ModuleInstance.Module.Name - @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)
-                </p>
-            </div>
 
-            <div class="assignment-detail-toolbar">
-                @if (StudentContext.HasWriteAccess)
-                {
-                    <a href="@($"/edit/{_selectedAssignment.Id}")" class="assignment-detail-icon-button"
-                       aria-label="Edit assignment">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"
-                             class="assignment-detail-icon assignment-detail-icon-pencil">
-                            <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                  stroke-linejoin="round"></path>
-                            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none"
-                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                  stroke-linejoin="round"></path>
-                        </svg>
-                    </a>
-                }
+<SectionContent SectionName="@StudentLayout.PageTitleSection">
+    <h1>Assignments</h1>
+    <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
+</SectionContent>
 
-                <a href="/" class="assignment-detail-icon-button" aria-label="Close details">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-detail-icon assignment-detail-icon-close">
-                        <path d="M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                              stroke-linejoin="round"></path>
-                        <path d="m6 6 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                              stroke-linejoin="round"></path>
-                    </svg>
-                </a>
-            </div>
+<SectionContent SectionName="@StudentLayout.PageActionsSection">
+    @if (StudentContext.HasWriteAccess)
+    {
+        <a href="@($"/edit/{_selectedAssignment.Id}")" class="app-button app-button-secondary app-header-action">Edit</a>
+    }
+
+    <a href="/" class="app-button app-button-secondary app-header-action">Back</a>
+</SectionContent>
+
+<article class="assignment-detail-card">
+        <div class="assignment-detail-heading">
+            <h2 class="assignment-detail-title">@_selectedAssignment.Title</h2>
+            <p class="assignment-detail-subtitle">
+                @_selectedAssignment.ModuleInstance.Module.Name - @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)
+            </p>
         </div>
 
         <div class="assignment-detail-content">
@@ -63,8 +51,7 @@
                     edited: @_selectedAssignment.UpdatedBy.StudentId - @FormatDetailDateTime(_selectedAssignment.UpdatedTime)</div>
             }
         </div>
-    </article>
-</div>
+</article>
 
 @code {
     private Assignment _selectedAssignment = null!;

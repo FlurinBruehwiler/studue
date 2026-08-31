@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "studue",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Studue/Studue.csproj", "--launch-profile", "http", "--no-build"],
+      "port": 5003
+    }
+  ]
+}

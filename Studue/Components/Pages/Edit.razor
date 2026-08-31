@@ -6,6 +6,7 @@
 @page "/edit/{Id:int}"
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
+@layout Layout.StudentLayout
 
 <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
 

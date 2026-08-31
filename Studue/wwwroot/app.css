@@ -156,3 +156,84 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Shared header/action button. Global rather than scoped because pages render these
+   into the layout's section outlets, where scoped selectors would not reach them. */
+.app-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.7rem 0.95rem;
+    border: 1px solid transparent;
+    border-radius: 0.9rem;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.app-button:hover {
+    transform: translateY(-1px);
+}
+
+.app-button:focus-visible {
+    outline: none;
+    border-color: #0061a2;
+    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+}
+
+.app-button-primary {
+    background: #0061a2;
+    color: #ffffff;
+}
+
+.app-button-secondary {
+    border-color: #c8d6e4;
+    background: #ffffff;
+    color: #111111;
+}
+
+/* sits on the tab rail */
+.app-header-action {
+    margin-bottom: 0.6rem;
+}
+
+@media (max-width: 640px) {
+    .app-button {
+        width: auto;
+        min-height: 2.35rem;
+        padding: 0.6rem 0.85rem;
+        border-radius: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .app-header-action {
+        margin-bottom: 0.25rem;
+    }
+
+    /* actions share the row like the tabs above them, instead of hugging the left edge.
+       Global, because the buttons are rendered by pages into the layout's outlet. */
+    .student-layout-navbar-actions > * {
+        flex: 1;
+    }
+}
+
+/* Page header typography. Global because pages render these into the layout's outlet. */
+.student-layout-hero h1 {
+    margin: 0;
+    color: #0061a2;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    line-height: 0.95;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+}
+
+.student-layout-hero p {
+    margin: 0.65rem 0 0;
+    color: #4f6477;
+    font-size: 1rem;
+    line-height: 1.6;
+}
