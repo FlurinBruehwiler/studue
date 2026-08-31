@@ -176,7 +176,6 @@
     gap: 1rem;
     padding: 0.85rem 1.1rem;
     border: 1px solid #e2e8f0;
-    border-left: 3px solid var(--accent, #cbd5e1);
     border-radius: 0.8rem;
     background: #ffffff;
     transition: border-color 160ms ease;
@@ -200,7 +199,6 @@
 
 .assignment-card:hover {
     border-color: #b6d2e7;
-    border-left-color: var(--accent, #cbd5e1);
 }
 
 .assignment-card-time {
