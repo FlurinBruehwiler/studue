@@ -1,3 +1,10 @@
+.assignment-form-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+}
+
 .assignment-form-card {
     position: relative;
     z-index: 2;
@@ -228,5 +235,22 @@
     .assignment-form-actions {
         flex-direction: row;
         justify-content: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .assignment-form-shell {
+        align-items: stretch;
+    }
+
+    .assignment-form-card {
+        width: 100%;
+        max-width: none;
+        min-height: 100dvh;
+        max-height: none;
+        overflow-y: visible;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 }

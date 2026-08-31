@@ -17,8 +17,9 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
     public async Task<List<Module>> GetStudentModules()
     {
+        var currentSemster = Helper.GetCurrentSemester();
         return (await context.ModuleInstances
-            .Where(x => x.Students.Contains(Student))
+            .Where(x => x.Students.Contains(Student) && x.Semester == currentSemster)
             .Include(x => x.Module)
             .ToListAsync()).Select(x => x.Module).ToList();
     }
@@ -32,6 +33,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             //check existing student
             var student = await context.Students.Where(x => x.StudentId == studentId)
                 .Include(x => x.ModuleInstances)
+                .ThenInclude(x => x.Module)
                 .FirstOrDefaultAsync();
 
             //if not already exists, initialize
