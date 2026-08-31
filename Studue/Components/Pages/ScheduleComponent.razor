@@ -55,7 +55,7 @@ else
     [EditorRequired]
     public List<ScheduleEntry> ScheduleEntries { get; set; }
 
-    private static readonly List<Lesson> _lessons = new[] { "08:00", "08:50", "10:00", "10:50", "12:00", "12:50", "14:00", "14:50", "16:00", "16:50", "17:45", "18:40", "19:25", "20:20", "21:05" }
+    private static readonly List<Lesson> _lessons = new[] { "08:15", "09:05", "10:15", "11:05", "13:00", "13:50", "14:50", "15:40", "16:40", "17:30", "18:40", "19:30", "20:25", "21:15" }
         .Select(x => new Lesson(TimeOnly.Parse(x), TimeOnly.Parse(x).AddMinutes(45))).ToList();
 
     private static readonly string[] _weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

@@ -52,6 +52,7 @@ public class EditLogEntry
     public string? ChangeInfo { get; set; } //
 }
 
+[Index(nameof(StudentId), IsUnique = true)]
 public class Student
 {
     public int Id { get; set; }
@@ -61,6 +62,7 @@ public class Student
     public bool IsBanned { get; set; }
     public required string WriteToken { get; set; }
     public DateTime LastAccess { get; set; }
+    public string LastFetchedSemester { get; set; }
 
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
@@ -68,6 +70,7 @@ public class Student
     public List<PushSubscriptionRow> PushSubscriptions { get; set; } = new();
 }
 
+[Index(nameof(Code), IsUnique = true)]
 public class Module
 {
     public int Id { get; set; }

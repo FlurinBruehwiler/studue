@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Studue;
 
@@ -10,9 +11,11 @@ using Studue;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(StudueContext))]
-    partial class StudueContextModelSnapshot : ModelSnapshot
+    [Migration("20260831092154_AddUniqueModuleCode")]
+    partial class AddUniqueModuleCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -316,9 +319,6 @@ namespace StudueSharp.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ScheduleEntryId");
-
-                    b.HasIndex("StudentId")
-                        .IsUnique();
 
                     b.ToTable("Students");
                 });
