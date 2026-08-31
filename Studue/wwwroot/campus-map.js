@@ -72,7 +72,8 @@ function draw(campus, highlight) {
     const order = { w: 0, s: 1, r: 2, b: 3, z: 4 };
     const features = [...campus.features].sort((a, b) => order[a.k] - order[b.k]);
 
-    let target = null;
+    // a code can span several buildings, so every match is framed, not just the first
+    const targets = [];
 
     for (const feature of features) {
         let shape;
@@ -82,10 +83,11 @@ function draw(campus, highlight) {
         } else if (feature.k === "s") {
             shape = L.polyline(feature.c, { className: "map-stream" });
         } else if (feature.k === "z") {
-            const active = feature.code === highlight;
+            const active = feature.codes.includes(highlight);
             shape = L.polygon(feature.c, { className: `map-zhaw${active ? " is-active" : ""}` });
-            shape.bindTooltip(feature.code, { permanent: true, direction: "center", className: "map-label" });
-            if (active) target = shape;
+            // several codes share one outline where OSM draws only one
+            shape.bindTooltip(feature.codes.join(" / "), { permanent: true, direction: "center", className: "map-label" });
+            if (active) targets.push(shape);
         } else {
             shape = L.polygon(feature.c, { className: feature.k === "w" ? "map-water" : "map-building" });
         }
@@ -93,10 +95,13 @@ function draw(campus, highlight) {
         shape.addTo(layers);
     }
 
-    if (target) {
+    if (targets.length > 0) {
+        const extent = targets.reduce((bounds, shape) => bounds.extend(shape.getBounds()),
+            L.latLngBounds(targets[0].getBounds()));
+
         // a fixed padding with a zoom cap keeps every building at a comparable scale,
         // where a proportional pad would frame a small building far too wide
-        map.fitBounds(target.getBounds(), {
+        map.fitBounds(extent, {
             maxZoom: 19,
             paddingTopLeft: panelOffset(),
             paddingBottomRight: [30, 30],

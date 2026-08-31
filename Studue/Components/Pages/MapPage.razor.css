@@ -137,7 +137,9 @@
     color: inherit;
 }
 
-@media (max-width: 720px) {
+/* 18rem of dropdown plus a centred "Campus Zentrum, Lagerstrasse" needs ~855px before
+   the two overlap, so they stack well above the usual mobile breakpoint */
+@media (max-width: 880px) {
     /* stacked, not side by side: a long campus name and the dropdown cannot share a row */
     .map-campus {
         top: 0.6rem;

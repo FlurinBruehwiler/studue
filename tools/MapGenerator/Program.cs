@@ -26,16 +26,62 @@ const double SearchSouth = 47.15, SearchWest = 8.40, SearchNorth = 47.60, Search
 var campusByCode = new Dictionary<string, string>
 {
     ["ZF"] = "Campus Zentrum, Toni-Areal",
+    ["ZT"] = "Campus Zentrum, Toni-Areal",
     ["ZA"] = "Campus Zentrum, Lagerstrasse",
     ["ZL"] = "Campus Zentrum, Lagerstrasse",
 };
 
-// Hand-verified addresses. These win over whatever OSM has named: an entry here is
-// used both to add a building OSM does not label and to correct one it labels wrongly.
-var buildingsByAddress = new Dictionary<string, (string Street, string Number, double South, double West, double North, double East)>
+// The towns ZHAW sits in. An address lookup is confined to one of them, so a street
+// name that repeats elsewhere in Switzerland cannot match the wrong building.
+var winterthur = (South: 47.47, West: 8.68, North: 47.53, East: 8.78);
+var zurich = (South: 47.36, West: 8.50, North: 47.40, East: 8.56);
+
+// Hand-verified addresses, for the buildings OSM does not name after their code. The
+// address may sit on the outline itself or on a bare address node inside it; either way
+// it resolves to the enclosing outline.
+var buildingsByAddress = new Dictionary<string, (string Street, string Number, (double South, double West, double North, double East) Area)>
 {
-    ["ZA"] = ("Militärstrasse", "48", 47.36, 8.50, 47.40, 8.56),
-    ["ZL"] = ("Lagerstrasse", "41", 47.36, 8.50, 47.40, 8.56),
+    ["ME"] = ("Tössfeldstrasse", "27", winterthur),
+    ["MG"] = ("Katharina-Sulzer-Platz", "9", winterthur),
+    ["MU"] = ("Zürcherstrasse", "12", winterthur),
+    ["MW"] = ("Technoparkstrasse", "1", winterthur),
+    ["SG"] = ("Gertrudstrasse", "15", winterthur),
+    ["TU"] = ("Technikumstrasse", "81", winterthur),
+    ["ZA"] = ("Militärstrasse", "48", zurich),
+    ["ZL"] = ("Lagerstrasse", "41", zurich),
+    ["ZT"] = ("Pfingstweidstrasse", "96", zurich),
+};
+
+// Hand-verified OSM elements, for the buildings with no usable address either. A way is
+// the outline itself; a node or a bare "lat/lon" is a point inside it - several ZHAW
+// buildings are mapped only as a defibrillator or toilet POI - and the outline that
+// contains that point is looked up.
+//
+// A code may list several: ZL occupies two neighbouring buildings, and gets its second
+// here on top of the address above.
+var buildingsByOsm = new Dictionary<string, string[]>
+{
+    ["GE"] = ["node/11331206153"],
+    ["GQ"] = ["way/146301271"],
+    ["GS"] = ["way/146301338"],
+    ["GU"] = ["node/13033898930"],
+    ["RA"] = ["47.225091/8.679146"],
+    ["RD"] = ["node/11037266739"],
+    ["RN"] = ["way/201594465"],
+    ["RS"] = ["node/10763310022"],
+    ["RT"] = ["node/10763310021"],
+    ["ZL"] = ["way/409968050"],
+};
+
+// Codes ZHAW lists separately that share one outline in OSM. Both codes then label and
+// highlight the same shape, which is honest about what OSM knows.
+//
+// TB is deliberately absent: it may share TH's building, but it may equally no longer
+// exist, and that has to be seen on site before it is drawn anywhere.
+var buildingsSharedWith = new Dictionary<string, string>
+{
+    ["RR"] = "RS",
+    ["TM"] = "TE",
 };
 
 var campusByPrefix = new Dictionary<char, string>
@@ -166,32 +212,176 @@ async Task<List<Building>> FindZhawBuildings()
         if (code == null || found.ContainsKey(code))
             continue;
 
-        found[code] = new Building(code, name, Tag(tags, "addr:street"), Tag(tags, "addr:housenumber"),
+        // the id is kept so a code sharing this building can borrow the same outline
+        var ways = element.GetProperty("type").GetString() == "way"
+            ? new List<long> { element.GetProperty("id").GetInt64() }
+            : [];
+
+        found[code] = new Building(code, name, ways,
             centre.GetProperty("lat").GetDouble(),
             centre.GetProperty("lon").GetDouble());
     }
 
-    foreach (var (code, address) in buildingsByAddress)
-    {
-        var addressBox = $"{F(address.South)},{F(address.West)},{F(address.North)},{F(address.East)}";
-        using var located = await Query(
-            "[out:json][timeout:60];(" +
-            $"way[\"building\"][\"addr:street\"=\"{address.Street}\"][\"addr:housenumber\"~\"^{address.Number}\"]({addressBox});" +
-            ");out tags center;");
+    foreach (var (code, building) in await ResolvePinned())
+        found[code] = building;
 
-        var first = located.RootElement.GetProperty("elements").EnumerateArray().FirstOrDefault();
-        if (first.ValueKind != JsonValueKind.Object)
+    // codes that share another code's outline, resolved last so the target already exists
+    foreach (var (code, shared) in buildingsSharedWith)
+    {
+        if (!found.TryGetValue(shared, out var target))
         {
-            Console.WriteLine($"  {code}: no building at {address.Street} {address.Number}");
+            Console.WriteLine($"  {code}: shares {shared}, which was not found");
             continue;
         }
 
-        var centre = first.GetProperty("center");
-        found[code] = new Building(code, $"ZHAW {code}", address.Street, address.Number,
-            centre.GetProperty("lat").GetDouble(), centre.GetProperty("lon").GetDouble());
+        if (target.WayIds.Count == 0)
+            Console.WriteLine($"  {code}: shares {shared}, which has no outline to share");
+
+        found[code] = target with { Code = code, Name = $"ZHAW {code}" };
     }
 
     return found.Values.ToList();
+}
+
+// Resolves every hand-verified code to the OSM way of its outline, in three batched
+// queries rather than one per building. Matching on the way id afterwards is exact,
+// where matching on a name or an address is not.
+async Task<Dictionary<string, Building>> ResolvePinned()
+{
+    var outlines = new Dictionary<string, List<(long Id, double Lat, double Lon)>>();  // code -> its outlines
+    var points = new List<(string Code, double Lat, double Lon)>();                    // still needing an outline
+
+    void Add(string code, long id, double lat, double lon)
+    {
+        if (!outlines.TryGetValue(code, out var list))
+            outlines[code] = list = new List<(long Id, double Lat, double Lon)>();
+
+        if (list.All(x => x.Id != id))
+            list.Add((id, lat, lon));
+    }
+
+    var wayIds = new Dictionary<long, string>();
+    var nodeIds = new Dictionary<long, string>();
+
+    foreach (var (code, references) in buildingsByOsm)
+    foreach (var reference in references)
+    {
+        if (reference.StartsWith("way/"))
+            wayIds[long.Parse(reference[4..])] = code;
+        else if (reference.StartsWith("node/"))
+            nodeIds[long.Parse(reference[5..])] = code;
+        else
+        {
+            var parts = reference.Split('/');
+            points.Add((code, double.Parse(parts[0], CultureInfo.InvariantCulture),
+                              double.Parse(parts[1], CultureInfo.InvariantCulture)));
+        }
+    }
+
+    // 1. the elements named outright
+    if (wayIds.Count > 0 || nodeIds.Count > 0)
+    {
+        var clauses = "";
+        if (wayIds.Count > 0) clauses += $"way(id:{string.Join(",", wayIds.Keys)});";
+        if (nodeIds.Count > 0) clauses += $"node(id:{string.Join(",", nodeIds.Keys)});";
+
+        using var document = await Query($"[out:json][timeout:90];({clauses});out center;");
+
+        foreach (var element in document.RootElement.GetProperty("elements").EnumerateArray())
+        {
+            var id = element.GetProperty("id").GetInt64();
+
+            if (element.GetProperty("type").GetString() == "way" && wayIds.TryGetValue(id, out var wayCode))
+            {
+                var centre = element.GetProperty("center");
+                Add(wayCode, id, centre.GetProperty("lat").GetDouble(), centre.GetProperty("lon").GetDouble());
+            }
+            else if (nodeIds.TryGetValue(id, out var nodeCode))
+            {
+                points.Add((nodeCode, element.GetProperty("lat").GetDouble(), element.GetProperty("lon").GetDouble()));
+            }
+        }
+    }
+
+    // 2. the addresses
+    if (buildingsByAddress.Count > 0)
+    {
+        var clauses = string.Concat(buildingsByAddress.Values.Select(address =>
+        {
+            var box = $"{F(address.Area.South)},{F(address.Area.West)},{F(address.Area.North)},{F(address.Area.East)}";
+            // anchored, so "1" cannot also match 10 and 12; a letter suffix still counts
+            var number = $"[\"addr:housenumber\"~\"^{address.Number}[a-z]?$\"]";
+            return $"way[\"building\"][\"addr:street\"=\"{address.Street}\"]{number}({box});"
+                 + $"node[\"addr:street\"=\"{address.Street}\"]{number}({box});";
+        }));
+
+        using var document = await Query($"[out:json][timeout:120];({clauses});out tags center;");
+
+        var codesByAddress = buildingsByAddress.ToDictionary(x => $"{x.Value.Street}|{x.Value.Number}", x => x.Key);
+        var fromOutline = new HashSet<string>();
+
+        // an outline carrying the address wins over a bare address node inside one
+        foreach (var element in document.RootElement.GetProperty("elements").EnumerateArray()
+                     .OrderBy(x => x.GetProperty("type").GetString() == "way" ? 0 : 1))
+        {
+            element.TryGetProperty("tags", out var tags);
+            var digits = new string((Tag(tags, "addr:housenumber") ?? "").TakeWhile(char.IsAsciiDigit).ToArray());
+
+            if (!codesByAddress.TryGetValue($"{Tag(tags, "addr:street")}|{digits}", out var code))
+                continue;
+
+            if (element.GetProperty("type").GetString() == "way")
+            {
+                var centre = element.GetProperty("center");
+                Add(code, element.GetProperty("id").GetInt64(),
+                    centre.GetProperty("lat").GetDouble(), centre.GetProperty("lon").GetDouble());
+                fromOutline.Add(code);
+            }
+            else if (!fromOutline.Contains(code))
+            {
+                points.Add((code, element.GetProperty("lat").GetDouble(), element.GetProperty("lon").GetDouble()));
+            }
+        }
+    }
+
+    // 3. the outlines around whatever is still only a point
+    if (points.Count > 0)
+    {
+        var clauses = string.Concat(points.Select(p => $"way(around:40,{F(p.Lat)},{F(p.Lon)})[\"building\"];"));
+        using var document = await Query($"[out:json][timeout:120];({clauses});out geom;");
+
+        var candidates = document.RootElement.GetProperty("elements").EnumerateArray()
+            .Where(x => x.TryGetProperty("geometry", out var g) && g.GetArrayLength() > 2)
+            .Select(x => (
+                Id: x.GetProperty("id").GetInt64(),
+                Ring: x.GetProperty("geometry").EnumerateArray()
+                    .Select(p => (Lat: p.GetProperty("lat").GetDouble(), Lon: p.GetProperty("lon").GetDouble()))
+                    .ToArray()))
+            .ToList();
+
+        foreach (var (code, lat, lon) in points)
+        {
+            var match = candidates.FirstOrDefault(x => Contains(x.Ring, lat, lon));
+
+            if (match.Ring == null)
+            {
+                Console.WriteLine($"  {code}: no building outline contains {F(lat)},{F(lon)}");
+                continue;
+            }
+
+            Add(code, match.Id,
+                (match.Ring.Min(p => p.Lat) + match.Ring.Max(p => p.Lat)) / 2,
+                (match.Ring.Min(p => p.Lon) + match.Ring.Max(p => p.Lon)) / 2);
+        }
+    }
+
+    foreach (var code in buildingsByAddress.Keys.Concat(buildingsByOsm.Keys).Where(x => !outlines.ContainsKey(x)))
+        Console.WriteLine($"  {code}: could not be located");
+
+    // a code spanning several buildings sits between them
+    return outlines.ToDictionary(x => x.Key, x => new Building(
+        x.Key, $"ZHAW {x.Key}", x.Value.Select(y => y.Id).ToList(),
+        x.Value.Average(y => y.Lat), x.Value.Average(y => y.Lon)));
 }
 
 async Task<Campus> FetchCampus(string id, string name, List<Building> members)
@@ -214,16 +404,16 @@ async Task<Campus> FetchCampus(string id, string name, List<Building> members)
         $"way[\"natural\"=\"water\"]({box});" +
         ");out geom;");
 
-    //a code with a hand-verified address is matched on that alone, never on the OSM name
-    var corrected = buildingsByAddress.Keys.ToHashSet();
+    // a code is matched on its own OSM way where one is known, and on the OSM name
+    // otherwise. Both are many-to-many: codes can share one outline, and one code
+    // can span several.
+    var codesByWay = members
+        .SelectMany(x => x.WayIds.Select(id => (Id: id, x.Code)))
+        .GroupBy(x => x.Id)
+        .ToDictionary(x => x.Key, x => x.Select(y => y.Code).ToList());
 
-    var codesByName = members
-        .Where(x => !corrected.Contains(x.Code))
-        .ToDictionary(x => x.Name, x => x.Code);
+    var codesByName = members.ToLookup(x => x.Name, x => x.Code);
 
-    var codesByAddress = members
-        .Where(x => corrected.Contains(x.Code) && x.Street != null && x.Number != null)
-        .ToDictionary(x => $"{x.Street}|{x.Number}", x => x.Code);
     var features = new List<object>();
 
     foreach (var element in document.RootElement.GetProperty("elements").EnumerateArray())
@@ -244,12 +434,16 @@ async Task<Campus> FetchCampus(string id, string name, List<Building> members)
 
         if (Tag(tags, "building") != null)
         {
-            var address = $"{Tag(tags, "addr:street")}|{Tag(tags, "addr:housenumber")}";
+            var codes = new List<string>();
 
-            if (buildingName != null && codesByName.TryGetValue(buildingName, out var code))
-                features.Add(new { k = "z", code, c = coordinates });
-            else if (codesByAddress.TryGetValue(address, out var addressCode))
-                features.Add(new { k = "z", code = addressCode, c = coordinates });
+            if (codesByWay.TryGetValue(element.GetProperty("id").GetInt64(), out var byWay))
+                codes.AddRange(byWay);
+
+            if (buildingName != null)
+                codes.AddRange(codesByName[buildingName].Where(x => !codes.Contains(x)));
+
+            if (codes.Count > 0)
+                features.Add(new { k = "z", codes = codes.Order(StringComparer.Ordinal).ToList(), c = coordinates });
             else
                 features.Add(new { k = "b", c = coordinates });
         }
@@ -294,11 +488,26 @@ static string Slug(string name)
 
 
 
+// ray casting; the OSM ring is closed, so the wrap-around edge is covered
+static bool Contains((double Lat, double Lon)[] ring, double lat, double lon)
+{
+    var inside = false;
+
+    for (int i = 0, j = ring.Length - 1; i < ring.Length; j = i++)
+    {
+        if (ring[i].Lon > lon != ring[j].Lon > lon
+            && lat < (ring[j].Lat - ring[i].Lat) * (lon - ring[i].Lon) / (ring[j].Lon - ring[i].Lon) + ring[i].Lat)
+            inside = !inside;
+    }
+
+    return inside;
+}
+
 static string? Tag(JsonElement tags, string key) =>
     tags.ValueKind == JsonValueKind.Object && tags.TryGetProperty(key, out var value) ? value.GetString() : null;
 
 static string F(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
 
-record Building(string Code, string Name, string? Street, string? Number, double Lat, double Lon);
+record Building(string Code, string Name, List<long> WayIds, double Lat, double Lon);
 
 record Campus(string id, string name, double[][] bounds, List<object> buildings, List<object> features);

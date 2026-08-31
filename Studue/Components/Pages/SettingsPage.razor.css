@@ -19,3 +19,8 @@
     gap: 0.75rem;
     margin-top: 1.25rem;
 }
+
+/* .panel carries no margin of its own, so stacked sections would touch */
+.settings-section + .settings-section {
+    margin-top: 1.25rem;
+}
