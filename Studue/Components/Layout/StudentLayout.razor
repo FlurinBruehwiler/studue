@@ -19,8 +19,9 @@
         </a>
 
         <nav class="app-nav" aria-label="Primary">
-            <a href="/" class="app-nav-link @(IsScheduleRoute || IsSettingsRoute ? null : "is-active")">Home</a>
+            <a href="/" class="app-nav-link @(IsScheduleRoute || IsSettingsRoute || IsMapRoute ? null : "is-active")">Home</a>
             <a href="/schedule" class="app-nav-link @(IsScheduleRoute ? "is-active" : null)">Schedule</a>
+            <a href="/map" class="app-nav-link @(IsMapRoute ? "is-active" : null)">Map</a>
         </nav>
 
         <div class="app-account">
@@ -46,7 +47,7 @@
         </div>
     }
 
-    <main class="app-main">
+    <main class="app-main @(IsMapRoute ? "is-full" : null)">
         @Body
     </main>
 </div>
@@ -68,6 +69,8 @@ function logout() {
     private MarkupString? _notice;
 
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsMapRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("map", StringComparison.OrdinalIgnoreCase);
 
     private bool IsSettingsRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("settings", StringComparison.OrdinalIgnoreCase);
 

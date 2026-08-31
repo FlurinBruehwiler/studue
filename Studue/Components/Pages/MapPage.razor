@@ -1,0 +1,78 @@
+﻿@page "/map"
+@attribute [StudentRequired]
+@layout Layout.StudentLayout
+@using Studue.Services
+@inject StudentContext StudentContext
+
+<PageTitle>Map</PageTitle>
+
+<div class="map-page" data-building="@Building" data-campus="@Campus" data-next-building="@_nextBuilding">
+    <div id="campus-map" class="map-surface"></div>
+
+    <p id="map-campus" class="map-campus"></p>
+
+    <details class="map-picker" id="map-picker">
+        <summary class="map-picker-toggle">
+            <span id="map-current">Select a building</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="map-picker-caret">
+                <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </summary>
+
+        <div class="map-picker-body">
+            <input id="building-search" class="map-search-input" type="search" autocomplete="off"
+                   placeholder="Search a building or campus" oninput="filterBuildings(this.value)"/>
+
+            <ul class="map-results" id="map-results"></ul>
+        </div>
+    </details>
+
+    <p id="map-message" class="map-message" style="display: none" role="status"></p>
+
+    <p class="map-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</p>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "building")]
+    public string? Building { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "campus")]
+    public string? Campus { get; set; }
+
+    private string? _nextBuilding;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // opening the map cold, the useful default is wherever you are headed next
+        if (Building != null || Campus != null)
+            return;
+
+        var entries = await StudentContext.GetScheduleEntriesForStudent(StudentContext.Student.StudentId);
+        _nextBuilding = NextLessonBuilding(entries);
+    }
+
+    private static string? NextLessonBuilding(List<ScheduleEntry> entries)
+    {
+        var now = Helper.Now();
+        var today = ((int)now.DayOfWeek + 6) % 7;   //the schedule counts Monday as 0
+        var timeOfDay = TimeOnly.FromDateTime(now);
+
+        return entries
+            .Where(x => Helper.BuildingCode(x.Room) != null)
+            .Select(x => new
+            {
+                Entry = x,
+                //days until it comes round again, this week or next
+                Days = (x.Weekday - today + 7) % 7 == 0 && x.StartTime <= timeOfDay
+                    ? 7
+                    : (x.Weekday - today + 7) % 7,
+            })
+            .OrderBy(x => x.Days)
+            .ThenBy(x => x.Entry.StartTime)
+            .Select(x => Helper.BuildingCode(x.Entry.Room))
+            .FirstOrDefault();
+    }
+}

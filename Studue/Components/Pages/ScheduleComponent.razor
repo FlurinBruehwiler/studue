@@ -59,7 +59,17 @@ else
                                 <div class="schedule-entry-meta">
                                     @foreach (var room in slot)
                                     {
-                                        <span>@room.Room · @room.Teacher</span>
+                                        <span>
+                                            @if (Helper.BuildingCode(room.Room) is { } building)
+                                            {
+                                                <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                            }
+                                            else
+                                            {
+                                                @room.Room
+                                            }
+                                            · @room.Teacher
+                                        </span>
                                     }
                                 </div>
                             </article>
@@ -96,7 +106,17 @@ else
                                 <strong>@lesson.Module.Name</strong>
                                 @foreach (var room in slot)
                                 {
-                                    <p>@room.Room · @room.Teacher</p>
+                                    <p>
+                                    @if (Helper.BuildingCode(room.Room) is { } building)
+                                    {
+                                        <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                    }
+                                    else
+                                    {
+                                        @room.Room
+                                    }
+                                    · @room.Teacher
+                                </p>
                                 }
                             </div>
                         </article>

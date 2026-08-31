@@ -279,3 +279,92 @@ h1:focus {
     font-size: 0.9rem;
     line-height: 1.5;
 }
+
+/* Campus map. Leaflet paints presentation attributes; CSS overrides them, so the
+   whole palette lives here rather than in the geometry. */
+.map-water {
+    fill: #dbeafe;
+    fill-opacity: 1;
+    stroke: none;
+}
+
+.map-building {
+    fill: #d8dee6;
+    fill-opacity: 1;
+    stroke: #cbd2da;
+    stroke-width: 1;
+}
+
+.map-stream {
+    fill: none;
+    stroke: #bfdbfe;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.map-road {
+    fill: none;
+    stroke: #ffffff;
+    stroke-linecap: round;
+}
+
+.map-road-major { stroke-width: 9; }
+.map-road-minor { stroke-width: 6; }
+.map-road-path  { stroke-width: 3; stroke: #f1f5f9; }
+
+.map-zhaw {
+    fill: #7ea8c9;
+    fill-opacity: 1;
+    stroke: #ffffff;
+    stroke-width: 1;
+}
+
+.map-zhaw.is-active {
+    fill: #0061a2;
+    stroke: #003f6b;
+    stroke-width: 2;
+}
+
+.map-label {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.map-label::before { display: none; }
+
+.leaflet-container {
+    background: #eef2f6;
+    border-radius: 0.9rem;
+    font: inherit;
+}
+
+.map-result {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: none;
+    color: #334155;
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.map-result:hover { background: #eef2f6; }
+
+.map-result.is-active {
+    background: #eaf4fb;
+    color: #0061a2;
+}
+
+.map-empty {
+    padding: 0.4rem 0.6rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}

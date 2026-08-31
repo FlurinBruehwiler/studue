@@ -11,6 +11,13 @@ public static class Helper
         VerifyEmailHtml = reader.ReadToEnd();
     }
 
+    //"TS O1.23" -> "TS"; "Online asynchron" has no building, so null
+    public static string? BuildingCode(string room)
+    {
+        var first = room.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return first is { Length: 2 } && first.All(char.IsAsciiLetterUpper) ? first : null;
+    }
+
     public static string GetCurrentSemester()
     {
         var currentYear = DateTime.Now.Year;

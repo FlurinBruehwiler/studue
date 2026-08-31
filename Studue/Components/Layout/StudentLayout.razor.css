@@ -127,6 +127,14 @@
     padding: 2rem 1.5rem 4rem;
 }
 
+/* the map is the whole page: no column, no padding, fills what the bar leaves */
+.app-main.is-full {
+    display: flex;
+    flex: 1;
+    max-width: none;
+    padding: 0;
+}
+
 @media (max-width: 720px) {
     .app-bar {
         flex-wrap: wrap;

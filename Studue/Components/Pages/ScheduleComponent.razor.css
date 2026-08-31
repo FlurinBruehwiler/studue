@@ -244,3 +244,15 @@
         font-size: 0.85rem;
     }
 }
+
+.schedule-room {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: #cbd5e1;
+    text-underline-offset: 0.15rem;
+}
+
+.schedule-room:hover {
+    color: #0061a2;
+    text-decoration-color: currentColor;
+}

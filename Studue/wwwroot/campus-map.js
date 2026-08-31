@@ -1,0 +1,307 @@
+// Campus map. Leaflet is used only as a pan/zoom/geolocate engine - there is no tile
+// layer, the geometry is our own committed GeoJSON, and every colour comes from CSS.
+// Leaflet itself is fetched lazily so the other pages never pay for it.
+
+const MAP_LIBRARY = "/lib/leaflet/leaflet.js";
+const MAP_STYLES = "/lib/leaflet/leaflet.css";
+
+let leafletLoading = null;
+let map = null;
+let layers = null;
+let buildingIndex = null;
+let currentCampus = null;
+
+function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (leafletLoading) return leafletLoading;
+
+    leafletLoading = new Promise((resolve, reject) => {
+        const styles = document.createElement("link");
+        styles.rel = "stylesheet";
+        styles.href = MAP_STYLES;
+        document.head.appendChild(styles);
+
+        const script = document.createElement("script");
+        script.src = MAP_LIBRARY;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("could not load leaflet"));
+        document.head.appendChild(script);
+    });
+
+    return leafletLoading;
+}
+
+async function loadIndex() {
+    if (buildingIndex) return buildingIndex;
+
+    const response = await fetch("/maps/buildings.json");
+    if (!response.ok) throw new Error(`/maps/buildings.json returned ${response.status}`);
+
+    buildingIndex = await response.json();
+    return buildingIndex;
+}
+
+// the panel floats over the map, so the target has to be framed in what is left of it:
+// beside the panel on a wide screen, below it on a narrow one
+function panelOffset() {
+    const panel = document.querySelector(".map-picker");
+    const host = document.getElementById("campus-map");
+    if (!panel || !host) return [30, 30];
+
+    const box = panel.getBoundingClientRect();
+    const surface = host.getBoundingClientRect();
+
+    return box.width > surface.width * 0.6
+        ? [30, box.height + 30]
+        : [box.width + 30, 30];
+}
+
+// buildings first by area so small ones stay clickable, ZHAW ones last so they sit on top
+function draw(campus, highlight) {
+    layers.clearLayers();
+
+    const order = { w: 0, s: 1, r: 2, b: 3, z: 4 };
+    const features = [...campus.features].sort((a, b) => order[a.k] - order[b.k]);
+
+    let target = null;
+
+    for (const feature of features) {
+        let shape;
+
+        if (feature.k === "r") {
+            shape = L.polyline(feature.c, { className: `map-road map-road-${feature.w}` });
+        } else if (feature.k === "s") {
+            shape = L.polyline(feature.c, { className: "map-stream" });
+        } else if (feature.k === "z") {
+            const active = feature.code === highlight;
+            shape = L.polygon(feature.c, { className: `map-zhaw${active ? " is-active" : ""}` });
+            shape.bindTooltip(feature.code, { permanent: true, direction: "center", className: "map-label" });
+            if (active) target = shape;
+        } else {
+            shape = L.polygon(feature.c, { className: feature.k === "w" ? "map-water" : "map-building" });
+        }
+
+        shape.addTo(layers);
+    }
+
+    if (target) {
+        // a fixed padding with a zoom cap keeps every building at a comparable scale,
+        // where a proportional pad would frame a small building far too wide
+        map.fitBounds(target.getBounds(), {
+            maxZoom: 18,
+            paddingTopLeft: panelOffset(),
+            paddingBottomRight: [30, 30],
+        });
+    } else {
+        // the ZHAW buildings, not campus.bounds: that is the padded query box and
+        // frames the whole town rather than the campus
+        const extent = L.latLngBounds(campus.buildings.map(b => [b.lat, b.lon]));
+        map.fitBounds(extent, {
+            maxZoom: 17,
+            paddingTopLeft: panelOffset(),
+            paddingBottomRight: [40, 40],
+        });
+    }
+}
+
+// a whole campus, with nothing singled out
+async function showCampus(id) {
+    const picker = document.getElementById("map-picker");
+    if (picker) picker.open = false;
+
+    if (currentCampus?.id !== id) {
+        const response = await fetch(`/maps/${id}.json`);
+        if (!response.ok) {
+            setMessage("No map has been generated for that campus yet.");
+            return;
+        }
+        currentCampus = await response.json();
+    }
+
+    setMessage("");
+
+    const heading = document.getElementById("map-campus");
+    if (heading) heading.textContent = currentCampus.name ?? "Campus";
+
+    const current = document.getElementById("map-current");
+    if (current) current.textContent = currentCampus.name ?? "Campus";
+
+    draw(currentCampus, null);
+    history.replaceState({}, "", `/map?campus=${encodeURIComponent(id)}`);
+    renderResults(document.getElementById("building-search")?.value ?? "", null);
+}
+
+async function show(code) {
+    const index = await loadIndex();
+    const entry = index[code];
+    if (!entry) return;
+
+    if (currentCampus?.id !== entry.campus) {
+        const response = await fetch(`/maps/${entry.campus}.json`);
+        if (!response.ok) {
+            setMessage(`No map generated for ${code} yet.`);
+            return;
+        }
+        currentCampus = await response.json();
+    }
+
+    setMessage("");
+
+    // close before measuring, so the open dropdown does not skew the framing
+    const picker = document.getElementById("map-picker");
+    if (picker) picker.open = false;
+
+    const heading = document.getElementById("map-campus");
+    if (heading) heading.textContent = currentCampus.name ?? "Campus";
+
+    // the OSM name is just "ZHAW TS", so the code alone says everything
+    const current = document.getElementById("map-current");
+    if (current) current.textContent = code;
+
+    draw(currentCampus, code);
+    history.replaceState({}, "", `/map?building=${encodeURIComponent(code)}`);
+    renderResults(document.getElementById("building-search")?.value ?? "", code);
+}
+
+function setMessage(text) {
+    const banner = document.getElementById("map-message");
+    if (!banner) return;
+
+    banner.textContent = text;
+    banner.style.display = text ? "block" : "none";
+}
+
+// the campuses a student can reach, derived from the building index
+function campuses() {
+    const found = new Map();
+
+    for (const entry of Object.values(buildingIndex)) {
+        if (!found.has(entry.campus)) found.set(entry.campus, entry.campusName);
+    }
+
+    return [...found].map(([id, name]) => ({ id, name }));
+}
+
+function addResult(list, label, sublabel, active, onPick) {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "map-result" + (active ? " is-active" : "");
+
+    const title = document.createElement("span");
+    title.textContent = label;
+    button.appendChild(title);
+
+    if (sublabel) {
+        const note = document.createElement("small");
+        note.textContent = sublabel;
+        button.appendChild(note);
+    }
+
+    button.onclick = onPick;
+    item.appendChild(button);
+    list.appendChild(item);
+}
+
+function renderResults(term, selected) {
+    const list = document.getElementById("map-results");
+    if (!list || !buildingIndex) return;
+
+    const needle = term.trim().toUpperCase();
+    list.innerHTML = "";
+
+    // campuses first: picking one is the broader, more common intent
+    const matchingCampuses = campuses()
+        .filter(x => !needle || x.name.toUpperCase().includes(needle))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const campus of matchingCampuses) {
+        addResult(list, campus.name, undefined,
+            !selected && currentCampus?.id === campus.id,
+            () => showCampus(campus.id));
+    }
+
+    const current = currentCampus?.id;
+    const codes = Object.keys(buildingIndex)
+        .filter(code => !needle || code.startsWith(needle) || buildingIndex[code].name.toUpperCase().includes(needle))
+        .sort((a, b) => {
+            const near = (code) => (buildingIndex[code].campus === current ? 0 : 1);
+            return near(a) - near(b) || a.localeCompare(b);
+        });
+
+    for (const code of codes) {
+        addResult(list, code, undefined, code === selected, () => show(code));
+    }
+
+    if (matchingCampuses.length === 0 && codes.length === 0) {
+        list.innerHTML = '<li class="map-empty">Nothing matches that.</li>';
+    }
+}
+
+window.filterBuildings = function (term) {
+    renderResults(term, null);
+};
+
+async function initCampusMap() {
+    const host = document.getElementById("campus-map");
+    if (!host) return;
+
+    // enhanced navigation reuses the DOM, so a second visit would hit a stale container
+    if (map) {
+        map.remove();
+        map = null;
+    }
+
+    // without this an unreachable library or index leaves a blank page and no clue why
+    try {
+        await loadLeaflet();
+        await loadIndex();
+    } catch (error) {
+        console.error(error);
+        setMessage("The map could not be loaded. Please try again later.");
+        return;
+    }
+
+    // no zoom buttons: scroll, pinch and double-click all zoom already
+    map = L.map(host, { attributionControl: false, zoomControl: false });
+    layers = L.layerGroup().addTo(map);
+
+    const page = document.querySelector(".map-page");
+    const requestedCampus = page?.dataset.campus;
+    const requested = page?.dataset.building?.toUpperCase();
+
+    const nextLesson = page?.dataset.nextBuilding?.toUpperCase();
+
+    if (requestedCampus) {
+        renderResults("", null);
+        await showCampus(requestedCampus);
+    } else if (requested && buildingIndex[requested]) {
+        renderResults("", requested);
+        await show(requested);
+    } else if (nextLesson && buildingIndex[nextLesson]) {
+        // no building asked for: open on the campus of the next lesson
+        renderResults("", null);
+        await showCampus(buildingIndex[nextLesson].campus);
+    } else {
+        const start = Object.keys(buildingIndex).sort()[0];
+        renderResults("", start);
+        await show(start);
+    }
+
+    // opening the dropdown should put the cursor straight in the search box
+    const picker = document.getElementById("map-picker");
+    const search = document.getElementById("building-search");
+
+    picker?.addEventListener("toggle", () => {
+        if (!picker.open) return;
+        search.value = "";
+        renderResults("", null);
+        search.focus();
+    });
+}
+
+if (window.Blazor) {
+    Blazor.addEventListener("enhancedload", initCampusMap);
+}
+
+initCampusMap();
