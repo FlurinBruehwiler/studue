@@ -70,9 +70,22 @@
 }
 
 .app-account-name {
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.6rem;
     color: #4f6477;
     font-weight: 600;
     white-space: nowrap;
+    text-decoration: none;
+}
+
+.app-account-name:hover {
+    background: #f1f6fa;
+    color: #0061a2;
+}
+
+.app-account-name.is-active {
+    background: #eaf4fb;
+    color: #0061a2;
 }
 
 .app-notice {

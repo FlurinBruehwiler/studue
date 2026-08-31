@@ -261,3 +261,18 @@ h1:focus {
         padding: 1.1rem;
     }
 }
+
+.notifications-status {
+    margin: 1rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.ios-notifications-hint {
+    max-width: 42rem;
+    margin: 1rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}

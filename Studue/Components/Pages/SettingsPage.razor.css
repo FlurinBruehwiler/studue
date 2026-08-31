@@ -1,0 +1,21 @@
+.settings-section h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.settings-note {
+    max-width: 42rem;
+    margin: 0.5rem 0 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.settings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}

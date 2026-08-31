@@ -1,0 +1,50 @@
+﻿@page "/settings"
+@attribute [StudentRequired]
+@layout Layout.StudentLayout
+@using Microsoft.EntityFrameworkCore
+@using Studue.Services
+@inject StudueContext StudueContext
+@inject StudentContext StudentContext
+
+<PageTitle>Settings</PageTitle>
+
+<header class="page-header">
+    <div>
+        <h1>Settings</h1>
+        <p>Signed in as @StudentContext.Student.StudentId, @StudentContext.Student.Class.</p>
+    </div>
+
+    <button type="button" class="app-button app-button-secondary" onclick="logout()">Log out</button>
+</header>
+
+<section class="panel settings-section">
+    <h2>Notifications</h2>
+
+    <p class="settings-note">
+        Studue can send a push notification one day and one hour before an assignment is due.
+        Being able to choose your own reminder times is planned.
+    </p>
+
+    <div class="settings-actions">
+        <button type="button" class="app-button app-button-primary enable-notifications-button" style="display: none"
+                data-vapid-key="@_vapidPublicKey" onclick="enableNotifications()">Enable notifications</button>
+
+        <button type="button" class="app-button app-button-secondary disable-notifications-button" style="display: none"
+                onclick="disableNotifications()">Disable notifications</button>
+    </div>
+
+    <p class="notifications-status" style="display: none" role="status"></p>
+
+    <p class="ios-notifications-hint" style="display: none">
+        To get notifications on your iPhone, tap Share and then <strong>Add to Home Screen</strong>. Open Studue from there and this option will appear.
+    </p>
+</section>
+
+@code {
+    private string? _vapidPublicKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _vapidPublicKey = (await StudueContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
+    }
+}

@@ -19,12 +19,12 @@
         </a>
 
         <nav class="app-nav" aria-label="Primary">
-            <a href="/" class="app-nav-link @(IsScheduleRoute ? null : "is-active")">Home</a>
+            <a href="/" class="app-nav-link @(IsScheduleRoute || IsSettingsRoute ? null : "is-active")">Home</a>
             <a href="/schedule" class="app-nav-link @(IsScheduleRoute ? "is-active" : null)">Schedule</a>
         </nav>
 
         <div class="app-account">
-            <span class="app-account-name">@StudentContext.Student.StudentId</span>
+            <a href="/settings" class="app-account-name @(IsSettingsRoute ? "is-active" : null)">@StudentContext.Student.StudentId</a>
 
             @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
             {
@@ -35,8 +35,6 @@
             {
                 <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
             }
-
-            <button type="button" class="app-button app-button-secondary" onclick="logout()">Logout</button>
         </div>
     </header>
 
@@ -70,6 +68,8 @@ function logout() {
     private MarkupString? _notice;
 
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsSettingsRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("settings", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {

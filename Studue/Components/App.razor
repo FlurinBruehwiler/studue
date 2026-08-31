@@ -70,8 +70,8 @@
         // the button while blocked would be a button that can never do anything
         const blocked = supported && Notification.permission === "denied";
 
-        enableButton.style.display = supported && !subscribed && !blocked ? "inline" : "none";
-        disableButton.style.display = supported && subscribed ? "inline" : "none";
+        enableButton.style.display = supported && !subscribed && !blocked ? "inline-flex" : "none";
+        disableButton.style.display = supported && subscribed ? "inline-flex" : "none";
         // navigator.standalone is false only in an iOS Safari tab, where push is unavailable
         iosHint.style.display = !supported && navigator.standalone === false ? "block" : "none";
 
