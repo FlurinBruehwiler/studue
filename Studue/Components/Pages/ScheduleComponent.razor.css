@@ -62,8 +62,10 @@
 }
 
 .schedule-day-column {
-    flex: 1 1 12rem;
-    min-width: 12rem;
+    /* only the floor: flex-grow widens these whenever there is room, so a light
+       week still gets wide columns while a full six-day week still fits */
+    flex: 1 1 9.5rem;
+    min-width: 8.5rem;
 }
 
 .schedule-corner-cell,
@@ -157,10 +159,24 @@
     line-height: 1.35;
 }
 
-/* The full six-day week needs ~79.8rem of grid plus 6rem of layout padding.
-   Below that, drop the weekdays the student has no lessons on. */
-@media (max-width: 86rem) {
-    .schedule-day-column[data-collapsible] {
-        display: none;
-    }
+/* A day with no lessons collapses to a labelled strip rather than disappearing, so it
+   is obvious the day exists and is simply empty. The content column is capped, so a
+   full-width six-day grid would not fit however wide the screen is. */
+.schedule-day-column[data-collapsible] {
+    flex: 0 0 3rem;
+    min-width: 3rem;
+}
+
+.schedule-day-column[data-collapsible] .schedule-day-cell {
+    padding-inline: 0.25rem;
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.schedule-day-column[data-collapsible] .schedule-slot-cell {
+    border: 0;
+    background: #f8fafc;
 }

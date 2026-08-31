@@ -50,6 +50,14 @@
         return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     }
 
+    function setNotificationStatus(message) {
+        const status = document.querySelector(".notifications-status");
+        if (!status) return;
+
+        status.textContent = message ?? "";
+        status.style.display = message ? "block" : "none";
+    }
+
     function refreshNotificationUi() {
         const enableButton = document.querySelector(".enable-notifications-button");
         const disableButton = document.querySelector(".disable-notifications-button");
@@ -58,38 +66,70 @@
 
         const supported = notificationsSupported();
         const subscribed = localStorage.getItem(NOTIFICATION_FLAG) === "on";
+        // permission can only be reset by the user in browser settings, so offering
+        // the button while blocked would be a button that can never do anything
+        const blocked = supported && Notification.permission === "denied";
 
-        enableButton.style.display = supported && !subscribed ? "inline" : "none";
+        enableButton.style.display = supported && !subscribed && !blocked ? "inline" : "none";
         disableButton.style.display = supported && subscribed ? "inline" : "none";
         // navigator.standalone is false only in an iOS Safari tab, where push is unavailable
         iosHint.style.display = !supported && navigator.standalone === false ? "block" : "none";
+
+        if (blocked) {
+            setNotificationStatus("Notifications are blocked for this site in your browser settings.");
+        }
     }
 
     async function enableNotifications() {
         if (!notificationsSupported()) return;
 
-        const registration = await navigator.serviceWorker.register("/ServiceWorker.js");
+        const button = document.querySelector(".enable-notifications-button");
+        const label = button.textContent;
 
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") return;
+        // every branch below reports something: silence here reads as a broken button
+        setNotificationStatus("");
+        button.disabled = true;
+        button.textContent = "Enabling…";
 
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: document.querySelector(".enable-notifications-button").dataset.vapidKey
-        });
+        try {
+            const registration = await navigator.serviceWorker.register("/ServiceWorker.js");
 
-        await fetch("/push/subscribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(subscription)
-        });
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") {
+                setNotificationStatus(permission === "denied"
+                    ? "Notifications are blocked for this site in your browser settings."
+                    : "Notifications were not enabled.");
+                return;
+            }
 
-        localStorage.setItem(NOTIFICATION_FLAG, "on");
-        refreshNotificationUi();
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: button.dataset.vapidKey
+            });
+
+            const response = await fetch("/push/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(subscription)
+            });
+
+            if (!response.ok) throw new Error(`/push/subscribe returned ${response.status}`);
+
+            localStorage.setItem(NOTIFICATION_FLAG, "on");
+            setNotificationStatus("Notifications are on. You'll get a reminder a day and an hour before each due date.");
+        } catch (error) {
+            console.error(error);
+            setNotificationStatus("Could not enable notifications. Please try again.");
+        } finally {
+            button.disabled = false;
+            button.textContent = label;
+            refreshNotificationUi();
+        }
     }
 
     async function disableNotifications() {
         localStorage.removeItem(NOTIFICATION_FLAG);
+        setNotificationStatus("Notifications are off.");
         refreshNotificationUi();
 
         if (!("serviceWorker" in navigator)) return;

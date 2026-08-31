@@ -1,7 +1,14 @@
-@layout MainLayout
+﻿@layout MainLayout
+@using System.Net.Http.Headers
+@using System.Web
+@using Microsoft.Extensions.Options
+@using QRCoder
 @using Studue.Services
 @inject StudentContext StudentContext
 @inject NavigationManager Navigation
+@inject IOptions<Settings> Settings
+@inject IHostEnvironment Environment
+@inject ILogger<StudentLayout> Logger
 @inherits LayoutComponentBase
 
 <div class="app">
@@ -33,6 +40,14 @@
         </div>
     </header>
 
+    @if (_notice != null)
+    {
+        <div class="app-notice" role="status">
+            <p>@_notice</p>
+            <a href="/" class="app-notice-dismiss" aria-label="Dismiss">&times;</a>
+        </div>
+    }
+
     <main class="app-main">
         @Body
     </main>
@@ -47,5 +62,45 @@ function logout() {
 </script>
 
 @code {
+    //the sign-in link is about the session, not about any one page, so it lives with the chrome
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "requestEditLink")]
+    public bool RequestEditLink { get; set; }
+
+    private MarkupString? _notice;
+
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RequestEditLink)
+            return;
+
+        var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
+
+        var qrCodeGenerator = new PayloadGenerator.Url(verifyLink.ToString());
+        using var qrCode = QRCodeGenerator.GenerateQrCode(qrCodeGenerator);
+        using var pongRenderer = new PngByteQRCode(qrCode);
+        var qrCodeImage = pongRenderer.GetGraphic(20);
+
+        if (Environment.IsDevelopment())
+        {
+            Console.WriteLine(verifyLink);
+        }
+
+        var qrCodeContent = (new ByteArrayContent(qrCodeImage)
+            {
+                Headers = { ContentType = new MediaTypeHeaderValue("image/png") }
+            },
+            "inline",
+            "magic-link-qr.png");
+
+        var email = $"{StudentContext.Student.StudentId}@students.zhaw.ch";
+
+        Logger.LogInformation("Sending edit link to {email}", email);
+
+        _notice = await StudentContext.SendMail(email, "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ])
+            ? new MarkupString($"We sent a sign-in link to {email} — check <a href=\"https://outlook.office.com\">outlook.office.com</a>.")
+            : new MarkupString("We were unable to send you an email, try again later.");
+    }
 }

@@ -126,21 +126,6 @@
     height: 1rem;
 }
 
-.home-messages {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-}
-
-.home-message {
-    margin: 0;
-    padding: 0.95rem 1rem;
-    border: 1px solid #d6e4ee;
-    border-radius: 1rem;
-    background: #f7fbfe;
-    color: #365165;
-    line-height: 1.6;
-}
 
 .assignment-groups {
     flex: 1;
@@ -326,6 +311,13 @@
 .ios-notifications-hint {
     margin: 0;
     color: #4f6477;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.notifications-status {
+    margin: 0.5rem 0 0;
+    color: #64748b;
     font-size: 0.9rem;
     line-height: 1.5;
 }

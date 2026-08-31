@@ -30,7 +30,9 @@ else
                     var collapsible = entries.Count == 0 ? "true" : null;
 
                     <div class="schedule-day-column" data-collapsible="@collapsible">
-                        <div class="schedule-day-cell" role="columnheader">@weekday</div>
+                        <div class="schedule-day-cell" role="columnheader" title="@(collapsible != null ? $"No lessons on {weekday}" : null)">
+                            @(collapsible != null ? weekday[..3] : weekday)
+                        </div>
 
                         @foreach (var (lessonIndex, _) in _lessons.Index())
                         {

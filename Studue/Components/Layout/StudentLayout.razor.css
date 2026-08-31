@@ -75,6 +75,39 @@
     white-space: nowrap;
 }
 
+.app-notice {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.7rem 1.25rem;
+    background: #eaf4fb;
+    border-bottom: 1px solid #cfe3f2;
+    color: #0b4f7f;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.app-notice p {
+    margin: 0;
+    flex: 1;
+}
+
+.app-notice a {
+    color: inherit;
+}
+
+.app-notice-dismiss {
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+    line-height: 1;
+    text-decoration: none;
+    opacity: 0.6;
+}
+
+.app-notice-dismiss:hover {
+    opacity: 1;
+}
+
 .app-main {
     width: 100%;
     max-width: 72rem;

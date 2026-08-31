@@ -2,17 +2,10 @@
 @attribute [StudentRequired]
 @layout Layout.StudentLayout
 @using System.Globalization
-@using System.Net.Http.Headers
-@using System.Web
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.Extensions.Options
-@using QRCoder
 @using Studue.Services
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
-@inject IOptions<Settings> Settings
-@inject IHostEnvironment Environment
-@inject ILogger<Home> Logger
 
 <PageTitle>Studue</PageTitle>
 
@@ -29,16 +22,6 @@
 </header>
 
 <div class="home-page">
-
-    @if (_statusMessages.Count > 0)
-    {
-        <section class="home-messages" aria-live="polite">
-            @foreach (var message in _statusMessages)
-            {
-                <p class="home-message">@message</p>
-            }
-        </section>
-    }
 
     <section class="assignment-groups">
         @if (_assignments.Count == 0)
@@ -139,6 +122,8 @@
             <button type="button" class="disable-notifications-button" style="display: none" onclick="disableNotifications()">Disable notifications</button>
         </div>
 
+        <p class="notifications-status" style="display: none" role="status"></p>
+
         <p class="ios-notifications-hint" style="display: none">
             To get notifications on your iPhone, tap Share and then <strong>Add to Home Screen</strong>. Open Studue from there and this option will appear.
         </p>
@@ -153,12 +138,6 @@ async function toggleAssignmentCompleted(assignmentId, event) {
 
 @code {
     private List<Assignment> _assignments = [];
-
-    private readonly List<MarkupString> _statusMessages = [];
-
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "requestEditLink")]
-    public bool RequestEditLink { get; set; }
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -175,51 +154,18 @@ async function toggleAssignmentCompleted(assignmentId, event) {
 
     protected override async Task OnInitializedAsync()
     {
-        if (RequestEditLink)
-        {
-            var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
-
-            var qrCodeGenerator = new PayloadGenerator.Url(verifyLink.ToString());
-            using var qrCode = QRCodeGenerator.GenerateQrCode(qrCodeGenerator);
-            using var pongRenderer = new PngByteQRCode(qrCode);
-            var qrCodeImage = pongRenderer.GetGraphic(20);
-
-            if (Environment.IsDevelopment())
-            {
-                Console.WriteLine(verifyLink);
-            }
-
-            var qrCodeContent = (new ByteArrayContent(qrCodeImage)
-                {
-                    Headers = { ContentType = new MediaTypeHeaderValue("image/png") }
-                },
-                "inline",
-                "magic-link-qr.png");
-
-            var email = $"{StudentContext.Student.StudentId}@students.zhaw.ch";
-
-            Logger.LogInformation("Sending edit link to {email}", email);
-
-            if (await StudentContext.SendMail(email, "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ]))
-            {
-                _statusMessages.Add(new MarkupString($"We sent an email to {email} asking you to confirm your identity (see <a href=\"https://outlook.office.com\">outlook.office.com</a>)."));
-            }
-            else
-            {
-                _statusMessages.Add(new MarkupString("We were unable to send you an email, try again later"));
-            }
-        }
-
         _vapidPublicKey = (await StudueContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
 
-        _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted);
+        var currentSemester = Helper.GetCurrentSemester();
+        _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.ModuleInstance.Semester == currentSemester);
         _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : Helper.Now().Date);
     }
 
     async Task<List<Assignment>> GetAssignments(DateTime today)
     {
+        var currentSemester = Helper.GetCurrentSemester();
         return await StudueContext.Assignements
-            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.DueDateTime >= today)
+            .Where(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.DueDateTime >= today && x.ModuleInstance.Semester == currentSemester)
             .OrderBy(x => x.DueDateTime)
             .Include(x => x.CreatedBy)
             .Include(x => x.UpdatedBy)
