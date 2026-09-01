@@ -1,5 +1,7 @@
+using System.IO.Compression;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -34,6 +36,10 @@ try
     builder.Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
         .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(AdminAuthenticationHandler.SchemeName, _ => { });
     builder.Services.AddAuthorization();
+
+    builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+    builder.Services.Configure<BrotliCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
 
     builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 
@@ -76,6 +82,9 @@ try
 
     if (!app.Environment.IsDevelopment())
     {
+        // before anything that writes a body
+        app.UseResponseCompression();
+
         app.UseExceptionHandler("/Error", createScopeForErrors: true);
         app.UseHsts();
     }
