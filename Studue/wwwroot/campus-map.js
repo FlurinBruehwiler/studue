@@ -18,7 +18,6 @@ function campusUrl(id) {
 let leafletLoading = null;
 let map = null;
 let layers = null;
-let buildingIndex = null;
 let currentCampus = null;
 
 function loadLeaflet() {
@@ -37,25 +36,6 @@ function loadLeaflet() {
     return leafletLoading;
 }
 
-async function loadIndex() {
-    if (buildingIndex) return buildingIndex;
-
-    // inlined by the page - about a kilobyte, and it would otherwise be a whole round
-    // trip before the campus file can even be asked for
-    const inline = document.getElementById("building-index");
-    if (inline) {
-        buildingIndex = JSON.parse(inline.textContent);
-        return buildingIndex;
-    }
-
-    const response = await fetch("/maps/buildings.json");
-    if (!response.ok) throw new Error(`/maps/buildings.json returned ${response.status}`);
-
-    buildingIndex = await response.json();
-    return buildingIndex;
-}
-
-// started before leaflet is loaded, and picked up again by whichever call needs it
 let pendingCampus = null;
 
 function fetchCampus(id) {
@@ -135,64 +115,6 @@ function draw(campus, highlight) {
 }
 
 // a whole campus, with nothing singled out
-async function showCampus(id) {
-    const picker = document.getElementById("map-picker");
-    if (picker) picker.open = false;
-
-    if (currentCampus?.id !== id) {
-        const campus = await fetchCampus(id);
-        if (!campus) {
-            setMessage("No map has been generated for that campus yet.");
-            return;
-        }
-        currentCampus = campus;
-    }
-
-    setMessage("");
-
-    const heading = document.getElementById("map-campus");
-    if (heading) heading.textContent = currentCampus.name ?? "Campus";
-
-    const current = document.getElementById("map-current");
-    if (current) current.textContent = currentCampus.name ?? "Campus";
-
-    draw(currentCampus, null);
-    history.replaceState({}, "", `/map?campus=${encodeURIComponent(id)}`);
-    renderResults(document.getElementById("building-search")?.value ?? "", null);
-}
-
-async function show(code) {
-    const index = await loadIndex();
-    const entry = index[code];
-    if (!entry) return;
-
-    if (currentCampus?.id !== entry.campus) {
-        const campus = await fetchCampus(entry.campus);
-        if (!campus) {
-            setMessage(`No map generated for ${code} yet.`);
-            return;
-        }
-        currentCampus = campus;
-    }
-
-    setMessage("");
-
-    // close before measuring, so the open dropdown does not skew the framing
-    const picker = document.getElementById("map-picker");
-    if (picker) picker.open = false;
-
-    const heading = document.getElementById("map-campus");
-    if (heading) heading.textContent = currentCampus.name ?? "Campus";
-
-    // the OSM name is just "ZHAW TS", so the code alone says everything
-    const current = document.getElementById("map-current");
-    if (current) current.textContent = code;
-
-    draw(currentCampus, code);
-    history.replaceState({}, "", `/map?building=${encodeURIComponent(code)}`);
-    renderResults(document.getElementById("building-search")?.value ?? "", code);
-}
-
 function setMessage(text) {
     const banner = document.getElementById("map-message");
     if (!banner) return;
@@ -201,75 +123,14 @@ function setMessage(text) {
     banner.style.display = text ? "block" : "none";
 }
 
-// the campuses a student can reach, derived from the building index
-function campuses() {
-    const found = new Map();
-
-    for (const entry of Object.values(buildingIndex)) {
-        if (!found.has(entry.campus)) found.set(entry.campus, entry.campusName);
-    }
-
-    return [...found].map(([id, name]) => ({ id, name }));
-}
-
-function addResult(list, label, sublabel, active, onPick) {
-    const item = document.createElement("li");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "map-result" + (active ? " is-active" : "");
-
-    const title = document.createElement("span");
-    title.textContent = label;
-    button.appendChild(title);
-
-    if (sublabel) {
-        const note = document.createElement("small");
-        note.textContent = sublabel;
-        button.appendChild(note);
-    }
-
-    button.onclick = onPick;
-    item.appendChild(button);
-    list.appendChild(item);
-}
-
-function renderResults(term, selected) {
-    const list = document.getElementById("map-results");
-    if (!list || !buildingIndex) return;
-
-    const needle = term.trim().toUpperCase();
-    list.innerHTML = "";
-
-    // campuses first: picking one is the broader, more common intent
-    const matchingCampuses = campuses()
-        .filter(x => !needle || x.name.toUpperCase().includes(needle))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const campus of matchingCampuses) {
-        addResult(list, campus.name, undefined,
-            !selected && currentCampus?.id === campus.id,
-            () => showCampus(campus.id));
-    }
-
-    const current = currentCampus?.id;
-    const codes = Object.keys(buildingIndex)
-        .filter(code => !needle || code.startsWith(needle) || buildingIndex[code].name.toUpperCase().includes(needle))
-        .sort((a, b) => {
-            const near = (code) => (buildingIndex[code].campus === current ? 0 : 1);
-            return near(a) - near(b) || a.localeCompare(b);
-        });
-
-    for (const code of codes) {
-        addResult(list, code, undefined, code === selected, () => show(code));
-    }
-
-    if (matchingCampuses.length === 0 && codes.length === 0) {
-        list.innerHTML = '<li class="map-empty">Nothing matches that.</li>';
-    }
-}
-
+// the list is rendered by the server, so filtering only hides what does not match
 window.filterBuildings = function (term) {
-    renderResults(term, null);
+    const needle = term.trim().toUpperCase();
+
+    for (const item of document.querySelectorAll("#map-results li")) {
+        const label = item.textContent.trim().toUpperCase();
+        item.hidden = needle.length > 0 && !label.includes(needle);
+    }
 };
 
 async function initCampusMap() {
@@ -284,17 +145,29 @@ async function initCampusMap() {
 
     readAssetUrls();
 
+    const page = document.querySelector(".map-page");
+    const campus = page?.dataset.campus;
+
+    if (!campus) {
+        setMessage("No map has been generated yet.");
+        return;
+    }
+
     // the campus file does not depend on leaflet, so it is asked for first and awaited
     // later - the two travel together instead of one after the other
-    const page = document.querySelector(".map-page");
-    if (page?.dataset.campus) fetchCampus(page.dataset.campus);
+    const pending = fetchCampus(campus);
 
-    // without this an unreachable library or index leaves a blank page and no clue why
     try {
-        await Promise.all([loadLeaflet(), loadIndex()]);
+        await loadLeaflet();
+        currentCampus = await pending;
     } catch (error) {
         console.error(error);
         setMessage("The map could not be loaded. Please try again later.");
+        return;
+    }
+
+    if (!currentCampus) {
+        setMessage("No map has been generated for that campus yet.");
         return;
     }
 
@@ -309,18 +182,7 @@ async function initCampusMap() {
     });
     layers = L.layerGroup().addTo(map);
 
-    // the page already resolved which campus this is, including the next-lesson default
-    const requested = page?.dataset.building?.toUpperCase();
-
-    if (requested && buildingIndex[requested]) {
-        renderResults("", requested);
-        await show(requested);
-    } else if (page?.dataset.campus) {
-        renderResults("", null);
-        await showCampus(page.dataset.campus);
-    } else {
-        setMessage("No map has been generated yet.");
-    }
+    draw(currentCampus, page?.dataset.building?.toUpperCase() ?? null);
 
     // opening the dropdown should put the cursor straight in the search box
     const picker = document.getElementById("map-picker");
@@ -329,7 +191,7 @@ async function initCampusMap() {
     picker?.addEventListener("toggle", () => {
         if (!picker.open) return;
         search.value = "";
-        renderResults("", null);
+        window.filterBuildings("");
         search.focus();
     });
 }

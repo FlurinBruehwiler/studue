@@ -44,6 +44,12 @@ public class BuildingIndex
     public string? NameForCampus(string? id) =>
         id != null && _nameByCampus.TryGetValue(id, out var name) ? name : null;
 
+    public IReadOnlyCollection<string> CodesFor(string campus) => _campusByCode
+        .Where(x => x.Value.Equals(campus, StringComparison.OrdinalIgnoreCase))
+        .Select(x => x.Key)
+        .OrderBy(x => x, StringComparer.Ordinal)
+        .ToList();
+
     public IReadOnlyCollection<string> Codes => _campusByCode.Keys.OrderBy(x => x, StringComparer.Ordinal).ToList();
 
     public IReadOnlyCollection<string> CampusIds => _campusByCode.Values.Distinct().ToList();

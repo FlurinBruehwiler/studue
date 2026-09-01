@@ -25,12 +25,10 @@
 
 <script type="application/json" id="map-urls">@((MarkupString)_assetUrls)</script>
 
-<script type="application/json" id="building-index">@((MarkupString)BuildingIndex.Json)</script>
-
 <div class="map-page" data-building="@_highlight" data-campus="@_campusId">
     <div id="campus-map" class="map-surface"></div>
 
-    <p id="map-campus" class="map-campus">@_campusName</p>
+    <h1 id="map-campus" class="map-campus">@_campusName</h1>
 
     <details class="map-picker" id="map-picker">
         <summary class="map-picker-toggle">
@@ -45,7 +43,26 @@
             <input id="building-search" class="map-search-input" type="search" autocomplete="off"
                    placeholder="Search a building or campus" oninput="filterBuildings(this.value)"/>
 
-            <ul class="map-results" id="map-results"></ul>
+            <ul class="map-results" id="map-results">
+                @foreach (var campus in BuildingIndex.CampusIds.OrderBy(x => BuildingIndex.NameForCampus(x), StringComparer.Ordinal))
+                {
+                    <li>
+                        <a class="map-result @(campus == _campusId && _highlight == null ? "is-active" : null)"
+                           href="@($"/map?campus={campus}")">
+                            <span>@BuildingIndex.NameForCampus(campus)</span>
+                        </a>
+                    </li>
+                }
+
+                @foreach (var building in BuildingIndex.CodesFor(_campusId ?? "").Concat(BuildingIndex.Codes.Where(x => BuildingIndex.CampusFor(x) != _campusId)))
+                {
+                    <li>
+                        <a class="map-result @(building == _highlight ? "is-active" : null)" href="@($"/map?building={building}")">
+                            <span>@building</span>
+                        </a>
+                    </li>
+                }
+            </ul>
         </div>
     </details>
 
@@ -64,12 +81,25 @@
     public string? Campus { get; set; }
 
     private string PageTitleText => _highlight != null
-        ? $"ZHAW building {_highlight} – {_campusName} | Studue"
-        : $"{_campusName ?? "Campus"} – ZHAW building map | Studue";
+        ? $"ZHAW {_highlight} – {_campusName}, {City} | Studue"
+        : $"ZHAW {_campusName}, {City} – building map | Studue";
+
+    private static readonly Dictionary<string, string> CityByCampus = new()
+    {
+        ["campus-technikumstrasse"] = "Winterthur",
+        ["campus-st-georgen-platz"] = "Winterthur",
+        ["campus-stadt-mitte"] = "Winterthur",
+        ["campus-zentrum-lagerstrasse"] = "Zürich",
+        ["campus-zentrum-toni-areal"] = "Zürich",
+        ["campus-gruental"] = "Wädenswil",
+        ["campus-reidbach"] = "Wädenswil",
+    };
+
+    private string City => _campusId != null && CityByCampus.TryGetValue(_campusId, out var city) ? city : "Switzerland";
 
     private string MetaDescription => _highlight != null
-        ? $"Where is ZHAW building {_highlight}? Find it on {_campusName}, with every other building on the campus."
-        : $"Map of {_campusName} at ZHAW, showing every building and its code.";
+        ? $"Where is ZHAW building {_highlight}? Find it on {_campusName} in {City} – building map and Lageplan with every building on campus."
+        : $"ZHAW {_campusName} in {City}: building map and Lageplan showing every building and its code.";
 
     private string? _campusId;
     private string? _campusName;

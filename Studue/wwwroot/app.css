@@ -351,6 +351,7 @@ h1:focus {
 }
 
 .map-result {
+    display: block;
     width: 100%;
     padding: 0.4rem 0.6rem;
     border: 0;
@@ -360,6 +361,7 @@ h1:focus {
     font: inherit;
     font-weight: 600;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
 
