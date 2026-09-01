@@ -1,7 +1,7 @@
 ﻿@inject StudentContext StudentContext
 @inject StudueContext StudueContext
 @inject NavigationManager Navigation
-@attribute [StudentRequired]
+@attribute [StudentRequired(RequireWriteAccess = true)]
 
 @page "/edit/{Id:int}"
 @using Microsoft.EntityFrameworkCore

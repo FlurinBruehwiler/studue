@@ -59,6 +59,14 @@
         status.style.display = message ? "block" : "none";
     }
 
+    function setReloadScheduleStatus(message) {
+        const status = document.querySelector(".reload-schedule-status");
+        if (!status) return;
+
+        status.textContent = message ?? "";
+        status.style.display = message ? "block" : "none";
+    }
+
     function refreshNotificationUi() {
         const enableButton = document.querySelector(".enable-notifications-button");
         const disableButton = document.querySelector(".disable-notifications-button");
@@ -152,6 +160,15 @@
         }
 
         await registration.unregister();
+    }
+
+    async function reloadSchedule() {
+        const result = await fetch("/settings/refetchSchedule", { method: "GET" })
+        if (result.ok) {
+            setReloadScheduleStatus("Schedule reloaded!");
+        } else {
+            setReloadScheduleStatus(await result.text())
+        }
     }
 
     Blazor.addEventListener('enhancedload', clearQuery);

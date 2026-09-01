@@ -40,6 +40,23 @@
     </p>
 </section>
 
+@if (StudentContext.HasWriteAccess)
+{
+    <section class="panel settings-section">
+        <h2>Reload schedule</h2>
+
+        <p class="settings-note">
+            Reload the schedule from stundenplan.zhaw.ch
+        </p>
+
+        <div class="settings-actions">
+            <button type="button" class="app-button app-button-primary" onclick="reloadSchedule()">Reload</button>
+        </div>
+
+        <p class="reload-schedule-status" style="display: none" role="status"></p>
+    </section>
+}
+
 <section class="panel settings-section">
     <h2>About</h2>
 

@@ -79,10 +79,10 @@ try
     app.Use(async (context, next) =>
     {
         var endpoint = context.GetEndpoint();
-        var studentNotRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
+        var studentRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
-        if (studentNotRequired == null)
+        if (studentRequired == null)
         {
             await next(context);
             return;
@@ -125,6 +125,16 @@ try
             }
         }
 
+        if (studentRequired.RequireWriteAccess && !studentContext.HasWriteAccess)
+        {
+            if (context.Request.Headers.Accept.Any(x => x != null && x.Contains("text/html")))
+                context.Response.Redirect("/");
+            else
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+            return;
+        }
+
         await next(context);
     });
 
@@ -144,6 +154,22 @@ try
         .AddInteractiveServerRenderMode();
 
     PushService.RegisterEndpoint(app);
+
+    app.MapGet("/settings/refetchSchedule", async (StudentContext studentContext, StudueContext studueContext) =>
+        {
+            if (!studentContext.HasWriteAccess)
+                return Results.Unauthorized();
+
+            var success = await studentContext.FetchModulesForStudent(studentContext.Student);
+            if (success)
+            {
+                await studueContext.SaveChangesAsync();
+                return Results.Ok();
+            }
+
+            return Results.InternalServerError("Failed to fetch schedule for current semester");
+        }).WithMetadata(new StudentRequiredAttribute{ RequireWriteAccess = true});
+
     app.MapGet("/admin/downloadDb", async (IOptions<Settings> settings) =>
     {
         var backupPath = await BackupService.CreateBackup(settings.Value);
@@ -153,21 +179,25 @@ try
         .RequireAuthorization();
 
     app.MapGet("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext, ILogger<Program> logger) =>
+    {
+        if (!studentContext.HasWriteAccess)
+            return Results.Unauthorized();
+
+        var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstAsync(x => x.Id == assignmentId);
+        if (completed)
         {
-            var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstAsync(x => x.Id == assignmentId);
-            if (completed)
-            {
-                logger.LogInformation("{0} marked '{1}' as completed", studentContext.Student.StudentId, assignment.Title);
-                assignment.CompletedByStudents.Add(studentContext.Student);
-            }
-            else
-            {
-                logger.LogInformation("{0} marked '{1}' as not completed", studentContext.Student.StudentId, assignment.Title);
-                assignment.CompletedByStudents.Remove(studentContext.Student);
-            }
-            await studueContext.SaveChangesAsync();
-        }).WithMetadata(new StudentRequiredAttribute())
-    .RequireAuthorization();
+            logger.LogInformation("{0} marked '{1}' as completed", studentContext.Student.StudentId, assignment.Title);
+            assignment.CompletedByStudents.Add(studentContext.Student);
+        }
+        else
+        {
+            logger.LogInformation("{0} marked '{1}' as not completed", studentContext.Student.StudentId, assignment.Title);
+            assignment.CompletedByStudents.Remove(studentContext.Student);
+        }
+        await studueContext.SaveChangesAsync();
+
+        return Results.Ok();
+    }).WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
 
     app.Run();
 }

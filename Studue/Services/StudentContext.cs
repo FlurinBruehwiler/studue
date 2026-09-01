@@ -80,10 +80,6 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                     {
                         await context.SaveChangesAsync();
                     }
-                    else
-                    {
-                        logger.LogWarning("Failed to fetch schedule for current semester for {studentId}", student.StudentId);
-                    }
                 }
 
                 Student = student;
@@ -220,7 +216,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         return document;
     }
 
-    private async Task<bool> FetchModulesForStudent(Student student)
+    public async Task<bool> FetchModulesForStudent(Student student)
     {
         var semester = Helper.GetCurrentSemester();
 
@@ -230,7 +226,10 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         document ??= await GetDocumentForDepartement(student.StudentId, "A", semester);
 
         if (document == null)
+        {
+            logger.LogWarning("Failed to fetch schedule for current semester for {studentId}", student.StudentId);
             return false;
+        }
 
         student.LastFetchedSemester = semester;
         var searchHighlight = document.QuerySelector(".searchHighlight")!;
@@ -293,6 +292,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
             allLessons.Add(scheduleEntry);
         }
+
+        student.ModuleInstances.RemoveAll(x => x.Semester == semester);
 
         foreach (var x in allLessons.GroupBy(x => x.Module))
         {

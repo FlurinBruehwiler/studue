@@ -3,4 +3,5 @@
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 public class StudentRequiredAttribute : Attribute
 {
+    public bool RequireWriteAccess { get; init; }
 }

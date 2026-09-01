@@ -1,6 +1,5 @@
-﻿@inject StudueContext StudueContext
-@inject StudentContext StudentContext
-@attribute [StudentRequired]
+﻿@inject StudentContext StudentContext
+@attribute [StudentRequired(RequireWriteAccess = true)]
 
 @page "/create"
 @using Studue.Services
