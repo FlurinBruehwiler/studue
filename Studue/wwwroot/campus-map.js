@@ -2,8 +2,18 @@
 // layer, the geometry is our own committed GeoJSON, and every colour comes from CSS.
 // Leaflet itself is fetched lazily so the other pages never pay for it.
 
-const MAP_LIBRARY = "/lib/leaflet/leaflet.js";
-const MAP_STYLES = "/lib/leaflet/leaflet.css";
+// fingerprinted urls, emitted by the page - they are the ones served as immutable, and
+// the hash is only known at build time
+let assetUrls = { leafletJs: "/lib/leaflet/leaflet.js", leafletCss: "/lib/leaflet/leaflet.css", campus: {} };
+
+function readAssetUrls() {
+    const tag = document.getElementById("map-urls");
+    if (tag) assetUrls = JSON.parse(tag.textContent);
+}
+
+function campusUrl(id) {
+    return assetUrls.campus[id] ?? `/maps/${id}.json`;
+}
 
 let leafletLoading = null;
 let map = null;
@@ -21,7 +31,7 @@ function loadLeaflet() {
     const stylesheet = new Promise((resolve) => {
         const styles = document.createElement("link");
         styles.rel = "stylesheet";
-        styles.href = MAP_STYLES;
+        styles.href = assetUrls.leafletCss;
         styles.onload = resolve;
         styles.onerror = resolve; // an unstyled map still beats no map
         document.head.appendChild(styles);
@@ -29,7 +39,7 @@ function loadLeaflet() {
 
     const library = new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = MAP_LIBRARY;
+        script.src = assetUrls.leafletJs;
         script.onload = resolve;
         script.onerror = () => reject(new Error("could not load leaflet"));
         document.head.appendChild(script);
@@ -43,11 +53,30 @@ function loadLeaflet() {
 async function loadIndex() {
     if (buildingIndex) return buildingIndex;
 
+    // inlined by the page - about a kilobyte, and it would otherwise be a whole round
+    // trip before the campus file can even be asked for
+    const inline = document.getElementById("building-index");
+    if (inline) {
+        buildingIndex = JSON.parse(inline.textContent);
+        return buildingIndex;
+    }
+
     const response = await fetch("/maps/buildings.json");
     if (!response.ok) throw new Error(`/maps/buildings.json returned ${response.status}`);
 
     buildingIndex = await response.json();
     return buildingIndex;
+}
+
+// started before leaflet is loaded, and picked up again by whichever call needs it
+let pendingCampus = null;
+
+function fetchCampus(id) {
+    if (pendingCampus?.id !== id) {
+        pendingCampus = { id, promise: fetch(campusUrl(id)).then(r => (r.ok ? r.json() : null)) };
+    }
+
+    return pendingCampus.promise;
 }
 
 // the panel floats over the map, so the target has to be framed in what is left of it:
@@ -124,12 +153,12 @@ async function showCampus(id) {
     if (picker) picker.open = false;
 
     if (currentCampus?.id !== id) {
-        const response = await fetch(`/maps/${id}.json`);
-        if (!response.ok) {
+        const campus = await fetchCampus(id);
+        if (!campus) {
             setMessage("No map has been generated for that campus yet.");
             return;
         }
-        currentCampus = await response.json();
+        currentCampus = campus;
     }
 
     setMessage("");
@@ -151,12 +180,12 @@ async function show(code) {
     if (!entry) return;
 
     if (currentCampus?.id !== entry.campus) {
-        const response = await fetch(`/maps/${entry.campus}.json`);
-        if (!response.ok) {
+        const campus = await fetchCampus(entry.campus);
+        if (!campus) {
             setMessage(`No map generated for ${code} yet.`);
             return;
         }
-        currentCampus = await response.json();
+        currentCampus = campus;
     }
 
     setMessage("");
@@ -266,10 +295,16 @@ async function initCampusMap() {
         map = null;
     }
 
+    readAssetUrls();
+
+    // the campus file does not depend on leaflet, so it is asked for first and awaited
+    // later - the two travel together instead of one after the other
+    const page = document.querySelector(".map-page");
+    if (page?.dataset.campus) fetchCampus(page.dataset.campus);
+
     // without this an unreachable library or index leaves a blank page and no clue why
     try {
-        await loadLeaflet();
-        await loadIndex();
+        await Promise.all([loadLeaflet(), loadIndex()]);
     } catch (error) {
         console.error(error);
         setMessage("The map could not be loaded. Please try again later.");
@@ -287,26 +322,17 @@ async function initCampusMap() {
     });
     layers = L.layerGroup().addTo(map);
 
-    const page = document.querySelector(".map-page");
-    const requestedCampus = page?.dataset.campus;
+    // the page already resolved which campus this is, including the next-lesson default
     const requested = page?.dataset.building?.toUpperCase();
 
-    const nextLesson = page?.dataset.nextBuilding?.toUpperCase();
-
-    if (requestedCampus) {
-        renderResults("", null);
-        await showCampus(requestedCampus);
-    } else if (requested && buildingIndex[requested]) {
+    if (requested && buildingIndex[requested]) {
         renderResults("", requested);
         await show(requested);
-    } else if (nextLesson && buildingIndex[nextLesson]) {
-        // no building asked for: open on the campus of the next lesson
+    } else if (page?.dataset.campus) {
         renderResults("", null);
-        await showCampus(buildingIndex[nextLesson].campus);
+        await showCampus(page.dataset.campus);
     } else {
-        const start = Object.keys(buildingIndex).sort()[0];
-        renderResults("", start);
-        await show(start);
+        setMessage("No map has been generated yet.");
     }
 
     // opening the dropdown should put the cursor straight in the search box

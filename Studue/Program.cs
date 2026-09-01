@@ -21,6 +21,7 @@ try
         settings.DatabaseBackupDir = Path.GetFullPath(settings.DatabaseBackupDir, builder.Environment.ContentRootPath);
     });
     builder.Services.AddScoped<StudentContext>();
+    builder.Services.AddSingleton<BuildingIndex>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
         options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),

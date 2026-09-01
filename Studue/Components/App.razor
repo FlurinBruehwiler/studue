@@ -8,15 +8,29 @@
     <meta name="antiforgery-token" content="@Antiforgery.GetAntiforgeryToken()?.Value"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="/"/>
-    <link rel="icon" href="favicon.png" />
+    <link rel="icon" href="@Assets["favicon.png"]" />
 
     @* iOS only allows web push for apps added to the home screen, which needs a manifest *@
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="@Assets["manifest.json"]" />
+    <link rel="apple-touch-icon" href="@Assets["apple-touch-icon.png"]" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Studue" />
     <meta name="theme-color" content="#0061a2" />
     <ResourcePreloader/>
+    @* self-hosted: the google stylesheet was an @@import inside app.css, so the font was
+       three serial hops and two extra origins away. Declared here rather than in app.css
+       because only here can the url carry the content hash and be cached immutably. *@
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="@Assets["fonts/ibm-plex-sans-var-latin.woff2"]"/>
+    <style>
+        @@font-face {
+            font-family: 'IBM Plex Sans';
+            font-style: normal;
+            font-weight: 100 700;
+            font-display: swap;
+            src: url('@Assets["fonts/ibm-plex-sans-var-latin.woff2"]') format('woff2');
+        }
+    </style>
     <link rel="stylesheet" href="@Assets["app.css"]"/>
     <link rel="stylesheet" href="@Assets["Studue.styles.css"]"/>
     <ImportMap/>
