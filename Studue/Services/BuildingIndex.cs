@@ -5,6 +5,7 @@ namespace Studue.Services;
 public class BuildingIndex
 {
     private readonly Dictionary<string, string> _campusByCode = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _nameByCampus = new(StringComparer.OrdinalIgnoreCase);
 
     public string Json { get; } = "{}";
 
@@ -23,8 +24,13 @@ public class BuildingIndex
         using var document = JsonDocument.Parse(json);
         foreach (var entry in document.RootElement.EnumerateObject())
         {
-            if (entry.Value.TryGetProperty("campus", out var campus) && campus.GetString() is { } id)
-                _campusByCode[entry.Name] = id;
+            if (!entry.Value.TryGetProperty("campus", out var campus) || campus.GetString() is not { } id)
+                continue;
+
+            _campusByCode[entry.Name] = id;
+
+            if (entry.Value.TryGetProperty("campusName", out var name) && name.GetString() is { } label)
+                _nameByCampus[id] = label;
         }
 
         // inlined into a <script> tag, where a "</script>" inside any name would end it early.
@@ -34,6 +40,9 @@ public class BuildingIndex
 
     public string? CampusFor(string? code) =>
         code != null && _campusByCode.TryGetValue(code, out var campus) ? campus : null;
+
+    public string? NameForCampus(string? id) =>
+        id != null && _nameByCampus.TryGetValue(id, out var name) ? name : null;
 
     public IReadOnlyCollection<string> CampusIds => _campusByCode.Values.Distinct().ToList();
 

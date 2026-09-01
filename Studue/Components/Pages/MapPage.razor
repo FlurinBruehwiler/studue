@@ -26,11 +26,11 @@
 <div class="map-page" data-building="@_highlight" data-campus="@_campusId">
     <div id="campus-map" class="map-surface"></div>
 
-    <p id="map-campus" class="map-campus"></p>
+    <p id="map-campus" class="map-campus">@_campusName</p>
 
     <details class="map-picker" id="map-picker">
         <summary class="map-picker-toggle">
-            <span id="map-current">Select a building</span>
+            <span id="map-current">@(_highlight ?? _campusName ?? "Select a building")</span>
             <svg viewBox="0 0 24 24" aria-hidden="true" class="map-picker-caret">
                 <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"
                       stroke-linecap="round" stroke-linejoin="round"></path>
@@ -60,6 +60,7 @@
     public string? Campus { get; set; }
 
     private string? _campusId;
+    private string? _campusName;
     private string? _highlight;
 
     private string _leafletJs = "";
@@ -70,6 +71,7 @@
     protected override async Task OnInitializedAsync()
     {
         _campusId = await ResolveCampus();
+        _campusName = BuildingIndex.NameForCampus(_campusId);
         BuildAssetUrls();
     }
 
