@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,8 @@ try
     builder.Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
         .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(AdminAuthenticationHandler.SchemeName, _ => { });
     builder.Services.AddAuthorization();
+
+    builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
@@ -86,6 +89,19 @@ try
         {
             await next(context);
             return;
+        }
+
+        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+        {
+            try
+            {
+                await context.RequestServices.GetRequiredService<IAntiforgery>().ValidateRequestAsync(context);
+            }
+            catch (AntiforgeryValidationException)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
         }
 
         var studentContext = context.RequestServices.GetRequiredService<StudentContext>();
@@ -155,7 +171,7 @@ try
 
     PushService.RegisterEndpoint(app);
 
-    app.MapGet("/settings/refetchSchedule", async (StudentContext studentContext, StudueContext studueContext) =>
+    app.MapPost("/settings/refetchSchedule", async (StudentContext studentContext, StudueContext studueContext) =>
         {
             if (!studentContext.HasWriteAccess)
                 return Results.Unauthorized();
@@ -178,12 +194,14 @@ try
     }).WithMetadata(new StudentRequiredAttribute())
         .RequireAuthorization();
 
-    app.MapGet("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext, ILogger<Program> logger) =>
+    app.MapPost("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext, ILogger<Program> logger) =>
     {
         if (!studentContext.HasWriteAccess)
             return Results.Unauthorized();
 
-        var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstAsync(x => x.Id == assignmentId);
+        var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if (assignment == null)
+            return Results.NotFound();
         if (completed)
         {
             logger.LogInformation("{0} marked '{1}' as completed", studentContext.Student.StudentId, assignment.Title);
@@ -199,12 +217,29 @@ try
         return Results.Ok();
     }).WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
 
+    app.MapPost("/logout", (HttpContext http) =>
+    {
+        http.Response.Cookies.Delete("student_id", IdentityCookie());
+        http.Response.Cookies.Delete("write_token", IdentityCookie());
+
+        return Results.Ok();
+    });
+
     app.Run();
 }
 catch (Exception e)
 {
     Console.WriteLine(e);
 }
+
+CookieOptions IdentityCookie() => new()
+{
+    MaxAge = TimeSpan.FromDays(365),
+    HttpOnly = true,
+    Secure = true,
+    SameSite = SameSiteMode.Lax,
+    Path = "/",
+};
 
 string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logger)
 {
@@ -214,10 +249,7 @@ string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logg
         {
             logger.LogInformation("{studentId} just logged in, writing {cookieName} cookie", str, name);
 
-            context.Response.Cookies.Append(name, str, new CookieOptions
-            {
-                MaxAge = TimeSpan.FromDays(365)
-            });
+            context.Response.Cookies.Append(name, str, IdentityCookie());
             return str;
         }
     }

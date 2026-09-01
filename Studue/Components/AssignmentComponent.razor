@@ -201,9 +201,6 @@
 
         if (AssignmentToUpdate != null && studentContext.HasWriteAccess)
         {
-            //same guard as DeleteAssignment: /edit/{id} loads by id alone, and
-            //SetValuesOnAssignment reassigns the module from the editor's own list, so
-            //without this an assignment can be edited out of a class it belongs to
             if (studentContext.Student.ModuleInstances.All(x => x.Id != AssignmentToUpdate.ModuleInstance.Id))
                 return;
 

@@ -125,7 +125,11 @@
 
 <script>
 async function toggleAssignmentCompleted(assignmentId, event) {
-    await fetch(`/assignment/${assignmentId}/${event.target.checked}`);
+    const response = await postWithToken(`/assignment/${assignmentId}/${event.target.checked}`);
+
+    if (!response.ok) {
+        event.target.checked = !event.target.checked;
+    }
 }
 </script>
 

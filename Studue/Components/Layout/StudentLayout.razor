@@ -53,9 +53,8 @@
 </div>
 
 <script>
-function logout() {
-    document.cookie = 'student_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    document.cookie = 'write_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+async function logout() {
+    await fetch("/logout", { method: "POST" });
     window.location.href = "/";
 }
 </script>

@@ -56,10 +56,10 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
             return Results.Ok();
         }).WithMetadata(new StudentRequiredAttribute());
 
-        webApplication.MapPost("/push/unsubscribe", async ([FromBody] PushUnsubscribeDto unsubscribeDto, StudueContext studueContext) =>
+        webApplication.MapPost("/push/unsubscribe", async ([FromBody] PushUnsubscribeDto unsubscribeDto, StudueContext studueContext, StudentContext studentContext) =>
         {
             await studueContext.PushSubscriptions
-                .Where(x => x.Endpoint == unsubscribeDto.Endpoint)
+                .Where(x => x.Endpoint == unsubscribeDto.Endpoint && x.Student == studentContext.Student)
                 .ExecuteDeleteAsync();
 
             return Results.Ok();

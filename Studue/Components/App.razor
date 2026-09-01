@@ -1,8 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inject AntiforgeryStateProvider Antiforgery
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8"/>
+    <meta name="antiforgery-token" content="@Antiforgery.GetAntiforgeryToken()?.Value"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="/"/>
     <link rel="icon" href="favicon.png" />
@@ -28,6 +31,13 @@
 
 <script>
     console.log("Source code: https://github.com/FlurinBruehwiler/studue")
+
+    async function postWithToken(url) {
+        return fetch(url, {
+            method: "POST",
+            headers: { "RequestVerificationToken": document.querySelector('meta[name="antiforgery-token"]')?.content ?? "" }
+        });
+    }
 
     function clearQuery(){
         if (window.location.search.length > 0) {
@@ -163,7 +173,7 @@
     }
 
     async function reloadSchedule() {
-        const result = await fetch("/settings/refetchSchedule", { method: "GET" })
+        const result = await postWithToken("/settings/refetchSchedule")
         if (result.ok) {
             setReloadScheduleStatus("Schedule reloaded!");
         } else {

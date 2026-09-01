@@ -8,7 +8,10 @@
 @using Studue.Services
 @layout Layout.StudentLayout
 
-<AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
+@if (_selectedAssignment != null)
+{
+    <AssignmentComponent Modules="@_modules" AssignmentToUpdate="@_selectedAssignment"></AssignmentComponent>
+}
 
 @code {
     private List<Module> _modules = [];
@@ -22,11 +25,14 @@
         _selectedAssignment = await StudueContext.Assignements
             .Include(x => x.ModuleInstance)
             .ThenInclude(x => x.Module)
-            .FirstOrDefaultAsync(x => x.Id == Id);
+            .FirstOrDefaultAsync(x => x.Id == Id
+                                      && !x.IsDeleted
+                                      && x.ModuleInstance.Students.Contains(StudentContext.Student));
 
         if (_selectedAssignment == null)
         {
             Navigation.NotFound();
+            return;
         }
     }
 }

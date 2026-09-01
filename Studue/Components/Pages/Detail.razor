@@ -10,59 +10,62 @@
 @inject NavigationManager Navigation
 @attribute [StudentRequired]
 
-<PageTitle>@_selectedAssignment.Title</PageTitle>
+@if (_selectedAssignment != null)
+{
+    <PageTitle>@_selectedAssignment.Title</PageTitle>
 
-<a href="/" class="page-back">&#8592; All assignments</a>
+    <a href="/" class="page-back">&#8592; All assignments</a>
 
-<header class="page-header">
-    <div>
-        <h1>@_selectedAssignment.Title</h1>
-        <p>Due @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</p>
+    <header class="page-header">
+        <div>
+            <h1>@_selectedAssignment.Title</h1>
+            <p>Due @FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</p>
+        </div>
+
+        @if (StudentContext.HasWriteAccess)
+        {
+            <a href="@($"/edit/{_selectedAssignment.Id}")" class="app-button app-button-secondary">Edit</a>
+        }
+    </header>
+
+    <div class="assignment-detail">
+        <article class="panel assignment-detail-body">
+            @if (GetDetailLines(_selectedAssignment.Description).Any())
+            {
+                @foreach (var line in GetDetailLines(_selectedAssignment.Description))
+                {
+                    <p>@RenderRichLine(line)</p>
+                }
+            }
+            else
+            {
+                <p class="assignment-detail-empty">No further details were added.</p>
+            }
+        </article>
+
+        <aside class="panel assignment-detail-meta">
+            <dl>
+                <dt>Module</dt>
+                <dd>@_selectedAssignment.ModuleInstance.Module.Name</dd>
+
+                <dt>Due</dt>
+                <dd>@FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</dd>
+
+                <dt>Type</dt>
+                <dd>@(_selectedAssignment.Mandatory ? "Mandatory" : "Optional")</dd>
+
+                <dt>Created</dt>
+                <dd>@_selectedAssignment.CreatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.CreatedTime)</span></dd>
+
+                @if (_selectedAssignment.CreatedTime != _selectedAssignment.UpdatedTime)
+                {
+                    <dt>Last edited</dt>
+                    <dd>@_selectedAssignment.UpdatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.UpdatedTime)</span></dd>
+                }
+            </dl>
+        </aside>
     </div>
-
-    @if (StudentContext.HasWriteAccess)
-    {
-        <a href="@($"/edit/{_selectedAssignment.Id}")" class="app-button app-button-secondary">Edit</a>
-    }
-</header>
-
-<div class="assignment-detail">
-    <article class="panel assignment-detail-body">
-        @if (GetDetailLines(_selectedAssignment.Description).Any())
-        {
-            @foreach (var line in GetDetailLines(_selectedAssignment.Description))
-            {
-                <p>@RenderRichLine(line)</p>
-            }
-        }
-        else
-        {
-            <p class="assignment-detail-empty">No further details were added.</p>
-        }
-    </article>
-
-    <aside class="panel assignment-detail-meta">
-        <dl>
-            <dt>Module</dt>
-            <dd>@_selectedAssignment.ModuleInstance.Module.Name</dd>
-
-            <dt>Due</dt>
-            <dd>@FormatSwissDateAndTime(_selectedAssignment.DueDateTime)</dd>
-
-            <dt>Type</dt>
-            <dd>@(_selectedAssignment.Mandatory ? "Mandatory" : "Optional")</dd>
-
-            <dt>Created</dt>
-            <dd>@_selectedAssignment.CreatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.CreatedTime)</span></dd>
-
-            @if (_selectedAssignment.CreatedTime != _selectedAssignment.UpdatedTime)
-            {
-                <dt>Last edited</dt>
-                <dd>@_selectedAssignment.UpdatedBy.StudentId<span>@FormatDetailDateTime(_selectedAssignment.UpdatedTime)</span></dd>
-            }
-        </dl>
-    </aside>
-</div>
+}
 
 @code {
     private Assignment _selectedAssignment = null!;
@@ -76,7 +79,11 @@
         var assignment = await StudueContext.Assignements
             .Include(x => x.ModuleInstance)
             .ThenInclude(x => x.Module)
-            .FirstOrDefaultAsync(x => x.Id == Id);
+            .Include(x => x.CreatedBy)
+            .Include(x => x.UpdatedBy)
+            .FirstOrDefaultAsync(x => x.Id == Id
+                                      && !x.IsDeleted
+                                      && x.ModuleInstance.Students.Contains(StudentContext.Student));
 
         if (assignment == null)
         {
