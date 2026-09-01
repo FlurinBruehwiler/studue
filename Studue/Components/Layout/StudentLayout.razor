@@ -21,7 +21,7 @@
         <nav class="app-nav" aria-label="Primary">
             <a href="/" class="app-nav-link @(IsScheduleRoute || IsSettingsRoute || IsMapRoute ? null : "is-active")">Home</a>
             <a href="/schedule" class="app-nav-link @(IsScheduleRoute ? "is-active" : null)">Schedule</a>
-            <a href="/map" data-enhance-nav="false" class="app-nav-link @(IsMapRoute ? "is-active" : null)">Map</a>
+            <a href="/map" class="app-nav-link @(IsMapRoute ? "is-active" : null)">Map</a>
         </nav>
 
         <div class="app-account">

@@ -12,7 +12,9 @@
    instead of one after the next *@
 <HeadContent>
     <link rel="preload" as="script" href="@_leafletJs"/>
-    <link rel="preload" as="style" href="@_leafletCss"/>
+    @* a real stylesheet, not a preload: injecting it from js put it outside the head that
+       enhanced navigation diffs against, so it was dropped when returning to this page *@
+    <link rel="stylesheet" href="@_leafletCss"/>
     @if (_campusUrl != null)
     {
         <link rel="preload" as="fetch" type="application/json" crossorigin="anonymous" href="@_campusUrl"/>

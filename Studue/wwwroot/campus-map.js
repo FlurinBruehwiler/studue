@@ -25,27 +25,14 @@ function loadLeaflet() {
     if (window.L) return Promise.resolve();
     if (leafletLoading) return leafletLoading;
 
-    // both have to be waited for, not just the script: leaflet measures the container and
-    // installs touch-action from its own stylesheet, so building a map before that sheet
-    // applies leaves gestures falling through to the page
-    const stylesheet = new Promise((resolve) => {
-        const styles = document.createElement("link");
-        styles.rel = "stylesheet";
-        styles.href = assetUrls.leafletCss;
-        styles.onload = resolve;
-        styles.onerror = resolve; // an unstyled map still beats no map
-        document.head.appendChild(styles);
-    });
-
-    const library = new Promise((resolve, reject) => {
+    // the stylesheet is declared by the page itself; only the library is fetched here
+    leafletLoading = new Promise((resolve, reject) => {
         const script = document.createElement("script");
         script.src = assetUrls.leafletJs;
         script.onload = resolve;
         script.onerror = () => reject(new Error("could not load leaflet"));
         document.head.appendChild(script);
     });
-
-    leafletLoading = Promise.all([stylesheet, library]);
 
     return leafletLoading;
 }
