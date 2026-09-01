@@ -1,2 +1,9 @@
 ﻿User-agent: *
 Allow: /
+
+Disallow: /admin
+Disallow: /settings
+Disallow: /edit/
+Disallow: /create
+
+Sitemap: https://zhaw.studue.ch/sitemap.xml

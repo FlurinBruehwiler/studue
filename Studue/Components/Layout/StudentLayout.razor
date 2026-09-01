@@ -25,16 +25,23 @@
         </nav>
 
         <div class="app-account">
-            <a href="/settings" class="app-account-name @(IsSettingsRoute ? "is-active" : null)">@StudentContext.Student.StudentId</a>
-
-            @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
+            @if (StudentContext.Student == null)
             {
-                <a href="/admin" class="app-button app-button-secondary">Admin</a>
+                <a href="/login" class="app-button app-button-primary">Sign in</a>
             }
-
-            @if (!StudentContext.HasWriteAccess)
+            else
             {
-                <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
+                <a href="/settings" class="app-account-name @(IsSettingsRoute ? "is-active" : null)">@StudentContext.Student.StudentId</a>
+
+                @if (StudentContext.Student.IsAdmin && StudentContext.HasWriteAccess)
+                {
+                    <a href="/admin" class="app-button app-button-secondary">Admin</a>
+                }
+
+                @if (!StudentContext.HasWriteAccess)
+                {
+                    <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
+                }
             }
         </div>
     </header>
@@ -75,7 +82,7 @@ async function logout() {
 
     protected override async Task OnInitializedAsync()
     {
-        if (!RequestEditLink)
+        if (!RequestEditLink || StudentContext.Student == null)
             return;
 
         var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");

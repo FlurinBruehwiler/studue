@@ -1,5 +1,5 @@
 ﻿@page "/"
-@attribute [StudentRequired]
+@attribute [StudentOptional]
 @layout Layout.StudentLayout
 @using System.Globalization
 @using Microsoft.EntityFrameworkCore
@@ -7,131 +7,140 @@
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
 
-<PageTitle>Studue</PageTitle>
+@if (StudentContext.Student == null)
+{
+    <Login Embedded="true"/>
+}
+else
+{
+    <PageTitle>Assignments | Studue</PageTitle>
 
-<header class="page-header">
-    <div>
-        <h1>Assignments</h1>
-        <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
-    </div>
 
-    @if (StudentContext.HasWriteAccess)
-    {
-        <a href="/create" class="app-button app-button-primary">Create assignment</a>
-    }
-</header>
 
-<div class="home-page">
+    <header class="page-header">
+        <div>
+            <h1>Assignments</h1>
+            <p>Shared assignment calendar for @StudentContext.Student.Class.</p>
+        </div>
 
-    <section class="assignment-groups">
-        @if (_assignments.Count == 0)
+        @if (StudentContext.HasWriteAccess)
         {
-            <div class="home-empty-state">
-                <h2>No assignments yet</h2>
-                <p>
-                    @(StudentContext.HasWriteAccess
-                        ? "Start the list by adding the first assignment for your class."
-                        : "Assignments for your modules will appear here as soon as one gets added.")
-                </p>
-            </div>
+            <a href="/create" class="app-button app-button-primary">Create assignment</a>
         }
+    </header>
 
-        @foreach (var assignmentGroup in _assignments.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
-        {
-            <section class="assignment-group">
-                <h2 class="assignment-group-title">
-                    <span>@FormatDate(assignmentGroup.Key)</span>
+    <div class="home-page">
 
-                    @if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date))
-                    {
-                        <span> - </span>
-                        <span style="color: #B23A48">Today!</span>
-                    }
-                    else if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date.AddDays(1)))
-                    {
-                        <span> - </span>
-                        <span style="color: #0061a2">Tomorrow</span>
-                    }
-                </h2>
+        <section class="assignment-groups">
+            @if (_assignments.Count == 0)
+            {
+                <div class="home-empty-state">
+                    <h2>No assignments yet</h2>
+                    <p>
+                        @(StudentContext.HasWriteAccess
+                            ? "Start the list by adding the first assignment for your class."
+                            : "Assignments for your modules will appear here as soon as one gets added.")
+                    </p>
+                </div>
+            }
 
-                <div class="assignment-list">
-                    @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
-                    {
-                        <article class="assignment-card @(StudentContext.HasWriteAccess ? "is-editable" : null)">
-                            <a class="assignment-card-link" href="@($"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
+            @foreach (var assignmentGroup in _assignments.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
+            {
+                <section class="assignment-group">
+                    <h2 class="assignment-group-title">
+                        <span>@FormatDate(assignmentGroup.Key)</span>
 
-                            @if (StudentContext.HasWriteAccess)
-                            {
-                                <label class="assignment-complete">
-                                    <input class="assignment-complete-toggle"
-                                           type="checkbox"
-                                           aria-label="Mark '@assignment.Title' as completed"
-                                           checked="@assignment.CompletedByStudents.Contains(StudentContext.Student)"
-                                           onclick="event.stopPropagation()"
-                                           onchange="toggleAssignmentCompleted(@assignment.Id, event)"/>
-                                </label>
-                            }
+                        @if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date))
+                        {
+                            <span> - </span>
+                            <span style="color: #B23A48">Today!</span>
+                        }
+                        else if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date.AddDays(1)))
+                        {
+                            <span> - </span>
+                            <span style="color: #0061a2">Tomorrow</span>
+                        }
+                    </h2>
 
-                            <div class="assignment-card-time">
-                                @(HasDueTime(assignment.DueDateTime) ? FormatTime(assignment.DueDateTime) : "—")
-                            </div>
-
-                            <div class="assignment-card-copy">
-                                <h3 class="assignment-card-title">@assignment.Title</h3>
-                                <p class="assignment-card-module">@assignment.ModuleInstance.Module.Name</p>
-                            </div>
-
-                            <div class="assignment-card-actions">
-                                @if (HasDueTime(assignment.DueDateTime) && assignment.DueDateTime <= Helper.Now())
-                                {
-                                    <span class="assignment-badge assignment-badge-overdue">Overdue</span>
-                                }
-
-                                <span class="assignment-badge @(assignment.Mandatory ? "assignment-badge-accent" : "assignment-badge-outline")">
-                                    @(assignment.Mandatory ? "Mandatory" : "Optional")
-                                </span>
+                    <div class="assignment-list">
+                        @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
+                        {
+                            <article class="assignment-card @(StudentContext.HasWriteAccess ? "is-editable" : null)">
+                                <a class="assignment-card-link" href="@($"/{assignment.Id}")" aria-label="Open details for @assignment.Title"></a>
 
                                 @if (StudentContext.HasWriteAccess)
                                 {
-                                    <a href="@($"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
-                                            <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                        </svg>
-                                    </a>
+                                    <label class="assignment-complete">
+                                        <input class="assignment-complete-toggle"
+                                               type="checkbox"
+                                               aria-label="Mark '@assignment.Title' as completed"
+                                               checked="@assignment.CompletedByStudents.Contains(StudentContext.Student)"
+                                               onclick="event.stopPropagation()"
+                                               onchange="toggleAssignmentCompleted(@assignment.Id, event)"/>
+                                    </label>
                                 }
-                            </div>
-                        </article>
-                    }
-                </div>
-            </section>
-        }
 
-        <div class="home-footer">
-            @if (!ShowOverdue)
-            {
-                if (_totalAssignmentCount > _assignments.Count)
+                                <div class="assignment-card-time">
+                                    @(HasDueTime(assignment.DueDateTime) ? FormatTime(assignment.DueDateTime) : "—")
+                                </div>
+
+                                <div class="assignment-card-copy">
+                                    <h3 class="assignment-card-title">@assignment.Title</h3>
+                                    <p class="assignment-card-module">@assignment.ModuleInstance.Module.Name</p>
+                                </div>
+
+                                <div class="assignment-card-actions">
+                                    @if (HasDueTime(assignment.DueDateTime) && assignment.DueDateTime <= Helper.Now())
+                                    {
+                                        <span class="assignment-badge assignment-badge-overdue">Overdue</span>
+                                    }
+
+                                    <span class="assignment-badge @(assignment.Mandatory ? "assignment-badge-accent" : "assignment-badge-outline")">
+                                        @(assignment.Mandatory ? "Mandatory" : "Optional")
+                                    </span>
+
+                                    @if (StudentContext.HasWriteAccess)
+                                    {
+                                        <a href="@($"/edit/{assignment.Id}")" class="assignment-edit-link" aria-label="Edit assignment">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" class="assignment-edit-icon">
+                                                <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </a>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+
+            <div class="home-footer">
+                @if (!ShowOverdue)
                 {
-                    <a href="/?overdue=true">Show overdue assignments</a>
+                    if (_totalAssignmentCount > _assignments.Count)
+                    {
+                        <a href="/?overdue=true">Show overdue assignments</a>
+                    }
                 }
-            }
-            else
-            {
-                <a href="/">Don't show overdue assignments</a>
-            }
-        </div>
-    </section>
-</div>
+                else
+                {
+                    <a href="/">Don't show overdue assignments</a>
+                }
+            </div>
+        </section>
+    </div>
 
-<script>
-async function toggleAssignmentCompleted(assignmentId, event) {
-    const response = await postWithToken(`/assignment/${assignmentId}/${event.target.checked}`);
+    <script>
+    async function toggleAssignmentCompleted(assignmentId, event) {
+        const response = await postWithToken(`/assignment/${assignmentId}/${event.target.checked}`);
 
-    if (!response.ok) {
-        event.target.checked = !event.target.checked;
+        if (!response.ok) {
+            event.target.checked = !event.target.checked;
+        }
     }
+    </script>
 }
-</script>
 
 @code {
     private List<Assignment> _assignments = [];
@@ -149,6 +158,9 @@ async function toggleAssignmentCompleted(assignmentId, event) {
 
     protected override async Task OnInitializedAsync()
     {
+        if (StudentContext.Student == null)
+            return;
+
         var currentSemester = Helper.GetCurrentSemester();
 
         _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.ModuleInstance.Semester == currentSemester);

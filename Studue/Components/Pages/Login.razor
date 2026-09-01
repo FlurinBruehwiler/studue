@@ -1,8 +1,20 @@
+
 @page "/login"
 
-<PageTitle>Studue Login</PageTitle>
+@if (Embedded)
+{
+    <PageTitle>Studue – Shared assignment calendar for ZHAW students</PageTitle>
+    <HeadContent>
+        <PageMeta Title="Studue – Shared assignment calendar for ZHAW students"
+                  Description="Studue is a shared assignment calendar for ZHAW students. One person enters a deadline for a module and everyone in the class sees it, alongside their schedule and a campus building map."/>
+    </HeadContent>
+}
+else
+{
+    <PageTitle>Sign in | Studue</PageTitle>
+}
 
-<div class="login-page">
+<div class="login-page @(Embedded ? "is-embedded" : null)">
     <main class="login-shell">
         <section class="login-hero">
             <img src="@Assets["studue-logo.svg"]" alt="Studue logo" class="login-logo" />
@@ -14,11 +26,11 @@
             <img src="@Assets["studue-logo.svg"]" alt="Studue logo" class="login-logo-mobile" />
 
             <div class="login-copy">
-                <h2>Use your student ID to see assignments.</h2>
+                <h2>@Prompt</h2>
                 <p>Your schedule will be downloaded from stundenplan.zhaw.ch</p>
             </div>
 
-            <form class="login-form" onsubmit="login(event)">
+            <form class="login-form" onsubmit="login(event)" data-next="@(Next ?? "/")">
                 <input
                     type="text"
                     id="studentId"
@@ -43,19 +55,34 @@ function login(e) {
     e.preventDefault();
 
     const studentId = document.getElementById("studentId").value;
+    const next = e.target.dataset.next || "/";
 
-    document.cookie = `student_id=${encodeURIComponent(studentId)}; path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 365}`;
-
-    window.location.href = "/";
+    // the server sets the cookie from this parameter, so it gets the right flags
+    window.location.href = `${next}${next.includes("?") ? "&" : "?"}student_id=${encodeURIComponent(studentId)}`;
 }
 </script>
 
 @code
 {
+    [Parameter]
+    public bool Embedded { get; set; }
+
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
     private string? message;
+
+    private string? Next { get; set; }
+
+    private string Prompt => Next switch
+    {
+        "/schedule" => "Sign in to see your schedule.",
+        "/settings" => "Sign in to reach your settings.",
+        "/create" => "Sign in to add an assignment.",
+        not null when Next.StartsWith("/edit/") => "Sign in to edit this assignment.",
+        not null => "Sign in to continue.",
+        _ => "Use your student ID to see assignments.",
+    };
 
     protected override void OnInitialized()
     {
@@ -63,5 +90,14 @@ function login(e) {
         {
             message = m;
         }
+
+        if (HttpContext?.Request.Query.TryGetValue("next", out var n) is true)
+        {
+            Next = LocalPath(n.ToString());
+        }
     }
+
+    // only ever somewhere on this site, never an absolute url someone appended
+    private static string? LocalPath(string value) =>
+        value.StartsWith('/') && !value.StartsWith("//") && !value.Contains(':') ? value : null;
 }

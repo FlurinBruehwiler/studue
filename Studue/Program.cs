@@ -93,9 +93,10 @@ try
     {
         var endpoint = context.GetEndpoint();
         var studentRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
+        var studentOptional = endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>();
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
-        if (studentRequired == null)
+        if (studentRequired == null && studentOptional == null)
         {
             await next(context);
             return;
@@ -119,15 +120,29 @@ try
         var studentId = GetCookieOrQuery(context, "student_id", logger);
         if (studentId == null)
         {
-            context.Response.Redirect("/login");
+            if (studentOptional != null)
+            {
+                await next(context);
+                return;
+            }
+
+            var wanted = $"{context.Request.Path}{context.Request.QueryString}";
+            context.Response.Redirect($"/login?next={Uri.EscapeDataString(wanted)}");
             return;
         }
 
         var (student, errorMsg) = await studentContext.GetOrCreateStudent(studentId);
         if (student == null)
         {
-            context.Response.Redirect($"/login?message={errorMsg}");
             context.Response.Cookies.Delete("student_id");
+
+            if (studentOptional != null)
+            {
+                await next(context);
+                return;
+            }
+
+            context.Response.Redirect($"/login?message={errorMsg}");
             return;
         }
 
@@ -151,7 +166,7 @@ try
             }
         }
 
-        if (studentRequired.RequireWriteAccess && !studentContext.HasWriteAccess)
+        if (studentRequired is { RequireWriteAccess: true } && !studentContext.HasWriteAccess)
         {
             if (context.Request.Headers.Accept.Any(x => x != null && x.Contains("text/html")))
                 context.Response.Redirect("/");
@@ -233,6 +248,22 @@ try
         http.Response.Cookies.Delete("write_token", IdentityCookie());
 
         return Results.Ok();
+    });
+
+    app.MapGet("/sitemap.xml", (HttpContext http, BuildingIndex index) =>
+    {
+        var origin = $"{http.Request.Scheme}://{http.Request.Host}";
+
+        var urls = new List<string> { origin + "/" };
+        urls.AddRange(index.CampusIds.OrderBy(x => x, StringComparer.Ordinal)
+            .Select(x => $"{origin}/map?campus={Uri.EscapeDataString(x)}"));
+        urls.AddRange(index.Codes.Select(x => $"{origin}/map?building={Uri.EscapeDataString(x)}"));
+
+        var body = string.Concat(urls.Select(x => $"<url><loc>{System.Security.SecurityElement.Escape(x)}</loc></url>"));
+
+        return Results.Text(
+            $"""<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>""",
+            "application/xml");
     });
 
     app.Run();

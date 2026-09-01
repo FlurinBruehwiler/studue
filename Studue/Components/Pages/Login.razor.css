@@ -181,3 +181,8 @@
         padding: 1.5rem;
     }
 }
+
+.login-page.is-embedded {
+    min-height: 0;
+    padding: 0;
+}

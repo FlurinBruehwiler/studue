@@ -1,16 +1,18 @@
 ﻿@page "/map"
-@attribute [StudentRequired]
+@attribute [StudentOptional]
 @layout Layout.StudentLayout
 @using System.Text.Json
 @using Studue.Services
 @inject StudentContext StudentContext
 @inject BuildingIndex BuildingIndex
 
-<PageTitle>Map</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 
 @* discovered while the HTML is still parsing, so these load alongside each other
    instead of one after the next *@
 <HeadContent>
+    <PageMeta Title="@PageTitleText" Description="@MetaDescription"/>
+
     <link rel="preload" as="script" href="@_leafletJs"/>
     @* a real stylesheet, not a preload: injecting it from js put it outside the head that
        enhanced navigation diffs against, so it was dropped when returning to this page *@
@@ -61,6 +63,14 @@
     [SupplyParameterFromQuery(Name = "campus")]
     public string? Campus { get; set; }
 
+    private string PageTitleText => _highlight != null
+        ? $"ZHAW building {_highlight} – {_campusName} | Studue"
+        : $"{_campusName ?? "Campus"} – ZHAW building map | Studue";
+
+    private string MetaDescription => _highlight != null
+        ? $"Where is ZHAW building {_highlight}? Find it on {_campusName}, with every other building on the campus."
+        : $"Map of {_campusName} at ZHAW, showing every building and its code.";
+
     private string? _campusId;
     private string? _campusName;
     private string? _highlight;
@@ -87,6 +97,9 @@
             _highlight = Building.ToUpperInvariant();
             return BuildingIndex.CampusFor(_highlight) ?? BuildingIndex.DefaultCampus;
         }
+
+        if (StudentContext.Student == null)
+            return BuildingIndex.DefaultCampus;
 
         // opening the map cold, the useful default is wherever you are headed next
         var entries = await StudentContext.GetScheduleEntriesForStudent(StudentContext.Student.StudentId);

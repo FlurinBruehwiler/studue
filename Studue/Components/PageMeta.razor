@@ -1,0 +1,43 @@
+@inject NavigationManager Navigation
+
+    <meta name="description" content="@Description"/>
+    <link rel="canonical" href="@Canonical"/>
+
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content="Studue"/>
+    <meta property="og:title" content="@Title"/>
+    <meta property="og:description" content="@Description"/>
+    <meta property="og:url" content="@Canonical"/>
+    <meta property="og:image" content="@Image"/>
+
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:title" content="@Title"/>
+    <meta name="twitter:description" content="@Description"/>
+    <meta name="twitter:image" content="@Image"/>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Studue";
+
+    [Parameter] public string Description { get; set; } = "";
+
+    private static readonly string[] PrivateParameters =
+        ["student_id", "write_token", "message", "requestEditLink"];
+
+    private string Canonical
+    {
+        get
+        {
+            var uri = new Uri(Navigation.Uri);
+            var kept = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            foreach (var name in PrivateParameters)
+                kept.Remove(name);
+
+            var query = kept.Count > 0 ? $"?{kept}" : "";
+
+            return $"{Navigation.BaseUri.TrimEnd('/')}{uri.AbsolutePath}{query}";
+        }
+    }
+
+    private string Image => $"{Navigation.BaseUri.TrimEnd('/')}/{Assets["icon-512.png"]}";
+}
