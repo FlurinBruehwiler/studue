@@ -69,7 +69,7 @@ function panelOffset() {
 function draw(campus, highlight) {
     layers.clearLayers();
 
-    const order = { w: 0, s: 1, r: 2, b: 3, z: 4 };
+    const order = { w: 0, s: 1, r: 2, t: 3, b: 4, z: 5 };
     const features = [...campus.features].sort((a, b) => order[a.k] - order[b.k]);
 
     // a code can span several buildings, so every match is framed, not just the first
@@ -82,6 +82,8 @@ function draw(campus, highlight) {
             shape = L.polyline(feature.c, { className: `map-road map-road-${feature.w}` });
         } else if (feature.k === "s") {
             shape = L.polyline(feature.c, { className: "map-stream" });
+        } else if (feature.k === "t") {
+            shape = L.polyline(feature.c, { className: "map-rail" });
         } else if (feature.k === "z") {
             const active = feature.codes.includes(highlight);
             shape = L.polygon(feature.c, { className: `map-zhaw${active ? " is-active" : ""}` });

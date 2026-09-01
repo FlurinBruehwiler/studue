@@ -401,6 +401,7 @@ async Task<Campus> FetchCampus(string id, string name, List<Building> members)
         $"way[\"highway\"]({box});" +
         $"way[\"waterway\"=\"river\"]({box});" +
         $"way[\"waterway\"=\"stream\"]({box});" +
+        $"way[\"railway\"~\"^(rail|light_rail|narrow_gauge|tram|subway)$\"]({box});" +
         $"way[\"natural\"=\"water\"]({box});" +
         ");out geom;");
 
@@ -455,6 +456,10 @@ async Task<Campus> FetchCampus(string id, string name, List<Building> members)
         else if (Tag(tags, "natural") == "water")
         {
             features.Add(new { k = "w", c = coordinates });
+        }
+        else if (Tag(tags, "railway") != null)
+        {
+            features.Add(new { k = "t", c = coordinates });
         }
         else
         {

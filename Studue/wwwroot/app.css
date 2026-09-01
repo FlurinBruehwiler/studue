@@ -302,6 +302,14 @@ h1:focus {
     stroke-linecap: round;
 }
 
+/* railway lines: a stronger blue than the pale water, so tracks do not read as a river */
+.map-rail {
+    fill: none;
+    stroke: #60a5fa;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
 .map-road {
     fill: none;
     stroke: #ffffff;
