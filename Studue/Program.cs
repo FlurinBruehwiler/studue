@@ -110,6 +110,7 @@ try
             }
             catch (AntiforgeryValidationException)
             {
+                logger.LogWarning("Antiforgery validation failed");
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
