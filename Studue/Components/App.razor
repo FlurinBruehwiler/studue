@@ -13,6 +13,7 @@
     @* iOS only allows web push for apps added to the home screen, which needs a manifest *@
     <link rel="manifest" href="@Assets["manifest.json"]" />
     <link rel="apple-touch-icon" href="@Assets["apple-touch-icon.png"]" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Studue" />
     <meta name="theme-color" content="#0061a2" />
@@ -40,12 +41,17 @@
 <body>
 <Routes/>
 @* <ReconnectModal/> *@
-<script src="@Assets["_framework/blazor.web.js"]"></script>
+<script src="@Assets["_framework/blazor.web.js"]" autostart="false"></script>
+<script>
+    Blazor.start({
+        circuit: {
+            configureSignalR: builder => builder.configureLogging("warning")
+        }
+    });
+</script>
 <script src="@Assets["campus-map.js"]"></script>
 
 <script>
-    console.log("Source code: https://github.com/FlurinBruehwiler/studue")
-
     async function postWithToken(url, body) {
         const headers = { "RequestVerificationToken": document.querySelector('meta[name="antiforgery-token"]')?.content ?? "" };
 
