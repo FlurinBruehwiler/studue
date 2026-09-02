@@ -59,25 +59,7 @@ else
                                 <div class="schedule-entry-meta">
                                     @foreach (var room in slot)
                                     {
-                                        <span>
-                                            @if (Helper.BuildingCode(room.Room) is { } building)
-                                            {
-                                                <a href="@($"https://mymaps.zhaw.ch/?building={building}")" target="_blank" rel="noopener" class="schedule-link">@room.Room</a>
-                                            }
-                                            else
-                                            {
-                                                @room.Room
-                                            }
-                                            ·
-                                            @if (room.TeacherId != null)
-                                            {
-                                                <a href="@($"https://www.zhaw.ch/en/about-us/person/{room.TeacherId}")" target="_blank" class="schedule-link">@room.Teacher</a>
-                                            }
-                                            else
-                                            {
-                                                @room.Teacher
-                                            }
-                                        </span>
+                                        <span>@RoomAndTeacher(room)</span>
                                     }
                                 </div>
                             </article>
@@ -114,25 +96,7 @@ else
                                 <strong>@lesson.Module.Name</strong>
                                 @foreach (var room in slot)
                                 {
-                                    <p>
-                                    @if (Helper.BuildingCode(room.Room) is { } building)
-                                    {
-                                        <a href="@($"https://mymaps.zhaw.ch/?building={building}")" target="_blank" rel="noopener" class="schedule-link">@room.Room</a>
-                                    }
-                                    else
-                                    {
-                                        @room.Room
-                                    }
-                                    ·
-                                    @if (room.TeacherId != null)
-                                    {
-                                        <a href="@($"https://www.zhaw.ch/en/about-us/person/{room.TeacherId}")" target="_blank" class="schedule-link">@room.Teacher</a>
-                                    }
-                                    else
-                                    {
-                                        @room.Teacher
-                                    }
-                                    </p>
+                                    <p>@RoomAndTeacher(room)</p>
                                 }
                             </div>
                         </article>
@@ -144,6 +108,25 @@ else
 }
 
 @code {
+    private RenderFragment RoomAndTeacher(ScheduleEntry room) => @<text>
+        @if (Helper.BuildingCode(room.Room) is { } building)
+        {
+            <a href="@($"https://mymaps.zhaw.ch/?building={building}")" target="_blank" rel="noopener" class="schedule-link">@room.Room</a>
+        }
+        else
+        {
+            @room.Room
+        }&nbsp;·
+        @if (room.TeacherId != null)
+        {
+            <a href="@($"https://www.zhaw.ch/en/about-us/person/{room.TeacherId}")" target="_blank" rel="noopener" class="schedule-link">@room.Teacher</a>
+        }
+        else
+        {
+            @room.Teacher
+        }
+    </text>;
+
     [Parameter]
     [EditorRequired]
     public List<ScheduleEntry> ScheduleEntries { get; set; }
