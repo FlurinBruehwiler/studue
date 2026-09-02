@@ -102,20 +102,6 @@ try
             return;
         }
 
-        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
-        {
-            try
-            {
-                await context.RequestServices.GetRequiredService<IAntiforgery>().ValidateRequestAsync(context);
-            }
-            catch (AntiforgeryValidationException)
-            {
-                logger.LogWarning("Antiforgery validation failed");
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-        }
-
         var studentContext = context.RequestServices.GetRequiredService<StudentContext>();
 
         var studentId = GetCookieOrQuery(context, "student_id", logger);
@@ -189,6 +175,34 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // after UseAuthentication: antiforgery tokens are bound to the authenticated user, so
+    // validating before the user is resolved rejects every token issued to an admin
+    app.Use(async (context, next) =>
+    {
+        var endpoint = context.GetEndpoint();
+        var gated = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>() != null
+                    || endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>() != null;
+
+        if (gated && !HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+        {
+            try
+            {
+                await context.RequestServices.GetRequiredService<IAntiforgery>().ValidateRequestAsync(context);
+            }
+            catch (AntiforgeryValidationException error)
+            {
+                context.RequestServices.GetRequiredService<ILogger<Program>>()
+                    .LogWarning("Antiforgery rejected {method} {path}: {reason}",
+                        context.Request.Method, context.Request.Path, error.Message);
+
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+        }
+
+        await next(context);
+    });
 
     app.UseAntiforgery();
 

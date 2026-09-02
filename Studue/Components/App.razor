@@ -46,10 +46,15 @@
 <script>
     console.log("Source code: https://github.com/FlurinBruehwiler/studue")
 
-    async function postWithToken(url) {
+    async function postWithToken(url, body) {
+        const headers = { "RequestVerificationToken": document.querySelector('meta[name="antiforgery-token"]')?.content ?? "" };
+
+        if (body !== undefined) headers["Content-Type"] = "application/json";
+
         return fetch(url, {
             method: "POST",
-            headers: { "RequestVerificationToken": document.querySelector('meta[name="antiforgery-token"]')?.content ?? "" }
+            headers,
+            body: body === undefined ? undefined : JSON.stringify(body),
         });
     }
 
@@ -140,11 +145,7 @@
                 applicationServerKey: button.dataset.vapidKey
             });
 
-            const response = await fetch("/push/subscribe", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(subscription)
-            });
+            const response = await postWithToken("/push/subscribe", subscription);
 
             if (!response.ok) throw new Error(`/push/subscribe returned ${response.status}`);
 
@@ -174,11 +175,7 @@
 
         if (subscription) {
             // tell the server first, while we still hold the endpoint
-            await fetch("/push/unsubscribe", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ endpoint: subscription.endpoint })
-            });
+            await postWithToken("/push/unsubscribe", { endpoint: subscription.endpoint });
 
             await subscription.unsubscribe();
         }
