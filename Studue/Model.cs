@@ -114,6 +114,7 @@ public class ScheduleEntry
     public int ZhawID { get; set; }
     public Module Module { get; set; }
     public string Teacher { get; set; } = null!;
+    public string? TeacherId { get; set; }
     public string Room { get; set; } = null!;
     public int Weekday { get; set; }
     public TimeOnly StartTime { get; set; }

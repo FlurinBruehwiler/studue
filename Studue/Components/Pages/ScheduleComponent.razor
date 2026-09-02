@@ -62,13 +62,21 @@ else
                                         <span>
                                             @if (Helper.BuildingCode(room.Room) is { } building)
                                             {
-                                                <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                                <a href="@($"/map?building={building}")" class="schedule-link">@room.Room</a>
                                             }
                                             else
                                             {
                                                 @room.Room
                                             }
-                                            · @room.Teacher
+                                            ·
+                                            @if (room.TeacherId != null)
+                                            {
+                                                <a href="@($"https://www.zhaw.ch/en/about-us/person/{room.TeacherId}")" target="_blank" class="schedule-link">@room.Teacher</a>
+                                            }
+                                            else
+                                            {
+                                                @room.Teacher
+                                            }
                                         </span>
                                     }
                                 </div>
@@ -109,14 +117,22 @@ else
                                     <p>
                                     @if (Helper.BuildingCode(room.Room) is { } building)
                                     {
-                                        <a href="@($"/map?building={building}")" class="schedule-room">@room.Room</a>
+                                        <a href="@($"/map?building={building}")" class="schedule-link">@room.Room</a>
                                     }
                                     else
                                     {
                                         @room.Room
                                     }
-                                    · @room.Teacher
-                                </p>
+                                    ·
+                                    @if (room.TeacherId != null)
+                                    {
+                                        <a href="@($"https://www.zhaw.ch/en/about-us/person/{room.TeacherId}")" target="_blank" class="schedule-link">@room.Teacher</a>
+                                    }
+                                    else
+                                    {
+                                        @room.Teacher
+                                    }
+                                    </p>
                                 }
                             </div>
                         </article>

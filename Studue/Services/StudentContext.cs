@@ -252,6 +252,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
             var teacherElement = lessonElement.NextElementSibling!;
             lesson.TeacherName = RemoveShorthandFromTeacherName(teacherElement.GetAttribute("title")!);
+            lesson.TeacherId = teacherElement.TextContent;
 
             var roomElement = teacherElement.NextElementSibling!;
             lesson.RoomCode = roomElement.TextContent;
@@ -282,6 +283,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                     Semester = lesson.Semester,
                     Weekday = lesson.WeekdayNumber,
                     Teacher = lesson.TeacherName,
+                    TeacherId = lesson.TeacherId,
                     ZhawID = lesson.LessonId,
                     Module = await GetOrCreateModule(lesson.ModuleCode, lesson.ModuleName ?? ""),
                     StartTime = startTime,
@@ -452,6 +454,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         public string Semester = null!;
         public int LessonId;
         public string TeacherName = null!;
+        public string TeacherId = null!;
         public string RoomCode = null!;
         public int WeekdayNumber;
         public string FirstLessonTime = null!;
