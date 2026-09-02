@@ -184,11 +184,22 @@
     }
 
     async function reloadSchedule() {
-        const result = await postWithToken("/settings/refetchSchedule")
-        if (result.ok) {
-            setReloadScheduleStatus("Schedule reloaded!");
-        } else {
-            setReloadScheduleStatus(await result.text())
+        const button = document.querySelector(".reload-schedule-button");
+        const label = button.textContent;
+
+        setReloadScheduleStatus("");
+        button.disabled = true;
+        button.textContent = "Reloading…";
+
+        try {
+            const result = await postWithToken("/settings/refetchSchedule");
+            setReloadScheduleStatus(result.ok ? "Schedule reloaded!" : await result.text());
+        } catch (error) {
+            console.error(error);
+            setReloadScheduleStatus("Could not reload the schedule. Please try again.");
+        } finally {
+            button.disabled = false;
+            button.textContent = label;
         }
     }
 
