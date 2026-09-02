@@ -14,13 +14,9 @@ A shared assignment calendar for ZHAW students.
     </td>
   </tr>
   <tr>
-    <td width="50%" valign="top">
-      <img width="100%" alt="Weekly schedule" src="https://github.com/user-attachments/assets/20faff28-bca3-4f91-badb-5c67ba73097b" />
+    <td colspan="2" align="center" valign="top">
+      <img width="50%" alt="Weekly schedule" src="https://github.com/user-attachments/assets/20faff28-bca3-4f91-badb-5c67ba73097b" />
       <p align="center"><sub><b>Schedule</b> — pulled from stundenplan.zhaw.ch</sub></p>
-    </td>
-    <td width="50%" valign="top">
-      <img width="100%" alt="Campus map" src="https://github.com/user-attachments/assets/3bb1be5f-21b5-4e5a-8e72-2b7092156f12" />
-      <p align="center"><sub><b>Campus map</b> — jump straight to a room's building</sub></p>
     </td>
   </tr>
 </table>
@@ -40,5 +36,5 @@ The system only works if at least one person takes the time to enter assignments
 The system is also based on trust. If someone starts to maliciously delete or edit assignments, it will no longer work.
 
 ## Extra features
-- Schedule
-- Campus map
+- Your weekly schedule, pulled from stundenplan.zhaw.ch
+- Push notifications a day and an hour before a deadline

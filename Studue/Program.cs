@@ -23,7 +23,6 @@ try
         settings.DatabaseBackupDir = Path.GetFullPath(settings.DatabaseBackupDir, builder.Environment.ContentRootPath);
     });
     builder.Services.AddScoped<StudentContext>();
-    builder.Services.AddSingleton<BuildingIndex>();
     builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
     {
         options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),
@@ -265,19 +264,12 @@ try
         return Results.Ok();
     });
 
-    app.MapGet("/sitemap.xml", (HttpContext http, BuildingIndex index) =>
+    app.MapGet("/sitemap.xml", (HttpContext http) =>
     {
         var origin = $"{http.Request.Scheme}://{http.Request.Host}";
 
-        var urls = new List<string> { origin + "/" };
-        urls.AddRange(index.CampusIds.OrderBy(x => x, StringComparer.Ordinal)
-            .Select(x => $"{origin}/map?campus={Uri.EscapeDataString(x)}"));
-        urls.AddRange(index.Codes.Select(x => $"{origin}/map?building={Uri.EscapeDataString(x)}"));
-
-        var body = string.Concat(urls.Select(x => $"<url><loc>{System.Security.SecurityElement.Escape(x)}</loc></url>"));
-
         return Results.Text(
-            $"""<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>""",
+            $"""<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{origin}/</loc></url></urlset>""",
             "application/xml");
     });
 
