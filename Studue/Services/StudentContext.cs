@@ -295,6 +295,12 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             allLessons.Add(scheduleEntry);
         }
 
+        // a caller may have loaded the student without its modules; RemoveAll would then
+        // clear nothing and every module would be linked a second time
+        var modules = context.Entry(student).Collection(x => x.ModuleInstances);
+        if (!modules.IsLoaded)
+            await modules.LoadAsync();
+
         student.ModuleInstances.RemoveAll(x => x.Semester == semester);
 
         foreach (var x in allLessons.GroupBy(x => x.Module))

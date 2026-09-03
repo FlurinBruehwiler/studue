@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Studue.Services
 @inject StudueContext StudueContext;
+@inject StudentContext StudentContext;
 @inject IJSRuntime JsRuntime
 @attribute [StudentRequired]
 @attribute [Authorize]
@@ -22,6 +23,8 @@
                                     new("Write Token", x => x.WriteToken),
                                     new("Impersonate", _ => null),
                                     new("Last Access", x => x.LastAccess),
+                                    new("Last fetched semester", x => x.LastFetchedSemester),
+                                    new("Reload schedule", _ => null)
                                 ])" InitialSortingColumn="Last Access">
             <RowTemplate Context="student">
                 <tr>
@@ -36,6 +39,10 @@
                         <button onclick="@($"impersonate(\"{student.StudentId}\", \"{student.WriteToken}\")")">Impersonate</button>
                     </td>
                     <td>@student.LastAccess.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@student.LastFetchedSemester</td>
+                    <td>
+                        <button @onclick="async () => await ReloadSchedule(student)">Reload schedule</button>
+                    </td>
                 </tr>
             </RowTemplate>
         </SortableTable>
@@ -54,6 +61,19 @@
     protected override async Task OnParametersSetAsync()
     {
         await RefreshStudents();
+    }
+
+    private async Task ReloadSchedule(Student student)
+    {
+        var success = await StudentContext.FetchModulesForStudent(student);
+        if (success)
+        {
+            await StudueContext.SaveChangesAsync();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "An error occured");
+        }
     }
 
     private async Task RefreshStudents()
