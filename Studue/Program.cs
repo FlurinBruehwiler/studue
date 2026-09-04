@@ -1,4 +1,6 @@
 using System.IO.Compression;
+using System.Net;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -34,6 +36,16 @@ try
 
     builder.Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
         .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(AdminAuthenticationHandler.SchemeName, _ => { });
+    // caddy terminates tls and proxies over plain http, so without this the app believes
+    // every request is http: canonical urls come out http, hsts is skipped and the https
+    // redirect cannot find a port to redirect to
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+        options.KnownProxies.Add(IPAddress.Loopback);
+        options.KnownProxies.Add(IPAddress.IPv6Loopback);
+    });
+
     builder.Services.AddAuthorization();
 
     builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
@@ -50,6 +62,8 @@ try
     var app = builder.Build();
 
     Log.Information("Using SQLite database at {DbFile}", app.Services.GetRequiredService<IOptions<Settings>>().Value.DbFile);
+
+    app.UseForwardedHeaders();
 
     app.UseSerilogRequestLogging();
 
