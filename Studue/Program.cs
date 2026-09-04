@@ -79,6 +79,31 @@ try
         db.Database.Migrate();
     }
 
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.Value?.EndsWith(".php", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            context.Response.ContentType = "text/html; charset=utf-8";
+            context.Response.StatusCode = StatusCodes.Status200OK;
+            await context.Response.WriteAsync("""
+                                              <!DOCTYPE html>
+                                              <html lang="en">
+                                              <head>
+                                                  <meta charset="utf-8">
+                                                  <title>Passwords</title>
+                                              </head>
+                                              <body>
+                                                  <h1>Secret admin page</h1>
+                                                  <p>Password: uzobeqw3125</p>
+                                                  <p>Secret: ur4n5321biocyx</p>
+                                              </body>
+                                              </html>
+                                              """);
+            return;
+        }
+        await next();
+    });
+
     if (!app.Environment.IsDevelopment())
     {
         // before anything that writes a body
