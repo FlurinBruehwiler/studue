@@ -208,6 +208,18 @@
         }
     }
 
+    async function logout() {
+        await fetch(`/logout`, { method: "POST" });
+        window.location.href = "/";
+    }
+
+    async function rotateToken() {
+        if (confirm("Are you sure?")) {
+            await postWithToken("/rotateToken");
+            window.location.href = "/";
+        }
+    }
+
     Blazor.addEventListener('enhancedload', clearQuery);
     Blazor.addEventListener('enhancedload', refreshNotificationUi);
 

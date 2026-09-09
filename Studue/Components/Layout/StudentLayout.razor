@@ -58,13 +58,6 @@
     </main>
 </div>
 
-<script>
-async function logout() {
-    await fetch("/logout", { method: "POST" });
-    window.location.href = "/";
-}
-</script>
-
 @code {
     //the sign-in link is about the session, not about any one page, so it lives with the chrome
     [Parameter]

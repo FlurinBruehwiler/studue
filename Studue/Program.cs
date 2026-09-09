@@ -303,6 +303,17 @@ try
         return Results.Ok();
     });
 
+    app.MapPost("/rotateToken", async (HttpContext http, StudentContext studentContext, StudueContext studueContext) =>
+    {
+        http.Response.Cookies.Delete("student_id", IdentityCookie());
+        http.Response.Cookies.Delete("write_token", IdentityCookie());
+
+        studentContext.Student.WriteToken = StudentContext.GenerateWriteToken();
+        await studueContext.SaveChangesAsync();
+
+        return Results.Ok();
+    }).WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true} );
+
     app.MapGet("/sitemap.xml", (HttpContext http) =>
     {
         var origin = $"{http.Request.Scheme}://{http.Request.Host}";
