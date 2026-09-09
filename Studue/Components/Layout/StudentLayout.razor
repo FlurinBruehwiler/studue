@@ -87,7 +87,7 @@
 
         disableAuthenticateButton = (DateTime.UtcNow - StudentContext.Student.LastAuthenticationMailSend).TotalMinutes < 1;
 
-        if (!RequestEditLink)
+        if (!RequestEditLink || disableAuthenticateButton)
             return;
 
         var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
