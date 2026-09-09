@@ -9,6 +9,7 @@
 @inject IOptions<Settings> Settings
 @inject IHostEnvironment Environment
 @inject ILogger<StudentLayout> Logger
+@inject StudueContext StudueContext;
 @inherits LayoutComponentBase
 
 <div class="app">
@@ -39,7 +40,15 @@
 
                 @if (!StudentContext.HasWriteAccess)
                 {
-                    <a href="/?requestEditLink=true" class="app-button app-button-primary">Authenticate to edit</a>
+                    if (disableAuthenticateButton)
+                    {
+                        <a href="/?requestEditLink=true" class="app-button app-button-primary disable" aria-disabled="true" tabindex="-1">Authenticate to edit</a>
+                    }
+                    else
+                    {
+                        <a href="/?requestEditLink=true" class="app-button app-button-primary" >Authenticate to edit</a>
+                    }
+
                 }
             }
         </div>
@@ -65,6 +74,7 @@
     public bool RequestEditLink { get; set; }
 
     private MarkupString? _notice;
+    private bool disableAuthenticateButton;
 
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
 
@@ -72,7 +82,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!RequestEditLink || StudentContext.Student == null)
+        if (StudentContext.Student == null)
+            return;
+
+        disableAuthenticateButton = (DateTime.UtcNow - StudentContext.Student.LastAuthenticationMailSend).TotalMinutes < 1;
+
+        if (!RequestEditLink)
             return;
 
         var verifyLink = new Uri(new Uri(Settings.Value.FrontendUrl), $"?write_token={HttpUtility.UrlEncode(StudentContext.Student.WriteToken)}&student_id={StudentContext.Student.StudentId}");
@@ -98,8 +113,14 @@
 
         Logger.LogInformation("Sending edit link to {email}", email);
 
+        //todo, we would probably want to permanently have this status message, even when the user reloads, but that is for the future
+
         _notice = await StudentContext.SendMail(email, "Your Studue sign-in link", verifyLink.ToString(), string.Format(Helper.VerifyEmailHtml, StudentContext.Student.StudentId, verifyLink), [ qrCodeContent ])
             ? new MarkupString($"We sent a sign-in link to {email} — check <a href=\"https://outlook.office.com\">outlook.office.com</a>.")
             : new MarkupString("We were unable to send you an email, try again later.");
+
+        disableAuthenticateButton = true;
+        StudentContext.Student.LastAuthenticationMailSend = DateTime.UtcNow;
+        await StudueContext.SaveChangesAsync();
     }
 }

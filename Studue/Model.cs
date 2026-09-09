@@ -63,6 +63,7 @@ public class Student
     public required string WriteToken { get; set; }
     public DateTime LastAccess { get; set; }
     public string LastFetchedSemester { get; set; }
+    public DateTime LastAuthenticationMailSend { get; set; }
 
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
