@@ -93,30 +93,39 @@ try
         db.Database.Migrate();
     }
 
-    app.Use(async (context, next) =>
+    app.MapGet("/redirect_{num:int}.php", (int num) =>
     {
-        if (context.Request.Path.Value?.EndsWith(".php", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            context.Response.ContentType = "text/html; charset=utf-8";
-            context.Response.StatusCode = StatusCodes.Status200OK;
-            await context.Response.WriteAsync("""
-                                              <!DOCTYPE html>
-                                              <html lang="en">
-                                              <head>
-                                                  <meta charset="utf-8">
-                                                  <title>Passwords</title>
-                                              </head>
-                                              <body>
-                                                  <h1>Secret admin page</h1>
-                                                  <p>Password: uzobeqw3125</p>
-                                                  <p>Secret: ur4n5321biocyx</p>
-                                              </body>
-                                              </html>
-                                              """);
-            return;
-        }
-        await next();
+        if (num == 420)
+            return Results.Redirect("/secret_admin_page.php");
+
+        var next = num > 420 ? num - 1 : num + 1;
+        return Results.Redirect($"/redirect_{next}.php");
     });
+
+    app.MapGet("/secret_admin_page.php", () =>
+    {
+        return Results.Content(
+            """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="utf-8">
+                <title>Passwords</title>
+            </head>
+            <body>
+                <h1>Secret admin page</h1>
+                <p>Password: uzobeqw3125</p>
+                <p>Secret: ur4n5321biocyx</p>
+            </body>
+            </html>
+            """,
+            "text/html; charset=utf-8");
+    });
+
+    app.MapGet("/{filename}.php", () =>
+    {
+        return Results.Redirect($"/redirect_{Random.Shared.Next(0, 1000)}.php");
+    }).WithOrder(1);
 
     if (!app.Environment.IsDevelopment())
     {
