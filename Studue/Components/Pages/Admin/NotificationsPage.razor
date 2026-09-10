@@ -1,0 +1,41 @@
+﻿@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/admin/notifications"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject StudueContext StudueContext;
+@rendermode InteractiveServer
+
+<section>
+    <h2>Notification subscriptions</h2>
+
+    <div>
+        <SortableTable TItem="PushSubscriptionRow" Items="_pushSubscriptions" Columns="@([
+                                                                        new("Id", x => x.Id),
+                                                                        new("Student", x => x.Student),
+                                                                        new("Endpoint", x => x.Endpoint),
+                                                                        new("Auth", x => x.Auth),
+                                                                        new("P256DH", x => x.P256DH),
+                                                                    ])" InitialSortingColumn="Id" Ascending="false">
+            <RowTemplate Context="incident">
+                <tr>
+                    <td>@incident.Id</td>
+                    <td>@incident.Student</td>
+                    <td>@incident.Endpoint</td>
+                    <td>@incident.Auth</td>
+                    <td>@incident.P256DH</td>
+                </tr>
+            </RowTemplate>
+        </SortableTable>
+    </div>
+</section>
+
+@code {
+    private List<PushSubscriptionRow> _pushSubscriptions = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _pushSubscriptions = await StudueContext.PushSubscriptions.ToListAsync();
+    }
+}
