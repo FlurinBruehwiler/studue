@@ -220,6 +220,38 @@
         }
     }
 
+    let currentPath = location.pathname;
+    let finishViewTransition = null;
+
+    function isAssignmentPage(path) {
+        return /^\/(\d+|edit\/\d+|create)$/.test(path);
+    }
+
+    // by the time this fires, links and back/forward have already updated location
+    Blazor.addEventListener('enhancednavigationstart', () => {
+        finishViewTransition?.();
+        finishViewTransition = null;
+
+        const from = currentPath, to = location.pathname;
+        const type = from === '/' && isAssignmentPage(to) ? 'forward'
+            : isAssignmentPage(from) && to === '/' ? 'back'
+            : null;
+
+        if (!type || !document.startViewTransition || !/Mobi/.test(navigator.userAgent)) return;
+
+        const updated = new Promise(resolve => finishViewTransition = resolve);
+        document.startViewTransition({ update: () => updated, types: [type] });
+    });
+
+    // enhancednavigationend is the fallback for navigations that end without a document update
+    for (const event of ['enhancedload', 'enhancednavigationend']) {
+        Blazor.addEventListener(event, () => {
+            currentPath = location.pathname;
+            finishViewTransition?.();
+            finishViewTransition = null;
+        });
+    }
+
     Blazor.addEventListener('enhancedload', clearQuery);
     Blazor.addEventListener('enhancedload', refreshNotificationUi);
 

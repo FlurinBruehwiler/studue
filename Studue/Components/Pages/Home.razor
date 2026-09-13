@@ -80,7 +80,7 @@ else
                                     </label>
                                 }
 
-                                <div class="assignment-card-time">
+                                <div class="assignment-card-time @(HasDueTime(assignment.DueDateTime) ? null : "is-empty")">
                                     @(HasDueTime(assignment.DueDateTime) ? FormatTime(assignment.DueDateTime) : "—")
                                 </div>
 

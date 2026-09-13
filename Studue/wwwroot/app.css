@@ -1,4 +1,47 @@
 
+::view-transition-group(app-bar),
+::view-transition-new(app-bar) {
+    animation: none;
+}
+
+::view-transition-old(app-bar) {
+    display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html:active-view-transition-type(forward)::view-transition-old(root) {
+        animation: 300ms ease both slide-to-left;
+    }
+
+    html:active-view-transition-type(forward)::view-transition-new(root) {
+        animation: 300ms ease both slide-from-right;
+    }
+
+    html:active-view-transition-type(back)::view-transition-old(root) {
+        animation: 300ms ease both slide-to-right;
+    }
+
+    html:active-view-transition-type(back)::view-transition-new(root) {
+        animation: 300ms ease both slide-from-left;
+    }
+}
+
+@keyframes slide-from-right {
+    from { transform: translateX(100%); }
+}
+
+@keyframes slide-to-left {
+    to { transform: translateX(-100%); }
+}
+
+@keyframes slide-from-left {
+    from { transform: translateX(-100%); }
+}
+
+@keyframes slide-to-right {
+    to { transform: translateX(100%); }
+}
+
 * {
     box-sizing: border-box;
 }

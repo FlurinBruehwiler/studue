@@ -8,6 +8,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    view-transition-name: app-bar;
     display: flex;
     align-items: center;
     gap: 1.75rem;
