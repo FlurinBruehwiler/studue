@@ -45,8 +45,8 @@
 <script>
     // Safari animates swipe back/forward itself. Registered before Blazor.start so it runs
     // ahead of Blazor's own popstate listener, which starts the navigation synchronously.
-    let popstateHadUAVisualTransition = false;
-    addEventListener('popstate', e => popstateHadUAVisualTransition = e.hasUAVisualTransition === true);
+    let pendingPopstate = null;
+    addEventListener('popstate', e => pendingPopstate = e);
 
     Blazor.start({
         circuit: {
@@ -237,18 +237,29 @@
         finishViewTransition?.();
         finishViewTransition = null;
 
-        const uaVisualTransition = popstateHadUAVisualTransition;
-        popstateHadUAVisualTransition = false;
+        const popstate = pendingPopstate;
+        pendingPopstate = null;
 
         const from = currentPath, to = location.pathname;
         const type = from === '/' && isAssignmentPage(to) ? 'forward'
             : isAssignmentPage(from) && to === '/' ? 'back'
             : null;
 
-        if (!type || uaVisualTransition || !document.startViewTransition || !/Mobi/.test(navigator.userAgent)) return;
+        if (!type || popstate?.hasUAVisualTransition || !document.startViewTransition || !/Mobi/.test(navigator.userAgent)) return;
 
         const updated = new Promise(resolve => finishViewTransition = resolve);
-        document.startViewTransition({ update: () => updated, types: [type] });
+        document.startViewTransition({
+            update: async () => {
+                await updated;
+
+                // Blazor's own scroll to top is smooth (scroll-behavior on html), and Safari
+                // leaves it half done once the transition starts. Going back keeps Safari's
+                // restored position on the home page.
+                if (type === 'forward' && !popstate)
+                    scrollTo({ top: 0, behavior: 'instant' });
+            },
+            types: [type]
+        });
     });
 
     // enhancednavigationend is the fallback for navigations that end without a document update
