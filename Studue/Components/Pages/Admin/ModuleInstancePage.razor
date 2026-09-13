@@ -76,7 +76,6 @@
     {
         var m = await StudueContext.ModuleInstances.Where(x => x.Id == InstanceId)
             .Include(x => x.Students)
-            .ThenInclude(x => x.CreatedAssignments)
             .Include(x => x.Assignements)
             .Include(x => x.Module)
             .FirstOrDefaultAsync();
