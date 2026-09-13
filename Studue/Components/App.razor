@@ -43,6 +43,11 @@
 @* <ReconnectModal/> *@
 <script src="@Assets["_framework/blazor.web.js"]" autostart="false"></script>
 <script>
+    // Safari animates swipe back/forward itself. Registered before Blazor.start so it runs
+    // ahead of Blazor's own popstate listener, which starts the navigation synchronously.
+    let popstateHadUAVisualTransition = false;
+    addEventListener('popstate', e => popstateHadUAVisualTransition = e.hasUAVisualTransition === true);
+
     Blazor.start({
         circuit: {
             configureSignalR: builder => builder.configureLogging("warning")
@@ -232,12 +237,15 @@
         finishViewTransition?.();
         finishViewTransition = null;
 
+        const uaVisualTransition = popstateHadUAVisualTransition;
+        popstateHadUAVisualTransition = false;
+
         const from = currentPath, to = location.pathname;
         const type = from === '/' && isAssignmentPage(to) ? 'forward'
             : isAssignmentPage(from) && to === '/' ? 'back'
             : null;
 
-        if (!type || !document.startViewTransition || !/Mobi/.test(navigator.userAgent)) return;
+        if (!type || uaVisualTransition || !document.startViewTransition || !/Mobi/.test(navigator.userAgent)) return;
 
         const updated = new Promise(resolve => finishViewTransition = resolve);
         document.startViewTransition({ update: () => updated, types: [type] });
