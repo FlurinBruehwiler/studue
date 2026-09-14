@@ -227,6 +227,7 @@
 
     let currentPath = location.pathname;
     let finishViewTransition = null;
+    let scrollToTopOnUpdate = false;
 
     function isAssignmentPage(path) {
         return /^\/(\d+|edit\/\d+|create)$/.test(path);
@@ -241,6 +242,20 @@
         pendingPopstate = null;
 
         const from = currentPath, to = location.pathname;
+
+        // Blazor scrolls to the top synchronously inside the link's click handler, before the
+        // fetch for the new page has even been awaited, so on a slow connection the page you
+        // are still looking at jumps to the top and sits there. This microtask runs after that
+        // click handler and before the next paint, so putting the position back is invisible;
+        // the reset then happens below, in the same task that swaps in the new document.
+        // Back/forward is left alone: Blazor skips its reset there and the browser restores
+        // the previous position itself.
+        if (!popstate && from !== to) {
+            const y = scrollY;
+            queueMicrotask(() => scrollTo({ top: y, behavior: 'instant' }));
+            scrollToTopOnUpdate = true;
+        }
+
         const type = from === '/' && isAssignmentPage(to) ? 'forward'
             : isAssignmentPage(from) && to === '/' ? 'back'
             : null;
@@ -249,15 +264,9 @@
 
         const updated = new Promise(resolve => finishViewTransition = resolve);
         document.startViewTransition({
-            update: async () => {
-                await updated;
-
-                // Blazor's own scroll to top is smooth (scroll-behavior on html), and Safari
-                // leaves it half done once the transition starts. Going back keeps Safari's
-                // restored position on the home page.
-                if (type === 'forward' && !popstate)
-                    scrollTo({ top: 0, behavior: 'instant' });
-            },
+            // the deferred reset below runs before this resolves, so the new snapshot is
+            // already at the top by the time the transition animates it in
+            update: () => updated,
             types: [type]
         });
     });
@@ -266,6 +275,14 @@
     for (const event of ['enhancedload', 'enhancednavigationend']) {
         Blazor.addEventListener(event, () => {
             currentPath = location.pathname;
+
+            // only 'enhancedload' means a new document is actually in; 'enhancednavigationend'
+            // just drops the pending reset for navigations that ended without one
+            if (scrollToTopOnUpdate) {
+                scrollToTopOnUpdate = false;
+                if (event === 'enhancedload') scrollTo({ top: 0, behavior: 'instant' });
+            }
+
             finishViewTransition?.();
             finishViewTransition = null;
         });
