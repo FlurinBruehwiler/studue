@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Serilog.Core;
 using Studue;
 using Studue.Components;
 using Studue.Services;
@@ -16,7 +17,14 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((context, config) => { config.ReadFrom.Configuration(context.Configuration); });
+    builder.Host.UseSerilog((context, services, config) =>
+    {
+        config.ReadFrom.Configuration(context.Configuration);
+        config.ReadFrom.Services(services);
+    });
+
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddSingleton<ILogEventEnricher, StudentLogEnricher>();
 
     builder.Services.Configure<Settings>(builder.Configuration.GetSection("Studue"));
     builder.Services.PostConfigure<Settings>(settings =>

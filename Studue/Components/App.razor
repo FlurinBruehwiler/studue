@@ -234,9 +234,6 @@
         return /^\/(\d+|edit\/\d+|create)$/.test(path);
     }
 
-    // currentPath is the path of the document actually on screen, so it lags location.pathname
-    // for the whole of an enhanced navigation - which is exactly the window where the list is
-    // still visible and still scrollable while the next page is being fetched
     addEventListener('scroll', () => {
         if (currentPath === '/') homeScrollY = scrollY;
     }, { passive: true });
@@ -251,32 +248,16 @@
 
         const from = currentPath, to = location.pathname;
 
-        // the scroll listener only sees positions the browser has had a chance to report, and
-        // this runs before Blazor's reset below, so it is the one reading that is always exact.
-        // Skipped for back/forward, where the browser may already have moved the scroll to the
-        // position it is restoring for the entry being navigated to.
         if (!popstate && from === '/') homeScrollY = scrollY;
 
-        // leaving an assignment for the list puts you back where you left off, everything
-        // else starts at the top
         const target = isAssignmentPage(from) && to === '/' ? homeScrollY : 0;
 
-        // Blazor scrolls to the top synchronously inside the link's click handler, before the
-        // fetch for the new page has even been awaited, so on a slow connection the page you
-        // are still looking at jumps to the top and sits there. This microtask runs after that
-        // click handler and before the next paint, so putting the position back is invisible;
-        // the real scroll then happens below, in the same task that swaps in the new document.
         if (!popstate && from !== to) {
             const y = scrollY;
             queueMicrotask(() => scrollTo({ top: y, behavior: 'instant' }));
             scrollOnUpdate = target;
         }
 
-        // back/forward never goes through that click handler, so Blazor scrolls nothing and
-        // there is nothing to undo. The browser does restore a position, but it does so against
-        // the document still on screen, so on a list that has not been fetched back in yet it
-        // lands short. Safari's swipe back animates and restores the position itself, and gets
-        // it right, so that one is left alone.
         if (popstate && !popstate.hasUAVisualTransition && target)
             scrollOnUpdate = target;
 
@@ -288,8 +269,6 @@
 
         const updated = new Promise(resolve => finishViewTransition = resolve);
         document.startViewTransition({
-            // the deferred reset below runs before this resolves, so the new snapshot is
-            // already at the top by the time the transition animates it in
             update: () => updated,
             types: [type]
         });
@@ -300,8 +279,6 @@
         Blazor.addEventListener(event, () => {
             currentPath = location.pathname;
 
-            // only 'enhancedload' means a new document is actually in; 'enhancednavigationend'
-            // just drops the pending scroll for navigations that ended without one
             if (scrollOnUpdate !== null) {
                 const target = scrollOnUpdate;
                 scrollOnUpdate = null;
