@@ -15,7 +15,10 @@
     </div>
 
     <div>
-        <button type="button" class="app-button app-button-secondary" onclick="rotateToken()">Log out on all devices</button>
+        @if (StudentContext.HasWriteAccess)
+        {
+            <button type="button" class="app-button app-button-secondary" onclick="rotateToken()">Log out on all devices</button>
+        }
         <button type="button" class="app-button app-button-secondary" onclick="logout()">Log out</button>
     </div>
 </header>
