@@ -10,7 +10,14 @@ using Microsoft.Extensions.Options;
 
 namespace Studue.Services;
 
-public class StudentContext(IHttpClientFactory clientFactory, StudueContext context, ILogger<StudentContext> logger, IOptions<Settings> settings, IHostEnvironment environment, IDbContextFactory<StudueContext> studueContextFactory)
+public class StudentContext(
+    IHttpClientFactory clientFactory,
+    StudueContext context,
+    ILogger<StudentContext> logger,
+    IOptions<Settings> settings,
+    IHostEnvironment environment,
+    IDbContextFactory<StudueContext> studueContextFactory
+)
 {
     public Student Student { get; private set; } = null!;
     public bool HasWriteAccess { get; set; }
@@ -19,8 +26,16 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     //small enough for distinct colours, it needs no storage, and both views derive the same map.
     private static readonly string[] ModuleAccents =
     [
-        "#0061a2", "#0f766e", "#7c3aed", "#b45309", "#be123c",
-        "#4338ca", "#0369a1", "#15803d", "#c2410c", "#9333ea"
+        "#0061a2",
+        "#0f766e",
+        "#7c3aed",
+        "#b45309",
+        "#be123c",
+        "#4338ca",
+        "#0369a1",
+        "#15803d",
+        "#c2410c",
+        "#9333ea",
     ];
 
     private IReadOnlyDictionary<string, string>? _moduleAccents;
@@ -32,8 +47,8 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         var semester = Helper.GetCurrentSemester();
 
-        var codes = await context.ModuleInstances
-            .Where(x => x.Students.Contains(Student) && x.Semester == semester)
+        var codes = await context
+            .ModuleInstances.Where(x => x.Students.Contains(Student) && x.Semester == semester)
             .Select(x => x.Module.Code)
             .Distinct()
             .ToListAsync();
@@ -49,10 +64,41 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     public async Task<List<Module>> GetStudentModules()
     {
         var currentSemster = Helper.GetCurrentSemester();
-        return (await context.ModuleInstances
-            .Where(x => x.Students.Contains(Student) && x.Semester == currentSemster)
-            .Include(x => x.Module)
-            .ToListAsync()).Select(x => x.Module).ToList();
+        return (
+            await context
+                .ModuleInstances.Where(x =>
+                    x.Students.Contains(Student) && x.Semester == currentSemster
+                )
+                .Include(x => x.Module)
+                .ToListAsync()
+        )
+            .Select(x => x.Module)
+            .ToList();
+    }
+
+    public async Task<Student?> FindStudent(string studentId)
+    {
+        return await context
+            .Students.Where(x => x.StudentId == studentId.ToLower().Trim())
+            .Include(x => x.ModuleInstances)
+            .ThenInclude(x => x.Module)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task ActivateStudent(Student student)
+    {
+        var currentSemester = Helper.GetCurrentSemester();
+        if (student.LastFetchedSemester != currentSemester)
+        {
+            var success = await FetchModulesForStudent(student);
+            if (success)
+            {
+                await context.SaveChangesAsync();
+            }
+        }
+
+        Student = student;
+        await UpdateLastAccess(student.StudentId);
     }
 
     public async Task<(Student?, string)> GetOrCreateStudent(string studentId)
@@ -62,28 +108,14 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         try
         {
             //check existing student
-            var student = await context.Students.Where(x => x.StudentId == studentId)
-                .Include(x => x.ModuleInstances)
-                .ThenInclude(x => x.Module)
-                .FirstOrDefaultAsync();
+            var student = await FindStudent(studentId);
 
             //if not already exists, initialize
             student ??= await InitializeStudentInternal(studentId);
 
             if (student != null)
             {
-                var currentSemester = Helper.GetCurrentSemester();
-                if (student.LastFetchedSemester != currentSemester)
-                {
-                    var success = await FetchModulesForStudent(student);
-                    if (success)
-                    {
-                        await context.SaveChangesAsync();
-                    }
-                }
-
-                Student = student;
-                await UpdateLastAccess(studentId);
+                await ActivateStudent(student);
             }
 
             return (student, $"We couldn't find a student with the student ID '{studentId}'");
@@ -106,7 +138,11 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         }
     }
 
-    public async Task GenerateIncident(string description, Exception? exception = null, bool sendMail = true)
+    public async Task GenerateIncident(
+        string description,
+        Exception? exception = null,
+        bool sendMail = true
+    )
     {
         await using var db = await studueContextFactory.CreateDbContextAsync();
 
@@ -118,18 +154,30 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             Description = description,
             DateTime = Helper.Now(),
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-            UserId = Student?.StudentId
+            UserId = Student?.StudentId,
         };
         db.Incidents.Add(incident);
         await db.SaveChangesAsync();
 
         if (sendMail)
         {
-            await SendMail("bruhwiler.flurin@gmail.com", "Incident", JsonSerializer.Serialize(incident), null, []); //avoid recursion
+            await SendMail(
+                "bruhwiler.flurin@gmail.com",
+                "Incident",
+                JsonSerializer.Serialize(incident),
+                null,
+                []
+            ); //avoid recursion
         }
     }
 
-    public async Task<bool> SendMail(string recipient, string subject, string text, string? html, (HttpContent content, string name, string filename)[] additionalContents)
+    public async Task<bool> SendMail(
+        string recipient,
+        string subject,
+        string text,
+        string? html,
+        (HttpContent content, string name, string filename)[] additionalContents
+    )
     {
         using var client = clientFactory.CreateClient();
 
@@ -151,7 +199,11 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         foreach (var additionalContent in additionalContents)
         {
-            content.Add(additionalContent.content, additionalContent.name, additionalContent.filename);
+            content.Add(
+                additionalContent.content,
+                additionalContent.name,
+                additionalContent.filename
+            );
         }
 
         var request = new HttpRequestMessage
@@ -161,9 +213,13 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             Content = content,
             Headers =
             {
-                Authorization = new AuthenticationHeaderValue("Basic",
-                    Convert.ToBase64String(Encoding.UTF8.GetBytes($"api:{settings.Value.MailgunApiKey}"))),
-            }
+                Authorization = new AuthenticationHeaderValue(
+                    "Basic",
+                    Convert.ToBase64String(
+                        Encoding.UTF8.GetBytes($"api:{settings.Value.MailgunApiKey}")
+                    )
+                ),
+            },
         };
 
         try
@@ -188,20 +244,41 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
     }
 
-    private async Task<IHtmlDocument?> GetDocumentForDepartement(string studentId, string departement, string semester)
+    private async Task<IHtmlDocument?> GetDocumentForDepartement(
+        string studentId,
+        string departement,
+        string semester
+    )
     {
         using var client = clientFactory.CreateClient();
 
-        var response = await client.SendAsync(new HttpRequestMessage
-        {
-            Content = new FormUrlEncodedContent([
-                new KeyValuePair<string, string>("ctl00$SelectionContent$txtSearch", studentId),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selDepartment", departement),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selPeriodVersion", semester),
-                new KeyValuePair<string, string>("ctl00$SelectionContent$selWeek", 8.ToString())]), //todo don't hardcode the week!
-            Method = HttpMethod.Post,
-            RequestUri = new Uri("https://stundenplan.zhaw.ch/"),
-        });
+        var response = await client.SendAsync(
+            new HttpRequestMessage
+            {
+                Content = new FormUrlEncodedContent(
+                    [
+                        new KeyValuePair<string, string>(
+                            "ctl00$SelectionContent$txtSearch",
+                            studentId
+                        ),
+                        new KeyValuePair<string, string>(
+                            "ctl00$SelectionContent$selDepartment",
+                            departement
+                        ),
+                        new KeyValuePair<string, string>(
+                            "ctl00$SelectionContent$selPeriodVersion",
+                            semester
+                        ),
+                        new KeyValuePair<string, string>(
+                            "ctl00$SelectionContent$selWeek",
+                            8.ToString()
+                        ),
+                    ]
+                ), //todo don't hardcode the week!
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://stundenplan.zhaw.ch/"),
+            }
+        );
 
         var stream = await response.Content.ReadAsStringAsync();
 
@@ -220,14 +297,21 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     {
         var semester = Helper.GetCurrentSemester();
 
-        logger.LogInformation("Fetching modules for {studentId} and {semester}", student.StudentId, semester);
+        logger.LogInformation(
+            "Fetching modules for {studentId} and {semester}",
+            student.StudentId,
+            semester
+        );
 
         var document = await GetDocumentForDepartement(student.StudentId, "T", semester);
         document ??= await GetDocumentForDepartement(student.StudentId, "A", semester);
 
         if (document == null)
         {
-            logger.LogWarning("Failed to fetch schedule for current semester for {studentId}", student.StudentId);
+            logger.LogWarning(
+                "Failed to fetch schedule for current semester for {studentId}",
+                student.StudentId
+            );
             return false;
         }
 
@@ -236,7 +320,9 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         student.Class = searchHighlight.NextSibling!.TextContent.Trim(',', ' ');
 
-        var cellToColumnMapping = GetCellToColumnMapping(document.QuerySelector("table")!.FirstElementChild!);
+        var cellToColumnMapping = GetCellToColumnMapping(
+            document.QuerySelector("table")!.FirstElementChild!
+        );
 
         var allLessons = new List<ScheduleEntry>();
         foreach (var lessonElement in document.QuerySelectorAll(".left"))
@@ -248,10 +334,14 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             lesson.Semester = semester;
 
             var title = lessonElement.ParentElement!.GetAttribute("title")!;
-            lesson.LessonId = int.Parse(title.Substring(title.IndexOf("id: ", StringComparison.Ordinal) + 4));
+            lesson.LessonId = int.Parse(
+                title.Substring(title.IndexOf("id: ", StringComparison.Ordinal) + 4)
+            );
 
             var teacherElement = lessonElement.NextElementSibling!;
-            lesson.TeacherName = RemoveShorthandFromTeacherName(teacherElement.GetAttribute("title")!);
+            lesson.TeacherName = RemoveShorthandFromTeacherName(
+                teacherElement.GetAttribute("title")!
+            );
             lesson.TeacherId = teacherElement.TextContent;
 
             var roomElement = teacherElement.NextElementSibling!;
@@ -264,16 +354,18 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
             lesson.FirstLessonTime = tableDefinition.ParentElement!.FirstElementChild!.TextContent;
 
             var startTime = TimeOnly.Parse(lesson.FirstLessonTime.Split("-").First().Trim());
-            var scheduleEntry = await context.ScheduleEntries
-                .Include(x => x.Module)
-                .FirstOrDefaultAsync(x => x.Module.Code == lesson.ModuleCode
-                                     && x.Semester == lesson.Semester
-                                     && x.ZhawID == lesson.LessonId
-                                     && x.Teacher == lesson.TeacherName
-                                     && x.Room == lesson.RoomCode
-                                     && x.Weekday == lesson.WeekdayNumber
-                                     && x.StartTime == startTime
-                                     && x.Duration == lesson.Duration);
+            var scheduleEntry = await context
+                .ScheduleEntries.Include(x => x.Module)
+                .FirstOrDefaultAsync(x =>
+                    x.Module.Code == lesson.ModuleCode
+                    && x.Semester == lesson.Semester
+                    && x.ZhawID == lesson.LessonId
+                    && x.Teacher == lesson.TeacherName
+                    && x.Room == lesson.RoomCode
+                    && x.Weekday == lesson.WeekdayNumber
+                    && x.StartTime == startTime
+                    && x.Duration == lesson.Duration
+                );
 
             if (scheduleEntry == null)
             {
@@ -312,19 +404,25 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         return true;
 
-        async Task<ModuleInstance> GetOrCreateModuleInstance(Module module, ScheduleEntry[] scheduleEntries)
+        async Task<ModuleInstance> GetOrCreateModuleInstance(
+            Module module,
+            ScheduleEntry[] scheduleEntries
+        )
         {
-            var moduleInstances = await context.ModuleInstances.Where(x => x.Module == module)
-                .Include(moduleInstance => moduleInstance.ScheduleEntries).ToListAsync();
-            var moduleInstance =
-                moduleInstances.FirstOrDefault(x => x.ScheduleEntries.Any(y => scheduleEntries.Any(z => z.Id == y.Id)));
+            var moduleInstances = await context
+                .ModuleInstances.Where(x => x.Module == module)
+                .Include(moduleInstance => moduleInstance.ScheduleEntries)
+                .ToListAsync();
+            var moduleInstance = moduleInstances.FirstOrDefault(x =>
+                x.ScheduleEntries.Any(y => scheduleEntries.Any(z => z.Id == y.Id))
+            );
             if (moduleInstance == null)
             {
                 moduleInstance = new ModuleInstance
                 {
                     Module = module,
                     Semester = Helper.GetCurrentSemester(),
-                    ScheduleEntries = scheduleEntries.ToList()
+                    ScheduleEntries = scheduleEntries.ToList(),
                 };
 
                 context.ModuleInstances.Add(moduleInstance);
@@ -341,11 +439,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
             if (module == null)
             {
-                module = new Module
-                {
-                    Code = moduleCode,
-                    Name = moduleName
-                };
+                module = new Module { Code = moduleCode, Name = moduleName };
                 context.Modules.Add(module);
             }
 
@@ -364,7 +458,7 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
         {
             WriteToken = GenerateWriteToken(),
             StudentId = studentId,
-            Class = "unknown"
+            Class = "unknown",
         };
         if (studentId == "bruehflu")
             newStudent.IsAdmin = true;
@@ -377,7 +471,13 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
 
         await context.SaveChangesAsync();
 
-        await SendMail("bruhwiler.flurin@gmail.com", $"Studue signup: {studentId}", $"Initialized student {studentId}", null, []);
+        await SendMail(
+            "bruhwiler.flurin@gmail.com",
+            $"Studue signup: {studentId}",
+            $"Initialized student {studentId}",
+            null,
+            []
+        );
 
         return newStudent;
     }
@@ -386,13 +486,17 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
     {
         var currentSemester = Helper.GetCurrentSemester();
 
-        var student = await context.Students.Where(x => x.StudentId == studentId)
+        var student = await context
+            .Students.Where(x => x.StudentId == studentId)
             .Include(x => x.ModuleInstances)
             .ThenInclude(x => x.ScheduleEntries)
             .ThenInclude(x => x.Module)
             .FirstAsync();
 
-        return student.ModuleInstances.Where(x => x.Semester == currentSemester).SelectMany(x => x.ScheduleEntries).ToList();
+        return student
+            .ModuleInstances.Where(x => x.Semester == currentSemester)
+            .SelectMany(x => x.ScheduleEntries)
+            .ToList();
     }
 
     private static Dictionary<IElement, int> GetCellToColumnMapping(IElement htmlTable)
@@ -421,8 +525,10 @@ public class StudentContext(IHttpClientFactory clientFactory, StudueContext cont
                 column++;
             }
 
-            for (var i = column; i < columnSpans.Length; i++) {
-                if (columnSpans[i] > 0) {
+            for (var i = column; i < columnSpans.Length; i++)
+            {
+                if (columnSpans[i] > 0)
+                {
                     columnSpans[i]--;
                 }
             }

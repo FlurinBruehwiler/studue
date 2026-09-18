@@ -9,8 +9,8 @@
 }
 else
 {
-    var firstSlot = ScheduleEntries.Min(x => GetLessonIndex(x.StartTime));
-    var lastSlot = ScheduleEntries.Max(x => GetLessonIndex(x.StartTime) + x.Duration - 1);
+    var firstSlot = ScheduleEntries.Min(x => ScheduleSlots.IndexOf(x.StartTime));
+    var lastSlot = ScheduleEntries.Max(x => ScheduleSlots.IndexOf(x.StartTime) + x.Duration - 1);
     var slots = Enumerable.Range(firstSlot, lastSlot - firstSlot + 1).ToList();
 
     var accents = ModuleAccents ?? FallbackAccents();
@@ -24,8 +24,8 @@ else
                     @foreach (var slot in slots)
                     {
                         <div class="schedule-time-cell">
-                            <span>@_lessons[slot].Start.ToString("HH:mm")</span>
-                            <span>@_lessons[slot].End.ToString("HH:mm")</span>
+                            <span>@ScheduleSlots.All[slot].Start.ToString("HH:mm")</span>
+                            <span>@ScheduleSlots.All[slot].End.ToString("HH:mm")</span>
                         </div>
                     }
                 </div>
@@ -51,7 +51,7 @@ else
                             var lesson = slot.First();
 
                             <article class="schedule-entry-card"
-                                     style="grid-row: @(GetLessonIndex(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --accent: @accents[lesson.Module.Code];"
+                                     style="grid-row: @(ScheduleSlots.IndexOf(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --accent: @accents[lesson.Module.Code];"
                                      aria-label="@lesson.Module.Name in @string.Join(", ", slot.Select(x => x.Room))">
                                 <span class="schedule-entry-code">@lesson.Module.Code</span>
                                 <strong class="schedule-entry-title">@lesson.Module.Name</strong>
@@ -89,7 +89,7 @@ else
                         <article class="schedule-agenda-item" style="--accent: @accents[lesson.Module.Code];">
                             <div class="schedule-agenda-time">
                                 <span>@lesson.StartTime.ToString("HH:mm")</span>
-                                <span>@EndTimeOf(lesson).ToString("HH:mm")</span>
+                                <span>@ScheduleSlots.EndTimeOf(lesson.StartTime, lesson.Duration).ToString("HH:mm")</span>
                             </div>
 
                             <div class="schedule-agenda-copy">
@@ -136,15 +136,10 @@ else
     [Parameter]
     public IReadOnlyDictionary<string, string>? ModuleAccents { get; set; }
 
-    private static readonly List<Lesson> _lessons = new[] { "08:15", "09:05", "10:15", "11:05", "13:00", "13:50", "14:50", "15:40", "16:40", "17:30", "18:40", "19:30", "20:25", "21:15" }
-        .Select(x => new Lesson(TimeOnly.Parse(x), TimeOnly.Parse(x).AddMinutes(45))).ToList();
-
     private static readonly string[] _weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
     //a stable colour per module, so a subject is recognisable without reading it
     private static readonly string[] _accents = ["#0061a2", "#0f766e", "#7c3aed", "#b45309", "#be123c", "#4338ca"];
-
-    record struct Lesson(TimeOnly Start, TimeOnly End);
 
     private IEnumerable<List<ScheduleEntry>> GroupBySlot(List<ScheduleEntry> entries)
     {
@@ -162,16 +157,5 @@ else
             .OrderBy(x => x, StringComparer.Ordinal)
             .Select((code, index) => (code, accent: _accents[index % _accents.Length]))
             .ToDictionary(x => x.code, x => x.accent);
-    }
-
-    private int GetLessonIndex(TimeOnly startTime)
-    {
-        return _lessons.FindIndex(x => x.Start == startTime);
-    }
-
-    private TimeOnly EndTimeOf(ScheduleEntry entry)
-    {
-        var lastSlot = Math.Min(GetLessonIndex(entry.StartTime) + entry.Duration - 1, _lessons.Count - 1);
-        return _lessons[lastSlot].End;
     }
 }

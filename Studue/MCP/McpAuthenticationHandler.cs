@@ -27,20 +27,27 @@ public class McpAuthenticationHandler(
         if (string.IsNullOrWhiteSpace(writeToken) || string.IsNullOrWhiteSpace(studentId))
             return AuthenticateResult.NoResult();
 
-        var (student, errorMessage) = await studentContext.GetOrCreateStudent(studentId);
-        if (student == null)
-            return AuthenticateResult.Fail(errorMessage);
+        var student = await studentContext.FindStudent(studentId);
+        if (student == null || !TokenMatches(writeToken, student.WriteToken))
+        {
+            log.LogWarning("MCP request for {studentId} sent an invalid write token", studentId);
+            return AuthenticateResult.Fail("Unknown student id or invalid write token");
+        }
 
         if (student.IsBanned)
             return AuthenticateResult.Fail("This student is banned");
 
-        if (!TokenMatches(writeToken, student.WriteToken))
+        try
         {
-            log.LogWarning(
-                "MCP request for {studentId} sent an invalid write token",
-                student.StudentId
+            await studentContext.ActivateStudent(student);
+        }
+        catch (Exception e)
+        {
+            await studentContext.GenerateIncident(
+                $"Could not activate student {student.StudentId} for an mcp request",
+                e
             );
-            return AuthenticateResult.Fail("Invalid write token");
+            return AuthenticateResult.Fail("An error occured, try again later");
         }
 
         studentContext.HasWriteAccess = true;
