@@ -75,23 +75,3 @@ anyone who has it can create, edit and delete assignments in your modules under 
 
 Pressing **"Log out on all devices"** in the settings rotates the token, which also kills the MCP
 configuration — you have to re-add the server with the new token from the next sign-in mail.
-
-## How it works internally
-
-- `Studue/MCP/StudueMcp.cs` — wires up the server: service registration, auth scheme, endpoint at `/mcp`.
-  Transport is streamable HTTP in **stateless** mode, so every request authenticates on its own and no
-  session state is kept between calls.
-- `Studue/MCP/McpAuthenticationHandler.cs` — own authentication scheme `Mcp`. It reads the bearer token
-  and the `X-Student-Id` header, compares the token in constant time, rejects banned students and grants
-  write access. The web app's cookie-based scheme is untouched; the `/mcp` endpoint requires the separate
-  `McpClient` authorization policy.
-- `Studue/MCP/StudueMcpTools.cs` — the tools themselves. Every query is scoped to the authenticated
-  student's module instances in the current semester, so a student can never see or touch another
-  module's assignments.
-- `Studue/Services/AssignmentService.cs` — create/update/delete including the edit log, shared by the
-  Blazor UI and the MCP tools so both behave identically.
-
-Only `McpException` messages reach the client; any other exception is replaced by a generic message,
-so internal errors never leak through the tool surface.
-
-Package: `ModelContextProtocol.AspNetCore` 2.2.0.
