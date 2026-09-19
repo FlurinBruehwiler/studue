@@ -2,6 +2,7 @@
 @using Studue.Services
 @inject StudueContext studueContext
 @inject StudentContext studentContext
+@inject AssignmentService assignmentService
 @inject NavigationManager Navigation
 
 <PageTitle>@(AssignmentToUpdate != null ? "Edit assignment" : "New assignment")</PageTitle>
@@ -133,17 +134,10 @@
     {
         if (studentContext.HasWriteAccess)
         {
-            if (studentContext.Student.ModuleInstances.All(x => x.Id != assignmentToUpdate.ModuleInstance.Id))
+            if (!AssignmentService.Attends(assignmentToUpdate, studentContext.Student))
                 return;
 
-            assignmentToUpdate.IsDeleted = true;
-            studueContext.EditLog.Add(new EditLogEntry
-            {
-                Assignment = assignmentToUpdate,
-                DateTime = Helper.Now(),
-                Student = studentContext.Student,
-                Type = "delete",
-            });
+            assignmentService.Delete(assignmentToUpdate, studentContext.Student);
 
             await studueContext.SaveChangesAsync();
             Navigation.NavigateTo("/");
@@ -177,23 +171,7 @@
 
         if (AssignmentToUpdate == null && studentContext.HasWriteAccess)
         {
-            var assignment = new Assignment
-            {
-                CreatedBy = studentContext.Student,
-                CreatedTime = Helper.Now(),
-            };
-            var logEntry = new EditLogEntry
-            {
-                Assignment = assignment,
-                Student = studentContext.Student,
-                Type = "add",
-                DateTime = Helper.Now(),
-            };
-            studueContext.EditLog.Add(logEntry);
-
-            await SetValuesOnAssignment(assignment, AssignmentModel, studentContext.Student, studueContext);
-
-            studueContext.Assignements.Add(assignment);
+            assignmentService.Create(studentContext.Student, AssignmentModel);
             await studueContext.SaveChangesAsync();
 
             Navigation.NavigateTo("/");
@@ -201,38 +179,13 @@
 
         if (AssignmentToUpdate != null && studentContext.HasWriteAccess)
         {
-            if (studentContext.Student.ModuleInstances.All(x => x.Id != AssignmentToUpdate.ModuleInstance.Id))
+            if (!AssignmentService.Attends(AssignmentToUpdate, studentContext.Student))
                 return;
 
-            await SetValuesOnAssignment(AssignmentToUpdate, AssignmentModel, studentContext.Student, studueContext);
-
-            var logEntry = new EditLogEntry
-            {
-                Assignment = AssignmentToUpdate,
-                Student = studentContext.Student,
-                Type = "change",
-                DateTime = Helper.Now()
-            };
-            studueContext.EditLog.Add(logEntry);
-
+            assignmentService.Update(AssignmentToUpdate, studentContext.Student, AssignmentModel);
             await studueContext.SaveChangesAsync();
 
             Navigation.NavigateTo("/");
-        }
-    }
-
-    async Task SetValuesOnAssignment(Assignment assignment, AssignmentModel formData, Student student, StudueContext context)
-    {
-        assignment.UpdatedBy = student;
-        assignment.UpdatedTime = Helper.Now();
-        assignment.Title = formData.Title;
-        assignment.Description = formData.Details;
-        assignment.DueDateTime = new DateTime(formData.DueDate, formData.DueTime ?? new TimeOnly());
-        assignment.Mandatory = formData.Type == AssignmentType.Mandatory;
-        assignment.ModuleInstance =  student.ModuleInstances.FirstOrDefault(x => x.Module.Code == formData.ModuleCode)!;
-        if (assignment.ModuleInstance == null)
-        {
-            throw new Exception($"Cannot create assignment with module instance {formData.ModuleCode}, because {student.StudentId} is not part of that module");
         }
     }
 

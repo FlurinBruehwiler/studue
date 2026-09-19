@@ -213,6 +213,23 @@
         }
     }
 
+    async function copyMcpConfig() {
+        const button = document.querySelector(".copy-mcp-config-button");
+        const status = document.querySelector(".mcp-config-status");
+        if (!button || !status) return;
+
+        try {
+            // the block on screen has the token masked, so the real config rides on the button
+            await navigator.clipboard.writeText(button.dataset.config);
+            status.textContent = "Copied, token included. Paste it into your assistant's MCP configuration.";
+        } catch (error) {
+            console.error(error);
+            status.textContent = "Could not copy the configuration. Please try again.";
+        }
+
+        status.style.display = "block";
+    }
+
     async function logout() {
         await fetch(`/logout`, { method: "POST" });
         window.location.href = "/";

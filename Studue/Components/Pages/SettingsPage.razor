@@ -1,10 +1,15 @@
 ﻿@page "/settings"
 @attribute [StudentRequired]
 @layout Layout.StudentLayout
+@using System.Text.Encodings.Web
+@using System.Text.Json
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Options
+@using Studue.MCP
 @using Studue.Services
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
+@inject IOptions<Settings> Settings
 
 <PageTitle>Settings | Studue</PageTitle>
 
@@ -61,6 +66,24 @@
 
         <p class="reload-schedule-status text-status" style="display: none" role="status"></p>
     </section>
+
+    <section class="panel settings-section">
+        <h2>Configure MCP</h2>
+
+        <p class="settings-note">
+            Configure the Studue MCP for your AI Assistant. The token is hidden below, but the copy
+            includes it. Treat it like a password, and use "Log out on all devices" if it leaks.
+        </p>
+
+        <pre class="mcp-config">@_maskedMcpConfig</pre>
+
+        <div class="settings-actions">
+            <button type="button" class="app-button app-button-primary copy-mcp-config-button"
+                    data-config="@_mcpConfig" onclick="copyMcpConfig()">Copy configuration</button>
+        </div>
+
+        <p class="mcp-config-status text-status" style="display: none" role="status"></p>
+    </section>
 }
 
 <section class="panel settings-section">
@@ -78,9 +101,53 @@
 
 @code {
     private string? _vapidPublicKey;
+    private string? _mcpConfig;
+    private string? _maskedMcpConfig;
 
     protected override async Task OnInitializedAsync()
     {
         _vapidPublicKey = (await StudueContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
+
+        if (!StudentContext.HasWriteAccess)
+            return;
+
+        _mcpConfig = BuildMcpConfig(StudentContext.Student.WriteToken);
+        // the token is only ever copied, never read off the screen, so nothing is lost by
+        // keeping it out of sight of whoever is standing behind you
+        _maskedMcpConfig = BuildMcpConfig("******");
+    }
+
+    private string BuildMcpConfig(string writeToken)
+    {
+        var student = StudentContext.Student;
+
+        var config = new
+        {
+            mcpServers = new
+            {
+                studue = new
+                {
+                    type = "http",
+                    url = new Uri(new Uri(Settings.Value.FrontendUrl), StudueMcp.RoutePrefix).ToString(),
+                    headers = new Dictionary<string, string>
+                    {
+                        ["Authorization"] = $"Bearer {writeToken}",
+                        ["X-Student-Id"] = student.StudentId,
+                    },
+                },
+            },
+        };
+
+        // the token is base64, so the default encoder would turn every '+' into '+':
+        // valid json, but unreadable for anyone comparing it against their client config.
+        // Razor escapes the value on render, so relaxed escaping stays safe here.
+        return JsonSerializer.Serialize(
+            config,
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            }
+        );
     }
 }

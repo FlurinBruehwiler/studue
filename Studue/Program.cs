@@ -1,27 +1,30 @@
 using System.IO.Compression;
 using System.Net;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Core;
 using Studue;
 using Studue.Components;
+using Studue.MCP;
 using Studue.Services;
 
 try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((context, services, config) =>
-    {
-        config.ReadFrom.Configuration(context.Configuration);
-        config.ReadFrom.Services(services);
-    });
+    builder.Host.UseSerilog(
+        (context, services, config) =>
+        {
+            config.ReadFrom.Configuration(context.Configuration);
+            config.ReadFrom.Services(services);
+        }
+    );
 
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddSingleton<ILogEventEnricher, StudentLogEnricher>();
@@ -30,46 +33,81 @@ try
     builder.Services.PostConfigure<Settings>(settings =>
     {
         settings.DbFile = Path.GetFullPath(settings.DbFile, builder.Environment.ContentRootPath);
-        settings.DatabaseBackupDir = Path.GetFullPath(settings.DatabaseBackupDir, builder.Environment.ContentRootPath);
+        settings.DatabaseBackupDir = Path.GetFullPath(
+            settings.DatabaseBackupDir,
+            builder.Environment.ContentRootPath
+        );
     });
     builder.Services.AddScoped<StudentContext>();
-    builder.Services.AddDbContextFactory<StudueContext>((services, options) =>
-    {
-        options.UseSqlite(BackupService.GetSqliteConnectionString(services.GetRequiredService<IOptions<Settings>>().Value),
-            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
-    });
+    builder.Services.AddScoped<AssignmentService>();
+    builder.Services.AddDbContextFactory<StudueContext>(
+        (services, options) =>
+        {
+            options.UseSqlite(
+                BackupService.GetSqliteConnectionString(
+                    services.GetRequiredService<IOptions<Settings>>().Value
+                ),
+                o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+            );
+        }
+    );
 
     builder.Services.AddHostedService<BackupService>();
     builder.Services.AddHttpClient();
 
-    builder.Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
-        .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(AdminAuthenticationHandler.SchemeName, _ => { });
+    var authentication = builder
+        .Services.AddAuthentication(AdminAuthenticationHandler.SchemeName)
+        .AddScheme<AuthenticationSchemeOptions, AdminAuthenticationHandler>(
+            AdminAuthenticationHandler.SchemeName,
+            _ => { }
+        );
+    StudueMcp.RegisterAuthentication(authentication);
     // caddy terminates tls and proxies over plain http, so without this the app believes
     // every request is http: canonical urls come out http, hsts is skipped and the https
     // redirect cannot find a port to redirect to
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
         options.KnownProxies.Add(IPAddress.Loopback);
         options.KnownProxies.Add(IPAddress.IPv6Loopback);
     });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        // the default policy authenticates against the Admin scheme; mcp clients carry headers
+        // instead of the cookies that scheme depends on, so they get their own scheme and policy
+        options.AddPolicy(
+            StudueMcp.AuthorizationPolicy,
+            policy =>
+                policy
+                    .AddAuthenticationSchemes(McpAuthenticationHandler.SchemeName)
+                    .RequireAuthenticatedUser()
+        );
+    });
+
+    StudueMcp.RegisterServices(builder.Services);
 
     builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
-    builder.Services.Configure<BrotliCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
-    builder.Services.Configure<GzipCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<BrotliCompressionProviderOptions>(o =>
+        o.Level = CompressionLevel.Fastest
+    );
+    builder.Services.Configure<GzipCompressionProviderOptions>(o =>
+        o.Level = CompressionLevel.Fastest
+    );
 
     builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 
-    builder.Services.AddRazorComponents()
-        .AddInteractiveServerComponents();
+    builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
     builder.Services.AddHostedService<PushService>();
 
     var app = builder.Build();
 
-    Log.Information("Using SQLite database at {DbFile}", app.Services.GetRequiredService<IOptions<Settings>>().Value.DbFile);
+    Log.Information(
+        "Using SQLite database at {DbFile}",
+        app.Services.GetRequiredService<IOptions<Settings>>().Value.DbFile
+    );
 
     app.UseForwardedHeaders();
 
@@ -79,14 +117,15 @@ try
     {
         errorApp.Run(async context =>
         {
-            var exceptionHandlerPathFeature =
-                context.Features.Get<IExceptionHandlerPathFeature>();
+            var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
 
             var ex = exceptionHandlerPathFeature?.Error;
 
             if (ex != null)
             {
-                await context.RequestServices.GetRequiredService<StudentContext>().GenerateIncident("Exception occured", ex);
+                await context
+                    .RequestServices.GetRequiredService<StudentContext>()
+                    .GenerateIncident("Exception occured", ex);
             }
 
             context.Response.StatusCode = 500;
@@ -110,85 +149,95 @@ try
         app.UseHsts();
     }
 
-    app.Use(async (context, next) =>
-    {
-        var endpoint = context.GetEndpoint();
-        var studentRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
-        var studentOptional = endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>();
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-
-        if (studentRequired == null && studentOptional == null)
+    app.Use(
+        async (context, next) =>
         {
-            await next(context);
-            return;
-        }
+            var endpoint = context.GetEndpoint();
+            var studentRequired = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>();
+            var studentOptional = endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>();
+            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
-        var studentContext = context.RequestServices.GetRequiredService<StudentContext>();
-
-        var studentId = GetCookieOrQuery(context, "student_id", logger);
-        if (studentId == null)
-        {
-            if (studentOptional != null)
+            if (studentRequired == null && studentOptional == null)
             {
                 await next(context);
                 return;
             }
 
-            var wanted = $"{context.Request.Path}{context.Request.QueryString}";
-            context.Response.Redirect($"/login?next={Uri.EscapeDataString(wanted)}");
-            return;
-        }
+            var studentContext = context.RequestServices.GetRequiredService<StudentContext>();
 
-        var (student, errorMsg) = await studentContext.GetOrCreateStudent(studentId);
-        if (student == null)
-        {
-            context.Response.Cookies.Delete("student_id");
-
-            if (studentOptional != null)
+            var studentId = GetCookieOrQuery(context, "student_id", logger);
+            if (studentId == null)
             {
-                await next(context);
-                return;
-            }
-
-            context.Response.Redirect($"/login?message={errorMsg}");
-            return;
-        }
-
-        var writeToken = GetCookieOrQuery(context, "write_token", logger);
-        if (writeToken != null)
-        {
-            if (student.IsBanned)
-            {
-                context.Response.Cookies.Delete("write_token");
-            }
-            else
-            {
-                if (writeToken != student.WriteToken)
+                if (studentOptional != null)
                 {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    context.Response.Cookies.Delete("write_token");
+                    await next(context);
                     return;
                 }
 
-                studentContext.HasWriteAccess = true;
+                var wanted = $"{context.Request.Path}{context.Request.QueryString}";
+                context.Response.Redirect($"/login?next={Uri.EscapeDataString(wanted)}");
+                return;
             }
+
+            var (student, errorMsg) = await studentContext.GetOrCreateStudent(studentId);
+            if (student == null)
+            {
+                context.Response.Cookies.Delete("student_id");
+
+                if (studentOptional != null)
+                {
+                    await next(context);
+                    return;
+                }
+
+                context.Response.Redirect($"/login?message={errorMsg}");
+                return;
+            }
+
+            var writeToken = GetCookieOrQuery(context, "write_token", logger);
+            if (writeToken != null)
+            {
+                if (student.IsBanned)
+                {
+                    context.Response.Cookies.Delete("write_token");
+                }
+                else
+                {
+                    if (writeToken != student.WriteToken)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.Cookies.Delete("write_token");
+                        return;
+                    }
+
+                    studentContext.HasWriteAccess = true;
+                }
+            }
+
+            if (studentRequired is { RequireWriteAccess: true } && !studentContext.HasWriteAccess)
+            {
+                if (context.Request.Headers.Accept.Any(x => x != null && x.Contains("text/html")))
+                    context.Response.Redirect("/");
+                else
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                return;
+            }
+
+            await next(context);
         }
+    );
 
-        if (studentRequired is { RequireWriteAccess: true } && !studentContext.HasWriteAccess)
-        {
-            if (context.Request.Headers.Accept.Any(x => x != null && x.Contains("text/html")))
-                context.Response.Redirect("/");
-            else
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-
-            return;
-        }
-
-        await next(context);
-    });
-
-
-    app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+    // re-executing into the html not-found page would replace the json body and the
+    // WWW-Authenticate header an mcp client needs to understand a 401
+    app.UseWhen(
+        context => !context.Request.Path.StartsWithSegments(StudueMcp.RoutePrefix),
+        branch =>
+            branch.UseStatusCodePagesWithReExecute(
+                "/not-found",
+                createScopeForStatusCodePages: true
+            )
+    );
     app.UseHttpsRedirection();
 
     app.UseStaticFiles();
@@ -199,112 +248,174 @@ try
 
     // after UseAuthentication: antiforgery tokens are bound to the authenticated user, so
     // validating before the user is resolved rejects every token issued to an admin
-    app.Use(async (context, next) =>
-    {
-        var endpoint = context.GetEndpoint();
-        var gated = endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>() != null
-                    || endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>() != null;
-
-        if (gated && !HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+    app.Use(
+        async (context, next) =>
         {
-            try
-            {
-                await context.RequestServices.GetRequiredService<IAntiforgery>().ValidateRequestAsync(context);
-            }
-            catch (AntiforgeryValidationException error)
-            {
-                context.RequestServices.GetRequiredService<ILogger<Program>>()
-                    .LogWarning("Antiforgery rejected {method} {path}: {reason}",
-                        context.Request.Method, context.Request.Path, error.Message);
+            var endpoint = context.GetEndpoint();
+            var gated =
+                endpoint?.Metadata.GetMetadata<StudentRequiredAttribute>() != null
+                || endpoint?.Metadata.GetMetadata<StudentOptionalAttribute>() != null;
 
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
+            if (
+                gated
+                && !HttpMethods.IsGet(context.Request.Method)
+                && !HttpMethods.IsHead(context.Request.Method)
+            )
+            {
+                try
+                {
+                    await context
+                        .RequestServices.GetRequiredService<IAntiforgery>()
+                        .ValidateRequestAsync(context);
+                }
+                catch (AntiforgeryValidationException error)
+                {
+                    context
+                        .RequestServices.GetRequiredService<ILogger<Program>>()
+                        .LogWarning(
+                            "Antiforgery rejected {method} {path}: {reason}",
+                            context.Request.Method,
+                            context.Request.Path,
+                            error.Message
+                        );
+
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return;
+                }
             }
+
+            await next(context);
         }
-
-        await next(context);
-    });
+    );
 
     app.UseAntiforgery();
 
-    app.MapRazorComponents<App>()
-        .AddInteractiveServerRenderMode();
+    app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
     PushService.RegisterEndpoint(app);
+    StudueMcp.RegisterEndpoint(app);
 
-    app.MapPost("/settings/refetchSchedule", async (StudentContext studentContext, StudueContext studueContext) =>
-        {
-            if (!studentContext.HasWriteAccess)
-                return Results.Unauthorized();
-
-            var success = await studentContext.FetchModulesForStudent(studentContext.Student);
-            if (success)
+    app.MapPost(
+            "/settings/refetchSchedule",
+            async (StudentContext studentContext, StudueContext studueContext) =>
             {
-                await studueContext.SaveChangesAsync();
-                return Results.Ok();
+                if (!studentContext.HasWriteAccess)
+                    return Results.Unauthorized();
+
+                var success = await studentContext.FetchModulesForStudent(studentContext.Student);
+                if (success)
+                {
+                    await studueContext.SaveChangesAsync();
+                    return Results.Ok();
+                }
+
+                return Results.InternalServerError("Failed to fetch schedule for current semester");
             }
+        )
+        .WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
 
-            return Results.InternalServerError("Failed to fetch schedule for current semester");
-        }).WithMetadata(new StudentRequiredAttribute{ RequireWriteAccess = true});
-
-    app.MapGet("/admin/downloadDb", async (IOptions<Settings> settings) =>
-    {
-        var backupPath = await BackupService.CreateBackup(settings.Value);
-        var stream = new FileStream(backupPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        return Results.File(stream, "application/octet-stream", Path.GetFileName(backupPath));
-    }).WithMetadata(new StudentRequiredAttribute())
+    app.MapGet(
+            "/admin/downloadDb",
+            async (IOptions<Settings> settings) =>
+            {
+                var backupPath = await BackupService.CreateBackup(settings.Value);
+                var stream = new FileStream(
+                    backupPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete
+                );
+                return Results.File(
+                    stream,
+                    "application/octet-stream",
+                    Path.GetFileName(backupPath)
+                );
+            }
+        )
+        .WithMetadata(new StudentRequiredAttribute())
         .RequireAuthorization();
 
-    app.MapPost("/assignment/{assignmentId:int}/{completed:bool}", async (int assignmentId, bool completed, StudueContext studueContext, StudentContext studentContext, ILogger<Program> logger) =>
-    {
-        if (!studentContext.HasWriteAccess)
-            return Results.Unauthorized();
+    app.MapPost(
+            "/assignment/{assignmentId:int}/{completed:bool}",
+            async (
+                int assignmentId,
+                bool completed,
+                StudueContext studueContext,
+                StudentContext studentContext,
+                ILogger<Program> logger
+            ) =>
+            {
+                if (!studentContext.HasWriteAccess)
+                    return Results.Unauthorized();
 
-        var assignment = await studueContext.Assignements.Include(x => x.CompletedByStudents).FirstOrDefaultAsync(x => x.Id == assignmentId);
-        if (assignment == null)
-            return Results.NotFound();
-        if (completed)
+                var assignment = await studueContext
+                    .Assignements.Include(x => x.CompletedByStudents)
+                    .FirstOrDefaultAsync(x => x.Id == assignmentId);
+                if (assignment == null)
+                    return Results.NotFound();
+                if (completed)
+                {
+                    logger.LogInformation(
+                        "{0} marked '{1}' as completed",
+                        studentContext.Student.StudentId,
+                        assignment.Title
+                    );
+                    assignment.CompletedByStudents.Add(studentContext.Student);
+                }
+                else
+                {
+                    logger.LogInformation(
+                        "{0} marked '{1}' as not completed",
+                        studentContext.Student.StudentId,
+                        assignment.Title
+                    );
+                    assignment.CompletedByStudents.Remove(studentContext.Student);
+                }
+                await studueContext.SaveChangesAsync();
+
+                return Results.Ok();
+            }
+        )
+        .WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
+
+    app.MapPost(
+        "/logout",
+        (HttpContext http) =>
         {
-            logger.LogInformation("{0} marked '{1}' as completed", studentContext.Student.StudentId, assignment.Title);
-            assignment.CompletedByStudents.Add(studentContext.Student);
+            http.Response.Cookies.Delete("student_id", IdentityCookie());
+            http.Response.Cookies.Delete("write_token", IdentityCookie());
+
+            return Results.Ok();
         }
-        else
+    );
+
+    app.MapPost(
+            "/rotateToken",
+            async (HttpContext http, StudentContext studentContext, StudueContext studueContext) =>
+            {
+                http.Response.Cookies.Delete("student_id", IdentityCookie());
+                http.Response.Cookies.Delete("write_token", IdentityCookie());
+
+                studentContext.Student.WriteToken = StudentContext.GenerateWriteToken();
+                await studueContext.SaveChangesAsync();
+
+                return Results.Ok();
+            }
+        )
+        .WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
+
+    app.MapGet(
+        "/sitemap.xml",
+        (HttpContext http) =>
         {
-            logger.LogInformation("{0} marked '{1}' as not completed", studentContext.Student.StudentId, assignment.Title);
-            assignment.CompletedByStudents.Remove(studentContext.Student);
+            var origin = $"{http.Request.Scheme}://{http.Request.Host}";
+
+            return Results.Text(
+                $"""<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{origin}/</loc></url></urlset>""",
+                "application/xml"
+            );
         }
-        await studueContext.SaveChangesAsync();
-
-        return Results.Ok();
-    }).WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
-
-    app.MapPost("/logout", (HttpContext http) =>
-    {
-        http.Response.Cookies.Delete("student_id", IdentityCookie());
-        http.Response.Cookies.Delete("write_token", IdentityCookie());
-
-        return Results.Ok();
-    });
-
-    app.MapPost("/rotateToken", async (HttpContext http, StudentContext studentContext, StudueContext studueContext) =>
-    {
-        http.Response.Cookies.Delete("student_id", IdentityCookie());
-        http.Response.Cookies.Delete("write_token", IdentityCookie());
-
-        studentContext.Student.WriteToken = StudentContext.GenerateWriteToken();
-        await studueContext.SaveChangesAsync();
-
-        return Results.Ok();
-    }).WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true} );
-
-    app.MapGet("/sitemap.xml", (HttpContext http) =>
-    {
-        var origin = $"{http.Request.Scheme}://{http.Request.Host}";
-
-        return Results.Text(
-            $"""<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{origin}/</loc></url></urlset>""",
-            "application/xml");
-    });
+    );
 
     app.Run();
 }
@@ -313,14 +424,15 @@ catch (Exception e)
     Console.WriteLine(e);
 }
 
-CookieOptions IdentityCookie() => new()
-{
-    MaxAge = TimeSpan.FromDays(365),
-    HttpOnly = true,
-    Secure = true,
-    SameSite = SameSiteMode.Lax,
-    Path = "/",
-};
+CookieOptions IdentityCookie() =>
+    new()
+    {
+        MaxAge = TimeSpan.FromDays(365),
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/",
+    };
 
 string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logger)
 {
@@ -328,7 +440,11 @@ string? GetCookieOrQuery(HttpContext context, string name, ILogger<Program> logg
     {
         if (queryValue is [{ } str])
         {
-            logger.LogInformation("{studentId} just logged in, writing {cookieName} cookie", str, name);
+            logger.LogInformation(
+                "{studentId} just logged in, writing {cookieName} cookie",
+                str,
+                name
+            );
 
             context.Response.Cookies.Append(name, str, IdentityCookie());
             return str;
@@ -356,6 +472,6 @@ namespace Studue
     public enum AssignmentType
     {
         Mandatory,
-        Optional
+        Optional,
     }
 }

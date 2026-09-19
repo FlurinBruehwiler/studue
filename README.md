@@ -38,3 +38,4 @@ The system is also based on trust. If someone starts to maliciously delete or ed
 ## Extra features
 - Your weekly schedule, pulled from stundenplan.zhaw.ch
 - Push notifications a day and an hour before a deadline
+- An [MCP server](docs/mcp.md), so an AI assistant can read your schedule and create assignments for you
