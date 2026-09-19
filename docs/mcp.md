@@ -1,7 +1,7 @@
 # Studue MCP server
 
 Studue speaks [MCP](https://modelcontextprotocol.io), so an AI assistant (Claude, ChatGPT, …) can read
-and write your assignments for you. Point it at `https://studue.ch/mcp`, give it your student ID and
+and write your assignments for you. Point it at `https://zhaw.studue.ch/mcp`, give it your student ID and
 your write token, and you can say things like:
 
 > Here is the PDF syllabus of Analysis 2 — put every exercise sheet into Studue with the right due date.
@@ -28,12 +28,17 @@ Dates are `yyyy-MM-dd`, times `HH:mm`. Leaving the time out means "that day, no 
 
 ## Configuration
 
+The quickest way: sign in on [zhaw.studue.ch](https://zhaw.studue.ch), open **Settings → Configure MCP**
+and press **"Copy configuration"**. That puts the JSON below — token filled in — on your clipboard.
+The rest of this section is the manual route.
+
 ### 1. Get your student ID and write token
 
-Sign in on [studue.ch](https://studue.ch) and open the mail Studue sends you. The link in it looks like:
+Sign in on [zhaw.studue.ch](https://zhaw.studue.ch) and open the mail Studue sends you. The link in it
+looks like:
 
 ```
-https://studue.ch/?write_token=abc123…&student_id=tomavant3
+https://zhaw.studue.ch/?write_token=abc123…&student_id=tomavant3
 ```
 
 Those two query parameters are exactly what the MCP client needs.
@@ -43,7 +48,7 @@ Those two query parameters are exactly what the MCP client needs.
 Claude Code:
 
 ```bash
-claude mcp add --transport http studue https://studue.ch/mcp \
+claude mcp add --transport http studue https://zhaw.studue.ch/mcp \
   --header "Authorization: Bearer abc123…" \
   --header "X-Student-Id: tomavant3"
 ```
@@ -55,7 +60,7 @@ Or, for clients configured via JSON:
   "mcpServers": {
     "studue": {
       "type": "http",
-      "url": "https://studue.ch/mcp",
+      "url": "https://zhaw.studue.ch/mcp",
       "headers": {
         "Authorization": "Bearer abc123…",
         "X-Student-Id": "tomavant3"
