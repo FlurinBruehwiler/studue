@@ -146,6 +146,10 @@ a.disable {
     flex: 1;
 }
 
+.app-promo p > a {
+    margin-left: 0.35rem;
+}
+
 .app-promo a {
     color: #0061a2;
     font-weight: 600;
