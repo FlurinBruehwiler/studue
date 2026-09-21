@@ -22,6 +22,31 @@
         <p>Assignments: <b>@_assignmentCount</b></p>
     </div>
 
+    <div>
+        <p>Active user in the last 24 hours: <b>@_activeUsersInTheLast24Hours</b> </p>
+        <p>Active user in the last Week: <b>@_activeUsersInTheLastWeek</b> </p>
+    </div>
+
+    <div>
+        <p>Edit leaderboard this semester</p>
+
+        <table>
+            <thead>
+            <th>Student</th>
+            <th>Edit count</th>
+            </thead>
+            <tbody>
+            @foreach (var entry in _leaderboard)
+            {
+                <tr>
+                    <td>@entry.student</td>
+                    <td>@entry.editcount</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
     <br>
     <br>
     <br>
@@ -43,12 +68,31 @@
     private int _assignmentCount;
     private string _dbReplacementStatus = "";
 
+    private int _activeUsersInTheLast24Hours;
+    private int _activeUsersInTheLastWeek;
+    private List<(string student, int editcount)> _leaderboard = [];
+
     protected override async Task OnParametersSetAsync()
     {
         _studentCount = await StudueContext.Students.CountAsync();
         _moduleCount = await StudueContext.Modules.CountAsync();
         _moduleInstanceCount = await StudueContext.ModuleInstances.CountAsync();
         _assignmentCount = await StudueContext.Assignements.CountAsync();
+
+        var dayCutoff = DateTime.UtcNow.AddHours(-24);
+        _activeUsersInTheLast24Hours = await StudueContext.Students.Where(x => x.LastAccess > dayCutoff).CountAsync();
+        var weekCutoff = DateTime.Now.AddDays(-7);
+        _activeUsersInTheLastWeek = await StudueContext.Students.Where(x => x.LastAccess > weekCutoff).CountAsync();
+
+        var semesterStart = Helper.GetCurrentSemesterStart();
+        var leaderboard = await StudueContext.EditLog
+            .Where(x => x.DateTime > semesterStart)
+            .GroupBy(x => x.Student)
+            .Select(x => new { Student = x.Key.StudentId, EditCount = x.Count() })
+            .OrderByDescending(x => x.EditCount)
+            .ToListAsync();
+
+        _leaderboard = leaderboard.Select(x => (x.Student, x.EditCount)).ToList();
     }
 
     private async Task LoadFile(InputFileChangeEventArgs fileEvent)

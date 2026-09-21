@@ -18,16 +18,33 @@ public static class Helper
         return first is { Length: 2 } && first.All(char.IsAsciiLetterUpper) ? first : null;
     }
 
+    public static DateTime GetCurrentSemesterStart()
+    {
+        var (semester, year) = GetCurrentSemesterInfo();
+
+        return semester == "HS"
+            ? new DateTime(year, 6, 30)
+            : new DateTime(year, 2, 2);
+    }
+
     public static string GetCurrentSemester()
     {
-        var currentYear = DateTime.Now.Year;
+        var (semester, year) = GetCurrentSemesterInfo();
+        return $"{semester}{year}";
+    }
 
-        var endOfSpringSemester = new DateTime(currentYear, 6, 29);
-        var endOfFallSemester = new DateTime(currentYear, 2, 1);
+    private static (string Semester, int Year) GetCurrentSemesterInfo()
+    {
+        var now = DateTime.Now;
+        var year = now.Year;
 
-        if (DateTime.Now < endOfFallSemester) return $"HS{currentYear - 1}";
-        if (DateTime.Now > endOfSpringSemester) return $"HS{currentYear}";
-        return $"FS{currentYear}";
+        if (now < new DateTime(year, 2, 1))
+            return ("HS", year - 1);
+
+        if (now > new DateTime(year, 6, 29))
+            return ("HS", year);
+
+        return ("FS", year);
     }
 
     private static TimeZoneInfo zurichTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich");
