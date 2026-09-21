@@ -230,6 +230,11 @@
         status.style.display = "block";
     }
 
+    async function dismissBanner(bannerId) {
+        document.getElementById(`banner-${bannerId}`)?.remove();
+        await postWithToken(`/banner/${bannerId}/dismiss`);
+    }
+
     async function logout() {
         await fetch(`/logout`, { method: "POST" });
         window.location.href = "/";

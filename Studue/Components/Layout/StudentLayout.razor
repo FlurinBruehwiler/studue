@@ -1,6 +1,7 @@
 ﻿@layout MainLayout
 @using System.Net.Http.Headers
 @using System.Web
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.Extensions.Options
 @using QRCoder
 @using Studue.Services
@@ -62,6 +63,25 @@
         </div>
     }
 
+    @foreach (var banner in _banners)
+    {
+        @* no role="status": the promo is there on first paint, so announcing it as a live
+           status update would interrupt a screen reader on every single page load *@
+        <div class="app-promo" id="banner-@banner.Id">
+            <p>
+                @banner.Message
+
+                @if (!string.IsNullOrWhiteSpace(banner.LinkUrl))
+                {
+                    <a href="@banner.LinkUrl"> @(string.IsNullOrWhiteSpace(banner.LinkText) ? "Learn more" : banner.LinkText)</a>
+                }
+            </p>
+
+            <button type="button" class="app-promo-dismiss" aria-label="Dismiss"
+                    onclick="dismissBanner(@banner.Id)">&times;</button>
+        </div>
+    }
+
     <main class="app-main">
         @Body
     </main>
@@ -75,6 +95,7 @@
 
     private MarkupString? _notice;
     private bool disableAuthenticateButton;
+    private List<Banner> _banners = [];
 
     private bool IsScheduleRoute => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("schedule", StringComparison.OrdinalIgnoreCase);
 
@@ -84,6 +105,17 @@
     {
         if (StudentContext.Student == null)
             return;
+
+        var now = Helper.Now();
+        var today = now.Date;
+
+        _banners = await StudueContext.Banners
+            .Where(x => x.Enabled
+                        && (x.StartsAt == null || x.StartsAt <= now)
+                        && (x.EndsAt == null || x.EndsAt >= today)
+                        && !x.DismissedByStudents.Contains(StudentContext.Student))
+            .OrderBy(x => x.Id)
+            .ToListAsync();
 
         disableAuthenticateButton = (DateTime.UtcNow - StudentContext.Student.LastAuthenticationMailSend).TotalMinutes < 1;
 
