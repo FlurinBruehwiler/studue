@@ -1,6 +1,7 @@
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Principal;
 using Microsoft.EntityFrameworkCore;
+
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 
 namespace Studue;
@@ -16,21 +17,43 @@ public class StudueContext(DbContextOptions<StudueContext> options) : DbContext(
     public DbSet<ScheduleEntry> ScheduleEntries { get; set; }
     public DbSet<PushSubscriptionRow> PushSubscriptions { get; set; }
     public DbSet<Config> Configs { get; set; }
+    public DbSet<Banner> Banners { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Assignment>()
+        modelBuilder
+            .Entity<Assignment>()
             .HasOne(x => x.CreatedBy)
             .WithMany(x => x.CreatedAssignments);
 
-        modelBuilder.Entity<Assignment>()
-            .HasOne(x => x.UpdatedBy)
-            .WithMany();
+        modelBuilder.Entity<Assignment>().HasOne(x => x.UpdatedBy).WithMany();
 
-        modelBuilder.Entity<Assignment>()
+        modelBuilder
+            .Entity<Assignment>()
             .HasMany(x => x.CompletedByStudents)
             .WithMany(x => x.CompletedAssignments);
+
+        modelBuilder
+            .Entity<Banner>()
+            .HasMany(x => x.DismissedByStudents)
+            .WithMany(x => x.DismissedBanners);
     }
+}
+
+//A banner promotes a newly shipped feature. Dismissal is per student rather than per browser,
+//so the promo does not come back on the next device the student signs in on.
+public class Banner
+{
+    public int Id { get; set; }
+    public required string Message { get; set; }
+    public string? LinkUrl { get; set; }
+    public string? LinkText { get; set; }
+    public bool Enabled { get; set; } = true;
+    public DateTime? StartsAt { get; set; }
+    public DateTime? EndsAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public List<Student> DismissedByStudents { get; set; } = new();
 }
 
 public class Incident
@@ -69,6 +92,7 @@ public class Student
     public List<Assignment> CreatedAssignments { get; set; } = new();
     public List<Assignment> CompletedAssignments { get; set; } = new();
     public List<PushSubscriptionRow> PushSubscriptions { get; set; } = new();
+    public List<Banner> DismissedBanners { get; set; } = new();
 }
 
 [Index(nameof(Code), IsUnique = true)]
@@ -131,7 +155,6 @@ public class Assignment
     public string? Description { get; set; }
     public List<Student> CompletedByStudents { get; set; } = new();
     public bool IsDeleted { get; set; }
-
 
     public DateTime DueDateTime { get; set; }
     public bool Mandatory { get; set; }

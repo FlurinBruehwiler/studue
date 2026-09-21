@@ -378,6 +378,48 @@ try
         )
         .WithMetadata(new StudentRequiredAttribute { RequireWriteAccess = true });
 
+    // no write access required: a student who has not authenticated to edit still sees banners,
+    // so they must be able to get rid of them
+    app.MapPost(
+            "/banner/{bannerId:int}/dismiss",
+            async (int bannerId, StudueContext studueContext, StudentContext studentContext) =>
+            {
+                var studentId = studentContext.Student.Id;
+
+                var banner = await studueContext.Banners.FirstOrDefaultAsync(x => x.Id == bannerId);
+                if (banner == null)
+                    return Results.NotFound();
+
+                await studueContext
+                    .Entry(banner)
+                    .Collection(x => x.DismissedByStudents)
+                    .Query()
+                    .Where(x => x.Id == studentId)
+                    .LoadAsync();
+
+                if (banner.DismissedByStudents.Count != 0)
+                    return Results.Ok();
+
+                banner.DismissedByStudents.Add(studentContext.Student);
+
+                try
+                {
+                    await studueContext.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    var dismissed = await studueContext.Banners.AnyAsync(x =>
+                        x.Id == bannerId && x.DismissedByStudents.Any(s => s.Id == studentId)
+                    );
+                    if (!dismissed)
+                        throw;
+                }
+
+                return Results.Ok();
+            }
+        )
+        .WithMetadata(new StudentRequiredAttribute());
+
     app.MapPost(
         "/logout",
         (HttpContext http) =>

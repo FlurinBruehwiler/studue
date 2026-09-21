@@ -1,0 +1,163 @@
+@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/admin/banners"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject StudueContext StudueContext;
+@inject IJSRuntime JsRuntime
+@rendermode InteractiveServer
+
+<section>
+    <h2>Banners</h2>
+
+    <p>
+        Promotes a new feature at the top of every student page. A student dismisses it once and it
+        stays gone for them. Leave both dates empty to show it until you disable it.
+    </p>
+
+    <h3>New banner</h3>
+
+    <div>
+        <p>
+            <label>
+                Message<br>
+                <input type="text" size="80" @bind="_newBanner.Message">
+            </label>
+        </p>
+        <p>
+            <label>
+                Link URL (optional)<br>
+                <input type="text" size="40" placeholder="/settings" @bind="_newBanner.LinkUrl">
+            </label>
+        </p>
+        <p>
+            <label>
+                Link text (optional)<br>
+                <input type="text" size="40" placeholder="Learn more" @bind="_newBanner.LinkText">
+            </label>
+        </p>
+        <p>
+            <label>
+                Starts (optional)
+                <input type="date" @bind="_newBanner.StartsAt">
+            </label>
+            <label>
+                Ends (optional)
+                <input type="date" @bind="_newBanner.EndsAt">
+            </label>
+        </p>
+
+        <button @onclick="Create">Create banner</button>
+        <span>@_status</span>
+    </div>
+
+    <br>
+    <br>
+
+    <h3>Existing banners</h3>
+
+    <div>
+        <SortableTable TItem="Banner" Items="_banners" Columns="@([
+                                                                    new("Id", x => x.Id),
+                                                                    new("Message", x => x.Message),
+                                                                    new("Link", x => x.LinkUrl),
+                                                                    new("Enabled", x => x.Enabled),
+                                                                    new("Starts", x => x.StartsAt),
+                                                                    new("Ends", x => x.EndsAt),
+                                                                    new("Dismissals", x => DismissalCount(x)),
+                                                                    new("Created", x => x.CreatedAt),
+                                                                    new("Delete", _ => null)
+                                                                ])" InitialSortingColumn="Id" Ascending="false">
+            <RowTemplate Context="banner">
+                <tr>
+                    <td>@banner.Id</td>
+                    <td>@banner.Message</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(banner.LinkUrl))
+                        {
+                            <span>@banner.LinkUrl (@(string.IsNullOrWhiteSpace(banner.LinkText) ? "Learn more" : banner.LinkText))</span>
+                        }
+                    </td>
+                    <td><input type="checkbox" @bind="banner.Enabled" @bind:after="Changed"></td>
+                    <td>@banner.StartsAt?.ToString("dd.MM.yyyy")</td>
+                    <td>@banner.EndsAt?.ToString("dd.MM.yyyy")</td>
+                    <td>@DismissalCount(banner)</td>
+                    <td>@banner.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        <button @onclick="async () => await Delete(banner)">Delete</button>
+                    </td>
+                </tr>
+            </RowTemplate>
+        </SortableTable>
+    </div>
+</section>
+
+@code {
+    private List<Banner> _banners = new();
+    private Dictionary<int, int> _dismissalCounts = new();
+    private Banner _newBanner = NewBanner();
+    private string _status = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Refresh();
+    }
+
+    private static Banner NewBanner() => new() { Message = "" };
+
+    private int DismissalCount(Banner banner) => _dismissalCounts.GetValueOrDefault(banner.Id);
+
+    private async Task Refresh()
+    {
+        //the dismissals are counted in SQL: including the navigation just to read .Count would
+        //park every student who ever dismissed any banner in the circuit's change tracker for as
+        //long as the page stays open. The banners themselves are still tracked entities, so the
+        //Enabled checkbox and Delete keep working.
+        var rows = await StudueContext
+            .Banners.Select(x => new { Banner = x, Dismissals = x.DismissedByStudents.Count })
+            .ToListAsync();
+
+        _banners = rows.Select(x => x.Banner).ToList();
+        _dismissalCounts = rows.ToDictionary(x => x.Banner.Id, x => x.Dismissals);
+    }
+
+    private async Task Create()
+    {
+        if (string.IsNullOrWhiteSpace(_newBanner.Message))
+        {
+            _status = "A banner needs a message.";
+            return;
+        }
+
+        _newBanner.Message = _newBanner.Message.Trim();
+        _newBanner.CreatedAt = Helper.Now();
+
+        StudueContext.Banners.Add(_newBanner);
+        await StudueContext.SaveChangesAsync();
+
+        _newBanner = NewBanner();
+        _status = "Banner created.";
+
+        await Refresh();
+    }
+
+    private async Task Changed()
+    {
+        await StudueContext.SaveChangesAsync();
+    }
+
+    private async Task Delete(Banner banner)
+    {
+        // disabling is the reversible action, so deleting says out loud that it is not
+        var confirm = await JsRuntime.InvokeAsync<bool>("confirm",
+            "Delete this banner for good? Disable it instead if you might want it back.");
+        if (!confirm)
+            return;
+
+        StudueContext.Banners.Remove(banner);
+        await StudueContext.SaveChangesAsync();
+
+        await Refresh();
+    }
+}
