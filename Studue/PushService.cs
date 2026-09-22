@@ -123,7 +123,7 @@ public class PushService(IDbContextFactory<StudueContext> contextFactory, IOptio
     private async Task SendAsync(StudueContext studueContext, Assignment assignment, string dueIn)
     {
         var subscriptions = await studueContext.Students
-            .Where(x => x.ModuleInstances.Any(y => y.Assignements.Contains(assignment)))
+            .Where(x => x.ModuleInstances.Any(y => y.Assignements.Contains(assignment)) && !x.CompletedAssignments.Contains(assignment))
             .SelectMany(x => x.PushSubscriptions)
             .ToListAsync();
 
