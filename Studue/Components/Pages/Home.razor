@@ -6,6 +6,7 @@
 @using Studue.Services
 @inject StudueContext StudueContext
 @inject StudentContext StudentContext
+@inject SemesterService SemesterService
 
 @if (StudentContext.Student == null)
 {
@@ -44,10 +45,23 @@ else
                 </div>
             }
 
-            @foreach (var assignmentGroup in _assignments.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
+            @foreach (var weekGroup in _assignments.GroupBy(x => GetWeekGroup(DateOnly.FromDateTime(x.DueDateTime))).OrderBy(x => x.Key.Start))
+            {
+            <section class="assignment-week">
+                <h2 class="assignment-week-title">
+                    <span>@FormatWeek(weekGroup.Key)</span>
+
+                    @if (IsCurrentWeek(weekGroup.Key))
+                    {
+                        <span> · </span>
+                        <span style="color: #B23A48">This Week</span>
+                    }
+                </h2>
+
+            @foreach (var assignmentGroup in weekGroup.GroupBy(x => DateOnly.FromDateTime(x.DueDateTime)).OrderBy(x => x.Key))
             {
                 <section class="assignment-group">
-                    <h2 class="assignment-group-title">
+                    <h3 class="assignment-group-title">
                         <span>@FormatDate(assignmentGroup.Key)</span>
 
                         @if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date))
@@ -60,7 +74,7 @@ else
                             <span> - </span>
                             <span style="color: #0061a2">Tomorrow</span>
                         }
-                    </h2>
+                    </h3>
 
                     <div class="assignment-list">
                         @foreach (var assignment in assignmentGroup.OrderBy(x => x.DueDateTime))
@@ -114,6 +128,8 @@ else
                     </div>
                 </section>
             }
+            </section>
+            }
 
             <div class="home-footer">
                 @if (!ShowOverdue)
@@ -144,6 +160,7 @@ else
 
 @code {
     private List<Assignment> _assignments = [];
+    private List<SemesterWeek> _weeks = [];
 
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
@@ -165,6 +182,32 @@ else
 
         _totalAssignmentCount = await StudueContext.Assignements.CountAsync(x => x.ModuleInstance.Students.Contains(StudentContext.Student) && !x.IsDeleted && x.ModuleInstance.Semester == currentSemester);
         _assignments = await GetAssignments(ShowOverdue ? DateTime.MinValue : Helper.Now().Date);
+        _weeks = await SemesterService.GetCachedWeeks(currentSemester) ?? [];
+    }
+
+    private record WeekGroup(int? Number, DateOnly Start, DateOnly End);
+
+    private WeekGroup GetWeekGroup(DateOnly date)
+    {
+        var index = _weeks.FindIndex(x => x.Start <= date && date <= x.End);
+        if (index >= 0)
+            return new WeekGroup(index + 1, _weeks[index].Start, _weeks[index].End);
+
+        //outside the lecture weeks (e.g. exam session) there is no number, but still a Monday-Sunday week
+        var monday = date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+        return new WeekGroup(null, monday, monday.AddDays(6));
+    }
+
+    private static bool IsCurrentWeek(WeekGroup week)
+    {
+        var today = DateOnly.FromDateTime(Helper.Now().Date);
+        return week.Start <= today && today <= week.End;
+    }
+
+    private static string FormatWeek(WeekGroup week)
+    {
+        var range = $"{week.Start.ToString("d MMM", DisplayCulture)} – {week.End.ToString("d MMM", DisplayCulture)}";
+        return week.Number is { } number ? $"Week {number} · {range}" : range;
     }
 
     async Task<List<Assignment>> GetAssignments(DateTime today)

@@ -148,6 +148,22 @@
     gap: 1.5rem;
 }
 
+.assignment-week {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.assignment-week-title {
+    margin: 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #d9d9d9;
+    color: #555555;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
 .assignment-group {
     display: grid;
     gap: 0.8rem;
