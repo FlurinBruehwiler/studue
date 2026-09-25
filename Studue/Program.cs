@@ -40,6 +40,7 @@ try
     });
     builder.Services.AddScoped<StudentContext>();
     builder.Services.AddScoped<AssignmentService>();
+    builder.Services.AddScoped<SemesterService>();
     builder.Services.AddDbContextFactory<StudueContext>(
         (services, options) =>
         {
@@ -297,7 +298,11 @@ try
 
     app.MapPost(
             "/settings/refetchSchedule",
-            async (StudentContext studentContext, StudueContext studueContext) =>
+            async (
+                StudentContext studentContext,
+                StudueContext studueContext,
+                SemesterService semesterService
+            ) =>
             {
                 if (!studentContext.HasWriteAccess)
                     return Results.Unauthorized();
@@ -306,6 +311,10 @@ try
                 if (success)
                 {
                     await studueContext.SaveChangesAsync();
+
+                    // the home page only reads the cached week list, so this is where it gets filled
+                    await semesterService.RefreshWeeks(Helper.GetCurrentSemester());
+
                     return Results.Ok();
                 }
 
