@@ -1,0 +1,154 @@
+@attribute [Authorize]
+@attribute [StudentRequired]
+@page "/admin/backups"
+@layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Options
+@using Studue.Services
+@inject IOptions<Settings> Settings
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject ILogger<BackupsPage> Logger
+@rendermode InteractiveServer
+
+<section>
+    <h2>Backups</h2>
+
+    <p>
+        A backup is taken once a day and the newest 10 are kept, in <code>@Path.GetFullPath(Settings.Value.DatabaseBackupDir)</code>.
+        Restoring replaces the live database. The current database is backed up first, so a restore can be undone by restoring that backup.
+    </p>
+
+    <p>
+        <button @onclick="CreateBackup" disabled="@_busy">Create backup now</button>
+        <a href="/admin/downloadDb" download>Download current database</a>
+    </p>
+
+    <p>
+        <label>
+            Upload a database file (it is added to the list, restore it from there)<br>
+            <InputFile OnChange="Upload" accept=".db" disabled="@_busy"></InputFile>
+        </label>
+    </p>
+
+    <p role="status">@_status</p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th>Size</th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var backup in _backups)
+        {
+            <tr>
+                <td>@backup.Name</td>
+                <td>@ToZurich(backup.CreatedUtc).ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@FormatSize(backup.Size)</td>
+                <td><a href="/admin/backups/@Uri.EscapeDataString(backup.Name)" download>Download</a></td>
+                <td>
+                    @if (_pendingRestore == backup.Name)
+                    {
+                        <span>Replace the live database with this backup?</span>
+                        <button @onclick="() => Restore(backup)" disabled="@_busy">Restore</button>
+                        <button @onclick="() => _pendingRestore = null" disabled="@_busy">Cancel</button>
+                    }
+                    else
+                    {
+                        <button @onclick="() => _pendingRestore = backup.Name" disabled="@_busy">Restore…</button>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    @if (_backups.Count == 0)
+    {
+        <p>No backups yet.</p>
+    }
+</section>
+
+@code {
+    // a database is well past the 512 KB InputFile allows by default
+    private const long MaxUploadSize = 1024L * 1024 * 1024;
+
+    private static readonly TimeZoneInfo ZurichTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich");
+
+    private List<BackupService.BackupFile> _backups = [];
+    private string? _pendingRestore;
+    private string _status = "";
+    private bool _busy;
+
+    protected override void OnParametersSet()
+    {
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        _backups = BackupService.ListBackups(Settings.Value);
+    }
+
+    private async Task CreateBackup()
+    {
+        await Run(async () =>
+        {
+            var path = await BackupService.CreateBackup(Settings.Value);
+            _status = $"Created {Path.GetFileName(path)}.";
+        });
+    }
+
+    private async Task Upload(InputFileChangeEventArgs fileEvent)
+    {
+        await Run(async () =>
+        {
+            await using var upload = fileEvent.File.OpenReadStream(MaxUploadSize);
+            var path = await BackupService.SaveUpload(Settings.Value, upload);
+            _status = $"Uploaded as {Path.GetFileName(path)}. Restore it from the list to use it.";
+        });
+    }
+
+    private async Task Restore(BackupService.BackupFile backup)
+    {
+        await Run(async () =>
+        {
+            // a fresh context: the migration must not run on one holding entities from before
+            await using var databaseContext = await DbContextFactory.CreateDbContextAsync();
+            var safetyBackup = await BackupService.RestoreBackup(Settings.Value, backup, databaseContext);
+
+            Logger.LogWarning("Restored the database from backup {backup}", backup.Name);
+            _status = $"Restored {backup.Name}. The database before the restore is saved as {safetyBackup}. Reload open pages to see the restored data.";
+        });
+    }
+
+    private async Task Run(Func<Task> action)
+    {
+        _busy = true;
+        _pendingRestore = null;
+        try
+        {
+            await action();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Backup action failed");
+            _status = $"Failed: {e.Message}";
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private static DateTime ToZurich(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(utc, ZurichTimeZone);
+
+    private static string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024:0.0} MB" : $"{bytes / 1024.0:0} KB";
+}

@@ -346,6 +346,26 @@ try
         .WithMetadata(new StudentRequiredAttribute())
         .RequireAuthorization();
 
+    app.MapGet(
+            "/admin/backups/{name}",
+            (string name, IOptions<Settings> settings) =>
+            {
+                var backup = BackupService.FindBackup(settings.Value, name);
+                if (backup == null)
+                    return Results.NotFound();
+
+                var stream = new FileStream(
+                    backup.Path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete
+                );
+                return Results.File(stream, "application/octet-stream", backup.Name);
+            }
+        )
+        .WithMetadata(new StudentRequiredAttribute())
+        .RequireAuthorization();
+
     app.MapPost(
             "/assignment/{assignmentId:int}/{completed:bool}",
             async (
