@@ -28,12 +28,17 @@ public static class IcalService
     {
         studentId = studentId.Trim().ToLowerInvariant();
 
+        // Only the current semester, like the rest of the app. Outlook silently drops
+        // every event past roughly the 300th, and with past semesters included the
+        // current one ended up at the end of the file, where it got cut off.
+        var currentSemester = Helper.GetCurrentSemester();
+
         var student = await databaseContext.Students
             .Where(x => x.StudentId == studentId)
-            .Include(x => x.ModuleInstances)
+            .Include(x => x.ModuleInstances.Where(mi => mi.Semester == currentSemester))
             .ThenInclude(x => x.ScheduleEntries)
             .ThenInclude(x => x.Module)
-            .Include(x => x.ModuleInstances)
+            .Include(x => x.ModuleInstances.Where(mi => mi.Semester == currentSemester))
             .ThenInclude(x => x.Assignements)
             .FirstOrDefaultAsync();
 
