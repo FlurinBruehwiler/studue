@@ -36,6 +36,13 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             .Entity<Banner>()
             .HasMany(x => x.DismissedByStudents)
             .WithMany(x => x.DismissedBanners);
+
+        modelBuilder.Entity<ScheduleEntry>().OwnsMany(x => x.Occurrences, x => x.ToJson());
+
+        modelBuilder
+            .Entity<Student>()
+            .HasMany(x => x.ScheduleEntries)
+            .WithMany(x => x.Students);
     }
 }
 
@@ -94,6 +101,12 @@ public class Student
     public DateTime LastAuthenticationMailSend { get; set; }
 
     public List<ModuleInstance> ModuleInstances { get; set; } = new();
+
+    // The student's own lessons, as the last schedule fetch found them. A module instance
+    // is shared by every class that has a lesson in common and only holds the lessons of
+    // whoever created it, so it says which assignments a student shares, not when and
+    // where the student has class.
+    public List<ScheduleEntry> ScheduleEntries { get; set; } = new();
     public List<Assignment> CreatedAssignments { get; set; } = new();
     public List<Assignment> CompletedAssignments { get; set; } = new();
     public List<PushSubscriptionRow> PushSubscriptions { get; set; } = new();
@@ -150,6 +163,18 @@ public class ScheduleEntry
     public TimeOnly StartTime { get; set; }
     public int Duration { get; set; }
     public List<Student> Students { get; set; } = new();
+
+    // The dates this lesson actually takes place on, taken from the iCal export of
+    // stundenplan.zhaw.ch. The weekly grid above knows nothing about holidays or moved
+    // lessons; this does. Empty when the export could not be fetched.
+    public List<LessonOccurrence> Occurrences { get; set; } = new();
+}
+
+public class LessonOccurrence
+{
+    public DateOnly Date { get; set; }
+    public TimeOnly Start { get; set; }
+    public TimeOnly End { get; set; }
 }
 
 public class Assignment

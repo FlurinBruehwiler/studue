@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Studue;
 
@@ -10,9 +11,11 @@ using Studue;
 namespace StudueSharp.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class StudueContextModelSnapshot : ModelSnapshot
+    [Migration("20261002155420_AddLessonOccurrences")]
+    partial class AddLessonOccurrences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -60,21 +63,6 @@ namespace StudueSharp.Migrations
                     b.HasIndex("StudentsId");
 
                     b.ToTable("ModuleInstanceStudent");
-                });
-
-            modelBuilder.Entity("ScheduleEntryStudent", b =>
-                {
-                    b.Property<int>("ScheduleEntriesId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("StudentsId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("ScheduleEntriesId", "StudentsId");
-
-                    b.HasIndex("StudentsId");
-
-                    b.ToTable("ScheduleEntryStudent");
                 });
 
             modelBuilder.Entity("Studue.Assignment", b =>
@@ -396,6 +384,9 @@ namespace StudueSharp.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ScheduleEntryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("StudentId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -405,6 +396,8 @@ namespace StudueSharp.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ScheduleEntryId");
 
                     b.HasIndex("StudentId")
                         .IsUnique();
@@ -447,21 +440,6 @@ namespace StudueSharp.Migrations
                     b.HasOne("Studue.ModuleInstance", null)
                         .WithMany()
                         .HasForeignKey("ModuleInstancesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Studue.Student", null)
-                        .WithMany()
-                        .HasForeignKey("StudentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ScheduleEntryStudent", b =>
-                {
-                    b.HasOne("Studue.ScheduleEntry", null)
-                        .WithMany()
-                        .HasForeignKey("ScheduleEntriesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -582,6 +560,13 @@ namespace StudueSharp.Migrations
                     b.Navigation("Occurrences");
                 });
 
+            modelBuilder.Entity("Studue.Student", b =>
+                {
+                    b.HasOne("Studue.ScheduleEntry", null)
+                        .WithMany("Students")
+                        .HasForeignKey("ScheduleEntryId");
+                });
+
             modelBuilder.Entity("Studue.Module", b =>
                 {
                     b.Navigation("ModuleInstances");
@@ -592,6 +577,11 @@ namespace StudueSharp.Migrations
                     b.Navigation("Assignements");
 
                     b.Navigation("ScheduleEntries");
+                });
+
+            modelBuilder.Entity("Studue.ScheduleEntry", b =>
+                {
+                    b.Navigation("Students");
                 });
 
             modelBuilder.Entity("Studue.Student", b =>

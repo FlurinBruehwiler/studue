@@ -102,6 +102,7 @@ try
     builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
     builder.Services.AddHostedService<PushService>();
+    builder.Services.AddHostedService<ScheduleRefreshService>();
 
     var app = builder.Build();
 

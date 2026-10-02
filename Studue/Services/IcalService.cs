@@ -35,6 +35,8 @@ public static class IcalService
 
         var student = await databaseContext.Students
             .Where(x => x.StudentId == studentId)
+            .Include(x => x.ScheduleEntries.Where(se => se.Semester == currentSemester))
+            .ThenInclude(x => x.Module)
             .Include(x => x.ModuleInstances.Where(mi => mi.Semester == currentSemester))
             .ThenInclude(x => x.ScheduleEntries)
             .ThenInclude(x => x.Module)
@@ -58,64 +60,90 @@ public static class IcalService
         {
             var semester = semesterGroup.Key;
 
-            // Classes need semester weeks to be placed on real dates, assignments don't.
-            // A missing week list must only skip the classes, never the assignments.
-            var weeks = await semesterService.GetWeeks(semester);
-            if (weeks is { Count: > 0 })
+            // only needed for entries without dates from the stundenplan export
+            List<SemesterWeek>? weeks = null;
+
+            // The same lesson can run in several rooms at once; one event, every room.
+            var slots = ScheduleGrouping.GroupBySlot(
+                StudentContext.ScheduleEntriesOf(student, semester)
+            );
+
+            foreach (var slot in slots)
             {
-                // The same lesson can run in several rooms at once; one event,
-                // every room.
-                var slots = ScheduleGrouping.GroupBySlot(
-                    semesterGroup.SelectMany(mi => mi.ScheduleEntries)
-                );
+                var ids = string.Join("-", slot.Entries.Select(x => x.Id).OrderBy(id => id));
 
-                foreach (var slot in slots)
+                // An occurrence in the entry's own slot is a regular weekly lesson; one on
+                // another day or at another time is a moved lesson.
+                var occurrences = slot.Entries.SelectMany(entry =>
+                    entry.Occurrences.Select(occurrence =>
+                        (
+                            Entry: entry,
+                            Occurrence: occurrence,
+                            IsRegular: occurrence.Start == entry.StartTime
+                                && ZhawCalendarExport.MondayBasedWeekday(occurrence.Date)
+                                    == entry.Weekday
+                        )
+                    )
+                ).ToList();
+
+                List<DateOnly> regularDates;
+                var endTime = ScheduleSlots.EndTimeOf(slot.StartTime, slot.Duration);
+                if (occurrences.Count > 0)
                 {
-                    var endTime = ScheduleSlots.EndTimeOf(
-                        slot.StartTime,
-                        slot.Duration
-                    );
-                    var ids = string.Join(
-                        "-",
-                        slot.Entries.Select(x => x.Id).OrderBy(id => id)
-                    );
+                    var regular = occurrences.Where(x => x.IsRegular).ToList();
+                    regularDates = regular
+                        .Select(x => x.Occurrence.Date)
+                        .Distinct()
+                        .Order()
+                        .ToList();
 
-                    // One VEVENT per actual teaching week: the week list has gaps for
-                    // holidays, which a weekly RRULE from semester start to end would
-                    // incorrectly fill with classes.
-                    foreach (var week in weeks)
+                    // the exported end is exact even when the slot grid has changed
+                    if (regular.Count > 0)
                     {
-                        var date = DateForWeekday(week, slot.Weekday);
-                        if (date is null)
-                            continue;
-
-                        var start = date.Value.ToDateTime(slot.StartTime);
-                        var end = date.Value.ToDateTime(endTime);
-
-                        calendar.Events.Add(
-                            new CalendarEvent
-                            {
-                                Uid =
-                                    $"class-{semester}-{ids}-{date.Value:yyyyMMdd}@studue.ch",
-                                Summary = slot.Entries.First().Module.Name,
-                                Description = string.Join(
-                                    "\n",
-                                    [
-                                        $"Teacher: {string.Join(", ", slot.Entries.Select(x => x.Teacher).Distinct(StringComparer.Ordinal))}",
-                                        $"Rooms: {string.Join(" / ", slot.Entries.Select(x => x.Room).Distinct(StringComparer.Ordinal))}",
-                                    ]
-                                ),
-                                Location = string.Join(
-                                    " / ",
-                                    slot.Entries
-                                        .Select(x => x.Room)
-                                        .Distinct(StringComparer.Ordinal)
-                                ),
-                                Start = new CalDateTime(start, TimeZoneId),
-                                End = new CalDateTime(end, TimeZoneId),
-                            }
-                        );
+                        endTime = regular
+                            .GroupBy(x => x.Occurrence.End)
+                            .MaxBy(x => x.Count())!
+                            .Key;
                     }
+                }
+                else
+                {
+                    // No export data (yet): every semester week, without holidays.
+                    // A missing week list only skips the classes, never the assignments.
+                    weeks ??= await semesterService.GetWeeks(semester) ?? [];
+                    regularDates = weeks
+                        .Select(week => DateForWeekday(week, slot.Weekday))
+                        .OfType<DateOnly>()
+                        .ToList();
+                }
+
+                if (regularDates.Count > 0)
+                {
+                    calendar.Events.Add(
+                        WeeklyClassEvent(
+                            $"class-{semester}-{ids}@studue.ch",
+                            slot,
+                            regularDates,
+                            endTime
+                        )
+                    );
+                }
+
+                foreach (
+                    var moved in occurrences
+                        .Where(x => !x.IsRegular)
+                        .GroupBy(x => (x.Occurrence.Date, x.Occurrence.Start, x.Occurrence.End))
+                )
+                {
+                    var (date, start, end) = moved.Key;
+                    calendar.Events.Add(
+                        ClassEvent(
+                            $"class-{semester}-{ids}-{date:yyyyMMdd}T{start:HHmm}@studue.ch",
+                            moved.Select(x => x.Entry).ToList(),
+                            date.ToDateTime(start),
+                            date.ToDateTime(end)
+                        )
+                    );
                 }
             }
 
@@ -162,6 +190,73 @@ public static class IcalService
             "text/calendar; charset=utf-8",
             $"{student.StudentId}.ics"
         );
+    }
+
+    // One recurring event per slot instead of one event per week: Outlook silently drops
+    // every event past roughly the 300th, and a semester of single events gets close.
+    // The weeks between the first and the last lesson without one (holidays) become
+    // exceptions. COUNT rather than UNTIL, since UNTIL would have to be in UTC.
+    private static CalendarEvent WeeklyClassEvent(
+        string uid,
+        ScheduleGrouping.SlotGroup slot,
+        List<DateOnly> dates,
+        TimeOnly endTime
+    )
+    {
+        var first = dates[0];
+        var calendarEvent = ClassEvent(
+            uid,
+            slot.Entries,
+            first.ToDateTime(slot.StartTime),
+            first.ToDateTime(endTime)
+        );
+
+        var weekCount = (dates[^1].DayNumber - first.DayNumber) / 7 + 1;
+        if (weekCount > 1)
+        {
+            calendarEvent.RecurrenceRule = new RecurrencePattern(FrequencyType.Weekly)
+            {
+                Count = weekCount,
+            };
+
+            var lessonDates = dates.ToHashSet();
+            for (var week = 1; week < weekCount; week++)
+            {
+                var date = first.AddDays(7 * week);
+                if (!lessonDates.Contains(date))
+                {
+                    calendarEvent.ExceptionDates.Add(
+                        new CalDateTime(date.ToDateTime(slot.StartTime), TimeZoneId)
+                    );
+                }
+            }
+        }
+
+        return calendarEvent;
+    }
+
+    private static CalendarEvent ClassEvent(
+        string uid,
+        IReadOnlyList<ScheduleEntry> entries,
+        DateTime start,
+        DateTime end
+    )
+    {
+        var rooms = string.Join(" / ", entries.Select(x => x.Room).Distinct(StringComparer.Ordinal));
+        var teachers = string.Join(
+            ", ",
+            entries.Select(x => x.Teacher).Distinct(StringComparer.Ordinal)
+        );
+
+        return new CalendarEvent
+        {
+            Uid = uid,
+            Summary = entries[0].Module.Name,
+            Description = $"Teacher: {teachers}\nRooms: {rooms}",
+            Location = rooms,
+            Start = new CalDateTime(start, TimeZoneId),
+            End = new CalDateTime(end, TimeZoneId),
+        };
     }
 
     // Weekday follows the schedule grid: 0 = Monday .. 5 = Saturday

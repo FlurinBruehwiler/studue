@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -245,13 +246,12 @@ public class StudentContext(
     }
 
     private async Task<IHtmlDocument?> GetDocumentForDepartement(
+        HttpClient client,
         string studentId,
         string departement,
         string semester
     )
     {
-        using var client = clientFactory.CreateClient();
-
         var response = await client.SendAsync(
             new HttpRequestMessage
             {
@@ -293,6 +293,61 @@ public class StudentContext(
         return document;
     }
 
+    // The weekly grid only says when a lesson usually is; the export of the same search says
+    // on which dates it really takes place. Without the export the entries keep the dates
+    // they had, and the iCal feed falls back to every semester week for entries with none.
+    private async Task AddOccurrencesFromExport(
+        HttpClient client,
+        Student student,
+        List<ScheduleEntry> entries
+    )
+    {
+        try
+        {
+            using var response = await client.GetAsync(
+                "https://stundenplan.zhaw.ch/Default.aspx?ExpCal=1"
+            );
+
+            // without a search in the session, the export url just returns the start page
+            if (
+                !response.IsSuccessStatusCode
+                || response.Content.Headers.ContentType?.MediaType != "text/calendar"
+            )
+            {
+                logger.LogWarning(
+                    "iCal export for {studentId} returned {status} {contentType}, keeping the old lesson dates",
+                    student.StudentId,
+                    response.StatusCode,
+                    response.Content.Headers.ContentType?.MediaType
+                );
+                return;
+            }
+
+            var lessons = ZhawCalendarExport.Parse(await response.Content.ReadAsStringAsync());
+            var unmatched = ZhawCalendarExport.AssignOccurrences(entries.Distinct().ToList(), lessons);
+
+            if (unmatched.Count > 0)
+            {
+                // a module that has no lesson in the grid week we read
+                logger.LogWarning(
+                    "{count} exported lessons for {studentId} belong to no module in the grid: {modules}",
+                    unmatched.Count,
+                    student.StudentId,
+                    string.Join(", ", unmatched.Select(x => x.ModuleCode).Distinct())
+                );
+            }
+        }
+        catch (Exception e)
+            when (e is HttpRequestException or TaskCanceledException or FormatException)
+        {
+            logger.LogWarning(
+                e,
+                "Failed to fetch the iCal export for {studentId}, keeping the old lesson dates",
+                student.StudentId
+            );
+        }
+    }
+
     public async Task<bool> FetchModulesForStudent(Student student)
     {
         var semester = Helper.GetCurrentSemester();
@@ -303,8 +358,13 @@ public class StudentContext(
             semester
         );
 
-        var document = await GetDocumentForDepartement(student.StudentId, "T", semester);
-        document ??= await GetDocumentForDepartement(student.StudentId, "A", semester);
+        // stundenplan.zhaw.ch keeps the last search in the ASP.NET session, and its iCal
+        // export is the export of exactly that search, so this fetch needs its own cookies
+        using var handler = new HttpClientHandler { CookieContainer = new CookieContainer() };
+        using var client = new HttpClient(handler);
+
+        var document = await GetDocumentForDepartement(client, student.StudentId, "T", semester);
+        document ??= await GetDocumentForDepartement(client, student.StudentId, "A", semester);
 
         if (document == null)
         {
@@ -327,6 +387,11 @@ public class StudentContext(
         var allLessons = new List<ScheduleEntry>();
         foreach (var lessonElement in document.QuerySelectorAll(".left"))
         {
+            // holidays ("Karfreitag", "Auffahrt ab 15:00h") use the same markup as lessons,
+            // but have no teacher or room after them
+            if (lessonElement.Closest(".schedHoliday") != null)
+                continue;
+
             var lesson = new Lesson();
 
             lesson.ModuleCode = NormalizeModuleCode(lessonElement.TextContent);
@@ -387,11 +452,26 @@ public class StudentContext(
             allLessons.Add(scheduleEntry);
         }
 
+        await AddOccurrencesFromExport(client, student, allLessons);
+
         // a caller may have loaded the student without its modules; RemoveAll would then
         // clear nothing and every module would be linked a second time
         var modules = context.Entry(student).Collection(x => x.ModuleInstances);
         if (!modules.IsLoaded)
             await modules.LoadAsync();
+
+        // Loaded before the module instances below are removed and re-added: Entry() detects
+        // changes, and a detected removal is not undone by adding the instance back.
+        var scheduleEntries = context.Entry(student).Collection(x => x.ScheduleEntries);
+        if (!scheduleEntries.IsLoaded)
+            await scheduleEntries.LoadAsync();
+
+        // only the difference, for the same reason
+        var ownLessons = allLessons.Distinct().ToList();
+        student.ScheduleEntries.RemoveAll(x => x.Semester == semester && !ownLessons.Contains(x));
+        student.ScheduleEntries.AddRange(
+            ownLessons.Where(x => !student.ScheduleEntries.Contains(x)).ToList()
+        );
 
         student.ModuleInstances.RemoveAll(x => x.Semester == semester);
 
@@ -495,13 +575,28 @@ public class StudentContext(
 
         var student = await context
             .Students.Where(x => x.StudentId == studentId)
+            .Include(x => x.ScheduleEntries)
+            .ThenInclude(x => x.Module)
             .Include(x => x.ModuleInstances)
             .ThenInclude(x => x.ScheduleEntries)
             .ThenInclude(x => x.Module)
             .FirstAsync();
 
+        return ScheduleEntriesOf(student, currentSemester);
+    }
+
+    // Needs Student.ScheduleEntries and ModuleInstances.ScheduleEntries loaded, both with
+    // their Module. A student whose schedule has not been fetched since the student's own
+    // lessons are stored falls back to the lessons of their module instances, which may be
+    // another class's; the nightly refresh replaces that with the student's own.
+    public static List<ScheduleEntry> ScheduleEntriesOf(Student student, string semester)
+    {
+        var own = student.ScheduleEntries.Where(x => x.Semester == semester).ToList();
+        if (own.Count > 0)
+            return own;
+
         return student
-            .ModuleInstances.Where(x => x.Semester == currentSemester)
+            .ModuleInstances.Where(x => x.Semester == semester)
             .SelectMany(x => x.ScheduleEntries)
             .ToList();
     }
@@ -544,7 +639,7 @@ public class StudentContext(
         return result;
     }
 
-    private static string NormalizeModuleCode(string moduleCode)
+    internal static string NormalizeModuleCode(string moduleCode)
     {
         //XXM1.AN2.V => XXM1.AN2
         //XXM1.AN2-BL.V => XXM1.AN2
