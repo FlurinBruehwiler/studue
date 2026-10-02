@@ -97,20 +97,17 @@ public class StudueMcpTools(
             async () =>
             {
                 var entries = await studentContext.GetScheduleEntriesForStudent(Student.StudentId);
-                return entries
-                    .GroupBy(x => (x.Weekday, x.StartTime, x.Duration, x.Module.Code))
-                    .OrderBy(x => x.Key.Weekday)
-                    .ThenBy(x => x.Key.StartTime)
-                    .Select(lesson => new ScheduleEntryDto(
-                        Weekdays[Math.Clamp(lesson.Key.Weekday, 0, Weekdays.Length - 1)],
-                        lesson.Key.StartTime.ToString("HH:mm"),
+                return ScheduleGrouping.GroupBySlot(entries)
+                    .Select(slot => new ScheduleEntryDto(
+                        Weekdays[Math.Clamp(slot.Weekday, 0, Weekdays.Length - 1)],
+                        slot.StartTime.ToString("HH:mm"),
                         ScheduleSlots
-                            .EndTimeOf(lesson.Key.StartTime, lesson.Key.Duration)
+                            .EndTimeOf(slot.StartTime, slot.Duration)
                             .ToString("HH:mm"),
-                        lesson.Key.Code,
-                        lesson.First().Module.Name,
-                        JoinDistinct(lesson.Select(x => x.Room)),
-                        JoinDistinct(lesson.Select(x => x.Teacher))
+                        slot.ModuleCode,
+                        slot.Entries.First().Module.Name,
+                        JoinDistinct(slot.Entries.Select(x => x.Room)),
+                        JoinDistinct(slot.Entries.Select(x => x.Teacher))
                     ))
                     .ToList();
             },

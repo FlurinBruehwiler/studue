@@ -31,9 +31,8 @@ public static class IcalService
         var student = await databaseContext.Students
             .Where(x => x.StudentId == studentId)
             .Include(x => x.ModuleInstances)
-            .ThenInclude(x => x.Module)
-            .Include(x => x.ModuleInstances)
             .ThenInclude(x => x.ScheduleEntries)
+            .ThenInclude(x => x.Module)
             .Include(x => x.ModuleInstances)
             .ThenInclude(x => x.Assignements)
             .FirstOrDefaultAsync();
@@ -50,18 +49,30 @@ public static class IcalService
             VTimeZone.FromDateTimeZone(TimeZoneId, new DateTime(2026, 1, 1), false)
         );
 
-        foreach (var moduleInstance in student.ModuleInstances)
+        foreach (var semesterGroup in student.ModuleInstances.GroupBy(x => x.Semester))
         {
+            var semester = semesterGroup.Key;
+
             // Classes need semester weeks to be placed on real dates, assignments don't.
             // A missing week list must only skip the classes, never the assignments.
-            var weeks = await semesterService.GetWeeks(moduleInstance.Semester);
+            var weeks = await semesterService.GetWeeks(semester);
             if (weeks is { Count: > 0 })
             {
-                foreach (var scheduleEntry in moduleInstance.ScheduleEntries)
+                // The same lesson can run in several rooms at once; one event,
+                // every room.
+                var slots = ScheduleGrouping.GroupBySlot(
+                    semesterGroup.SelectMany(mi => mi.ScheduleEntries)
+                );
+
+                foreach (var slot in slots)
                 {
                     var endTime = ScheduleSlots.EndTimeOf(
-                        scheduleEntry.StartTime,
-                        scheduleEntry.Duration
+                        slot.StartTime,
+                        slot.Duration
+                    );
+                    var ids = string.Join(
+                        "-",
+                        slot.Entries.Select(x => x.Id).OrderBy(id => id)
                     );
 
                     // One VEVENT per actual teaching week: the week list has gaps for
@@ -69,21 +80,32 @@ public static class IcalService
                     // incorrectly fill with classes.
                     foreach (var week in weeks)
                     {
-                        var date = DateForWeekday(week, scheduleEntry.Weekday);
+                        var date = DateForWeekday(week, slot.Weekday);
                         if (date is null)
                             continue;
 
-                        var start = date.Value.ToDateTime(scheduleEntry.StartTime);
+                        var start = date.Value.ToDateTime(slot.StartTime);
                         var end = date.Value.ToDateTime(endTime);
 
                         calendar.Events.Add(
                             new CalendarEvent
                             {
                                 Uid =
-                                    $"class-{moduleInstance.Semester}-{scheduleEntry.Id}-{date.Value:yyyyMMdd}@studue.ch",
-                                Summary = moduleInstance.Module.Name,
-                                Description = $"{scheduleEntry.Teacher}\n{scheduleEntry.Room}",
-                                Location = scheduleEntry.Room,
+                                    $"class-{semester}-{ids}-{date.Value:yyyyMMdd}@studue.ch",
+                                Summary = slot.Entries.First().Module.Name,
+                                Description = string.Join(
+                                    "\n",
+                                    [
+                                        $"Teacher: {string.Join(", ", slot.Entries.Select(x => x.Teacher).Distinct(StringComparer.Ordinal))}",
+                                        $"Rooms: {string.Join(" / ", slot.Entries.Select(x => x.Room).Distinct(StringComparer.Ordinal))}",
+                                    ]
+                                ),
+                                Location = string.Join(
+                                    " / ",
+                                    slot.Entries
+                                        .Select(x => x.Room)
+                                        .Distinct(StringComparer.Ordinal)
+                                ),
                                 Start = new CalDateTime(start, TimeZoneId),
                                 End = new CalDateTime(end, TimeZoneId),
                             }
@@ -92,35 +114,38 @@ public static class IcalService
                 }
             }
 
-            foreach (
-                var assignment in moduleInstance.Assignements.Where(x => !x.IsDeleted)
-            )
+            foreach (var moduleInstance in semesterGroup)
             {
-                // No time entered in the form is stored as midnight (see
-                // AssignmentService.SetValues defaulting to TimeOnly.MinValue),
-                // so 00:00 means "date only" and becomes an all-day event.
-                // A DATE DTSTART without DTEND/DURATION is one day per RFC 5545,
-                // so no DTEND is emitted in that case.
-                var isAllDay = assignment.DueDateTime.TimeOfDay == TimeSpan.Zero;
-                var dueDate = DateOnly.FromDateTime(assignment.DueDateTime);
+                foreach (
+                    var assignment in moduleInstance.Assignements.Where(x => !x.IsDeleted)
+                )
+                {
+                    // No time entered in the form is stored as midnight (see
+                    // AssignmentService.SetValues defaulting to TimeOnly.MinValue),
+                    // so 00:00 means "date only" and becomes an all-day event.
+                    // A DATE DTSTART without DTEND/DURATION is one day per RFC 5545,
+                    // so no DTEND is emitted in that case.
+                    var isAllDay = assignment.DueDateTime.TimeOfDay == TimeSpan.Zero;
+                    var dueDate = DateOnly.FromDateTime(assignment.DueDateTime);
 
-                calendar.Events.Add(
-                    new CalendarEvent
-                    {
-                        Uid = $"assignment-{assignment.Id}@studue.ch",
-                        Summary = $"Assignment: {assignment.Title}",
-                        Description = assignment.Description,
-                        Start = isAllDay
-                            ? new CalDateTime(dueDate)
-                            : new CalDateTime(assignment.DueDateTime, TimeZoneId),
-                        End = isAllDay
-                            ? null
-                            : new CalDateTime(
-                                assignment.DueDateTime.AddMinutes(30),
-                                TimeZoneId
-                            ),
-                    }
-                );
+                    calendar.Events.Add(
+                        new CalendarEvent
+                        {
+                            Uid = $"assignment-{assignment.Id}@studue.ch",
+                            Summary = $"Assignment: {assignment.Title}",
+                            Description = assignment.Description,
+                            Start = isAllDay
+                                ? new CalDateTime(dueDate)
+                                : new CalDateTime(assignment.DueDateTime, TimeZoneId),
+                            End = isAllDay
+                                ? null
+                                : new CalDateTime(
+                                    assignment.DueDateTime.AddMinutes(30),
+                                    TimeZoneId
+                                ),
+                        }
+                    );
+                }
             }
         }
 

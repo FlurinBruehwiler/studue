@@ -46,18 +46,18 @@ else
                         }
 
                         @* the same lesson can run in several rooms at once; one card, every room *@
-                        @foreach (var slot in GroupBySlot(entries))
+                        @foreach (var slot in ScheduleGrouping.GroupBySlot(entries))
                         {
-                            var lesson = slot.First();
+                            var lesson = slot.Entries.First();
 
                             <article class="schedule-entry-card"
                                      style="grid-row: @(ScheduleSlots.IndexOf(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --accent: @accents[lesson.Module.Code];"
-                                     aria-label="@lesson.Module.Name in @string.Join(", ", slot.Select(x => x.Room))">
+                                     aria-label="@lesson.Module.Name in @string.Join(", ", slot.Entries.Select(x => x.Room))">
                                 <span class="schedule-entry-code">@lesson.Module.Code</span>
                                 <strong class="schedule-entry-title">@lesson.Module.Name</strong>
 
                                 <div class="schedule-entry-meta">
-                                    @foreach (var room in slot)
+                                    @foreach (var room in slot.Entries)
                                     {
                                         <span>@RoomAndTeacher(room)</span>
                                     }
@@ -82,9 +82,9 @@ else
                 <section class="schedule-agenda-day">
                     <h3>@weekday</h3>
 
-                    @foreach (var slot in GroupBySlot(entries))
+                    @foreach (var slot in ScheduleGrouping.GroupBySlot(entries))
                     {
-                        var lesson = slot.First();
+                        var lesson = slot.Entries.First();
 
                         <article class="schedule-agenda-item" style="--accent: @accents[lesson.Module.Code];">
                             <div class="schedule-agenda-time">
@@ -94,7 +94,7 @@ else
 
                             <div class="schedule-agenda-copy">
                                 <strong>@lesson.Module.Name</strong>
-                                @foreach (var room in slot)
+                                @foreach (var room in slot.Entries)
                                 {
                                     <p>@RoomAndTeacher(room)</p>
                                 }
@@ -140,14 +140,6 @@ else
 
     //a stable colour per module, so a subject is recognisable without reading it
     private static readonly string[] _accents = ["#0061a2", "#0f766e", "#7c3aed", "#b45309", "#be123c", "#4338ca"];
-
-    private IEnumerable<List<ScheduleEntry>> GroupBySlot(List<ScheduleEntry> entries)
-    {
-        return entries
-            .GroupBy(x => (x.StartTime, x.Duration, x.Module.Code))
-            .OrderBy(x => x.Key.StartTime)
-            .Select(x => x.OrderBy(y => y.Room, StringComparer.Ordinal).ToList());
-    }
 
     private Dictionary<string, string> FallbackAccents()
     {
