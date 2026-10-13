@@ -69,12 +69,15 @@ public class ScheduleRefreshService(
             await Task.Delay(PauseBetweenStudents, stoppingToken);
         }
 
-        logger.LogInformation(
-            "Refreshed {succeeded} of {count} schedules, failed: {failed}",
-            studentIds.Count - failed.Count,
-            studentIds.Count,
-            string.Join(", ", failed)
-        );
+        if (failed.Count == 0)
+            logger.LogInformation("Refreshed all {count} schedules", studentIds.Count);
+        else
+            logger.LogWarning(
+                "Refreshed {succeeded} of {count} schedules, failed: {failed}",
+                studentIds.Count - failed.Count,
+                studentIds.Count,
+                string.Join(", ", failed)
+            );
     }
 
     private async Task<bool> Refresh(string studentId, CancellationToken stoppingToken)
