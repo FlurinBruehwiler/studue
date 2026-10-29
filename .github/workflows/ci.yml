@@ -31,7 +31,6 @@ jobs:
           host: studue.ch
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           username: studue
-          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
           source: "./ReleaseBuild"
           target: "/opt/studue/releases/backend-1.1.0"
 
@@ -41,5 +40,4 @@ jobs:
           host: studue.ch
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           username: studue
-          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
           script: sudo systemctl restart studue
