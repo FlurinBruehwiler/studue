@@ -1,0 +1,27 @@
+name: Add SSH Key
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add-key:
+    name: Add laptop public key to server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Append key to authorized_keys
+        uses: appleboy/ssh-action@v1
+        with:
+          host: studue.ch
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          username: studue
+          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          script: |
+            KEY='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM5T06ntPVcPtgxbPqudwUqZuAKz3AcuU1OXsfdYbOsG bruhwiler.flurin@gmail.com'
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            touch ~/.ssh/authorized_keys
+            chmod 600 ~/.ssh/authorized_keys
+            grep -qxF "$KEY" ~/.ssh/authorized_keys || echo "$KEY" >> ~/.ssh/authorized_keys
+            echo "authorized_keys now contains:"
+            cat ~/.ssh/authorized_keys
