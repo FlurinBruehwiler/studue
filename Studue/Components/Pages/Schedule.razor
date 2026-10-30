@@ -6,6 +6,7 @@
 @attribute [StudentRequired]
 
 @inject StudentContext StudentContext
+@inject SemesterService SemesterService
 
 <PageTitle>Schedule | Studue</PageTitle>
 
@@ -14,6 +15,11 @@
         <h1>Schedule</h1>
         <p>Current semester lessons for @StudentContext.Student.Class.</p>
     </div>
+
+    @if (_currentWeekNumber is { } weekNumber)
+    {
+        <span class="schedule-week-badge">Week @weekNumber</span>
+    }
 </header>
 
 <div class="schedule-page">
@@ -24,10 +30,17 @@
 
     private List<ScheduleEntry> _scheduleEntries = [];
     private IReadOnlyDictionary<string, string> _moduleAccents = new Dictionary<string, string>();
+    private int? _currentWeekNumber;
 
     protected override async Task OnInitializedAsync()
     {
         _scheduleEntries = await StudentContext.GetScheduleEntriesForStudent(StudentContext.Student.StudentId);
         _moduleAccents = await StudentContext.GetModuleAccents();
+
+        //outside the lecture weeks (e.g. exam session) there is no week number, so no badge
+        var weeks = await SemesterService.GetWeeks(Helper.GetCurrentSemester()) ?? [];
+        var today = DateOnly.FromDateTime(Helper.Now().Date);
+        var index = weeks.FindIndex(x => x.Start <= today && today <= x.End);
+        _currentWeekNumber = index >= 0 ? index + 1 : null;
     }
 }
