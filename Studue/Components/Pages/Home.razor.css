@@ -13,7 +13,7 @@
 .home-field-label {
     display: block;
     margin-bottom: 0.55rem;
-    color: #1f2937;
+    color: var(--text);
     font-size: 0.95rem;
     font-weight: 600;
 }
@@ -26,10 +26,10 @@
     width: 100%;
     min-height: 2.75rem;
     padding: 0.75rem 2.8rem 0.75rem 0.95rem;
-    border: 1px solid #cfdce8;
+    border: 1px solid var(--border-strong);
     border-radius: 0.9rem;
-    background: #ffffff;
-    color: #111111;
+    background: var(--surface);
+    color: var(--text);
     font: inherit;
     appearance: none;
     box-sizing: border-box;
@@ -37,8 +37,8 @@
 
 .home-select:focus {
     outline: none;
-    border-color: #0061a2;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .home-select-icon {
@@ -46,7 +46,7 @@
     top: 50%;
     right: 1rem;
     transform: translateY(-50%);
-    color: #5f7890;
+    color: var(--text-muted);
     font-size: 0.95rem;
     pointer-events: none;
 }
@@ -71,25 +71,25 @@
     width: 1.3rem;
     height: 1.3rem;
     margin: 0;
-    border: 2px solid #cbd5e1;
+    border: 2px solid var(--border-strong);
     border-radius: 999px;
-    background-color: #ffffff;
+    background-color: var(--surface);
     cursor: pointer;
     transition: border-color 160ms ease, background-color 160ms ease;
 }
 
 .assignment-complete:hover .assignment-complete-toggle {
-    border-color: #0061a2;
+    border-color: var(--accent);
 }
 
 .assignment-complete-toggle:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.14);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .assignment-complete-toggle:checked {
-    border-color: #0061a2;
-    background-color: #0061a2;
+    border-color: var(--accent);
+    background-color: var(--accent-solid);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
     background-position: center;
     background-repeat: no-repeat;
@@ -97,13 +97,13 @@
 }
 
 .assignment-card:has(.assignment-complete-toggle:checked) .assignment-card-title {
-    color: #94a3b8;
+    color: var(--text-faint);
     text-decoration: line-through;
 }
 
 .assignment-card:has(.assignment-complete-toggle:checked) .assignment-card-time,
 .assignment-card:has(.assignment-complete-toggle:checked) .assignment-card-module {
-    color: #cbd5e1;
+    color: var(--text-faint);
 }
 
 /* a secondary action: quiet until you reach for it */
@@ -117,21 +117,21 @@
     border: 0;
     border-radius: 0.5rem;
     background-color: transparent;
-    color: #94a3b8;
+    color: var(--text-faint);
     cursor: pointer;
     pointer-events: auto;
     transition: background-color 160ms ease, color 160ms ease;
 }
 
 .assignment-edit-link:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 .assignment-edit-link:focus-visible {
     outline: none;
-    color: #0f172a;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    color: var(--text);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .assignment-edit-icon {
@@ -156,8 +156,8 @@
 .assignment-week-title {
     margin: 0;
     padding-bottom: 0.4rem;
-    border-bottom: 1px solid #d9d9d9;
-    color: #555555;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -172,7 +172,7 @@
 .assignment-group-title,
 .home-empty-state h2 {
     margin: 0;
-    color: #111111;
+    color: var(--text);
     font-size: clamp(1.25rem, 2vw, 1.5rem);
     font-weight: 700;
     letter-spacing: -0.03em;
@@ -191,9 +191,9 @@
     align-items: center;
     gap: 1rem;
     padding: 0.85rem 1.1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 0.8rem;
-    background: #ffffff;
+    background: var(--surface);
     transition: border-color 160ms ease;
 }
 
@@ -206,7 +206,7 @@
 
 .assignment-card-link:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .assignment-card.is-editable {
@@ -214,11 +214,11 @@
 }
 
 .assignment-card:hover {
-    border-color: #b6d2e7;
+    border-color: var(--accent);
 }
 
 .assignment-card-time {
-    color: #0f172a;
+    color: var(--text);
     font-size: 0.95rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -232,7 +232,7 @@
 
 .assignment-card-title {
     margin: 0;
-    color: #0f172a;
+    color: var(--text);
     font-size: 1rem;
     line-height: 1.3;
     font-weight: 600;
@@ -240,7 +240,7 @@
 
 .assignment-card-module {
     margin: 0.1rem 0 0;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.85rem;
     line-height: 1.35;
 }
@@ -268,35 +268,35 @@
 }
 
 .assignment-badge-accent {
-    border-color: #b6d2e7;
-    background: #eaf4fb;
-    color: #003f6b;
+    border-color: var(--border-strong);
+    background: var(--accent-soft);
+    color: var(--accent);
 }
 
 .assignment-badge-overdue {
-    border-color: #f0c2c2;
-    background: #fdf2f2;
-    color: #9f1d1d;
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
 }
 
 .assignment-badge-outline {
-    border-color: #c8d6e4;
-    background: #ffffff;
-    color: #111111;
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
 }
 
 .home-empty-state {
     padding: 2rem;
-    border: 1px dashed #cddae5;
+    border: 1px dashed var(--border-strong);
     border-radius: 1.5rem;
-    background: #f9fbfd;
+    background: var(--surface-muted);
     text-align: center;
 }
 
 .home-empty-state p {
     max-width: 34rem;
     margin: 0.75rem auto 0;
-    color: #5c7185;
+    color: var(--text-muted);
     line-height: 1.6;
 }
 
