@@ -1,3 +1,26 @@
+:root {
+    color-scheme: light dark;
+
+    --bg: light-dark(#f1f5f9, #0b1220);
+    --surface: light-dark(#ffffff, #131c2e);
+    --surface-muted: light-dark(#f1f6fa, #1a2438);
+    --border: light-dark(#e2e8f0, #253148);
+    --border-strong: light-dark(#cfdce8, #354560);
+
+    --text: light-dark(#111111, #e6edf5);
+    --text-muted: light-dark(#64748b, #9aa8bb);
+    --text-faint: light-dark(#94a3b8, #6b7a90);
+
+    /* --accent: text and borders, --accent-solid: fills under white text */
+    --accent: light-dark(#0061a2, #5eb0ea);
+    --accent-solid: light-dark(#0061a2, #0a6cb5);
+    --accent-soft: light-dark(#eaf4fb, #11304b);
+
+    --danger: light-dark(#b23a48, #f0788a);
+    --danger-soft: light-dark(#fff1f1, #3a161d);
+
+    --focus-ring: light-dark(rgba(0, 97, 162, 0.14), rgba(94, 176, 234, 0.3));
+}
 
 ::view-transition-group(app-bar),
 ::view-transition-new(app-bar) {
@@ -55,8 +78,8 @@ body {
     margin: 0;
     /* on body, not on a div: it propagates to the canvas, so the reserved
        scrollbar gutter is painted too instead of showing a white strip */
-    background: #f1f5f9;
-    color: #111111;
+    background: var(--bg);
+    color: var(--text);
     font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -64,9 +87,9 @@ body {
 
 .assignment-detail-link {
     overflow-wrap: anywhere;
-    color: #0061a2;
+    color: var(--accent);
     text-decoration: underline;
-    text-decoration-color: #8ab5d1;
+    text-decoration-color: var(--border-strong);
     text-underline-offset: 0.25rem;
 }
 
@@ -75,7 +98,7 @@ table {
 }
 
 table, th, td {
-    border: 1px solid black;
+    border: 1px solid var(--text);
     padding: 5px
 }
 
@@ -91,7 +114,7 @@ a {
 }
 
 ::selection {
-    background: rgba(0, 97, 162, 0.16);
+    background: var(--focus-ring);
 }
 
 .assignment-form-card .assignment-form-control {
@@ -101,10 +124,10 @@ a {
     max-width: 100%;
     overflow: hidden;
     padding: 0.75rem 1rem;
-    border: 1px solid #cfdce8;
+    border: 1px solid var(--border-strong);
     border-radius: 0.9rem;
-    background: #ffffff;
-    color: #111111;
+    background: var(--surface);
+    color: var(--text);
     font: inherit;
     font-size: 16px;
     box-sizing: border-box;
@@ -113,23 +136,23 @@ a {
 }
 
 .assignment-form-card .assignment-form-control:hover {
-    border-color: #cfdce8;
+    border-color: var(--border-strong);
     box-shadow: none;
 }
 
 .assignment-form-card .assignment-form-control:focus {
     outline: none;
-    border-color: #0061a2;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 a.active {
-    color: #0061a2;
+    color: var(--accent);
 }
 
 .assignment-form-card .assignment-form-control::placeholder {
-    color: #7a8ea1;
+    color: var(--text-faint);
 }
 
 .assignment-form-card .assignment-form-textarea {
@@ -144,9 +167,9 @@ a.active {
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image:
-        linear-gradient(180deg, #ffffff 0%, #ffffff 100%),
-        linear-gradient(45deg, transparent 50%, #5f7890 50%),
-        linear-gradient(135deg, #5f7890 50%, transparent 50%);
+        linear-gradient(180deg, var(--surface) 0%, var(--surface) 100%),
+        linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
     background-position:
         0 0,
         calc(100% - 1.1rem) calc(50% - 0.12rem),
@@ -160,7 +183,7 @@ a.active {
 }
 
 .assignment-form-card .assignment-form-radio {
-    accent-color: #0061a2;
+    accent-color: var(--accent);
 }
 
 h1:focus {
@@ -225,19 +248,19 @@ h1:focus {
 
 .app-button:focus-visible {
     outline: none;
-    border-color: #0061a2;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .app-button-primary {
-    background: #0061a2;
+    background: var(--accent-solid);
     color: #ffffff;
 }
 
 .app-button-secondary {
-    border-color: #c8d6e4;
-    background: #ffffff;
-    color: #111111;
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
 }
 
 @media (max-width: 640px) {
@@ -261,7 +284,7 @@ h1:focus {
 
 .page-header h1 {
     margin: 0;
-    color: #0f172a;
+    color: var(--text);
     font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.03em;
@@ -270,14 +293,14 @@ h1:focus {
 
 .page-header p {
     margin: 0.3rem 0 0;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.95rem;
 }
 
 .page-back {
     display: inline-block;
     margin-bottom: 0.75rem;
-    color: #0061a2;
+    color: var(--accent);
     font-size: 0.9rem;
     font-weight: 600;
     text-decoration: none;
@@ -290,8 +313,8 @@ h1:focus {
 /* The surface page content sits on. */
 .panel {
     padding: 1.5rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 0.9rem;
 }
 
@@ -308,7 +331,7 @@ h1:focus {
 
 .text-status {
     margin: 1rem 0 0;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -316,7 +339,7 @@ h1:focus {
 .ios-notifications-hint {
     max-width: 42rem;
     margin: 1rem 0 0;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -332,4 +355,23 @@ h1:focus {
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+/* Scoped CSS only reaches its own .razor file and the logo is rendered by Logo.razor,
+   so these are defined here instead of in Login.razor.css. */
+.login-logo {
+    display: block;
+    width: min(100%, 24rem);
+}
+
+.login-logo-mobile {
+    display: none;
+    width: min(100%, 12rem);
+    margin: 0 auto 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .login-logo-mobile {
+        display: block;
+    }
 }
