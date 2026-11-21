@@ -6,7 +6,7 @@
 }
 
 .assignment-detail-body {
-    color: #1e293b;
+    color: var(--text);
     font-size: 1.05rem;
     line-height: 1.7;
 }
@@ -20,7 +20,7 @@
 }
 
 .assignment-detail-empty {
-    color: #94a3b8;
+    color: var(--text-faint);
 }
 
 .assignment-detail-meta dl {
@@ -30,14 +30,14 @@
 }
 
 .assignment-detail-meta dt {
-    color: #94a3b8;
+    color: var(--text-faint);
     font-size: 0.85rem;
     font-weight: 500;
 }
 
 .assignment-detail-meta dd {
     margin: 0.15rem 0 0;
-    color: #1e293b;
+    color: var(--text);
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -45,7 +45,7 @@
 .assignment-detail-meta dd span {
     display: block;
     margin-top: 0.1rem;
-    color: #94a3b8;
+    color: var(--text-faint);
     font-size: 0.85rem;
     font-weight: 400;
 }

@@ -1,6 +1,6 @@
 .settings-section h2 {
     margin: 0;
-    color: #0f172a;
+    color: var(--text);
     font-size: 1.15rem;
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -9,7 +9,7 @@
 .settings-note {
     max-width: 42rem;
     margin: 0.5rem 0 0;
-    color: #64748b;
+    color: var(--text-muted);
     line-height: 1.6;
 }
 
@@ -25,10 +25,10 @@
     overflow-x: auto;
     margin: 1rem 0 0;
     padding: 0.9rem 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 0.9rem;
-    background: #f8fafc;
-    color: #0f172a;
+    background: var(--surface-muted);
+    color: var(--text);
     font-size: 0.85rem;
     line-height: 1.5;
 }

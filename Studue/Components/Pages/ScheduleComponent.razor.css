@@ -9,15 +9,15 @@
     min-height: 18rem;
     padding: 2rem;
     place-items: center;
-    border: 1px dashed #cddae5;
+    border: 1px dashed var(--border-strong);
     border-radius: 1.5rem;
-    background: #f9fbfd;
+    background: var(--surface-muted);
     text-align: center;
 }
 
 .schedule-board-empty h2 {
     margin: 0;
-    color: #111111;
+    color: var(--text);
     font-size: clamp(1.25rem, 2vw, 1.5rem);
     font-weight: 700;
     letter-spacing: -0.03em;
@@ -25,7 +25,7 @@
 
 .schedule-board-empty p {
     margin: 0.65rem 0 0;
-    color: #4f6477;
+    color: var(--text-muted);
     line-height: 1.6;
 }
 
@@ -83,8 +83,8 @@
     align-items: center;
     justify-content: center;
     padding: 0.85rem 1rem;
-    background: #edf5fb;
-    color: #355167;
+    background: var(--accent-soft);
+    color: var(--text-muted);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -105,15 +105,15 @@
     display: grid;
     align-content: space-between;
     padding: 0.85rem 0.4rem;
-    background: #f8fbfd;
-    color: #4f6477;
+    background: var(--surface-muted);
+    color: var(--text-muted);
     font-size: 0.82rem;
     font-weight: 600;
     text-align: center;
 }
 
 .schedule-slot-line {
-    border-top: 1px solid #eef2f7;
+    border-top: 1px solid var(--border);
 }
 
 .schedule-entry-card {
@@ -122,18 +122,22 @@
     display: flex;
     flex-direction: column;
     padding: 0.6rem 0.7rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-left: 3px solid var(--accent, #0061a2);
     border-radius: 0.5rem;
-    background: #ffffff;
-    background: color-mix(in srgb, var(--accent, #0061a2) 7%, #ffffff);
-    color: #0f172a;
+    background: var(--surface);
+    background: color-mix(in srgb, var(--accent, #0061a2) 7%, var(--surface));
+    color: var(--text);
     overflow: hidden;
 }
 
 .schedule-entry-code {
     align-self: flex-start;
-    color: var(--accent, #0061a2);
+    /* lesson colours are mixed towards white so they stay readable as text, more so on a dark surface */
+    color: light-dark(
+        color-mix(in srgb, var(--accent, #0061a2), white 10%),
+        color-mix(in srgb, var(--accent, #0061a2), white 45%)
+    );
     font-size: 0.72rem;
     font-weight: 700;
 }
@@ -151,7 +155,7 @@
     gap: 0.1rem;
     margin-top: auto;
     padding-top: 0.5rem;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.78rem;
     line-height: 1.3;
 }
@@ -171,15 +175,15 @@
 
 .schedule-day-column[data-collapsible] .schedule-day-cell {
     padding-inline: 0.25rem;
-    background: #f1f5f9;
-    color: #94a3b8;
+    background: var(--bg);
+    color: var(--text-faint);
     font-size: 0.62rem;
     letter-spacing: 0.04em;
     white-space: nowrap;
 }
 
 .schedule-day-column[data-collapsible] .schedule-slot-line {
-    border-top-color: #f4f7fa;
+    border-top-color: var(--border);
 }
 
 /* A six-day grid is the wrong artefact on a phone: you end up panning sideways to
@@ -201,7 +205,7 @@
 
     .schedule-agenda-day h3 {
         margin: 0 0 0.15rem;
-        color: #0f172a;
+        color: var(--text);
         font-size: 1rem;
         font-weight: 700;
     }
@@ -212,35 +216,35 @@
         align-items: baseline;
         gap: 0.85rem;
         padding: 0.7rem 0.8rem;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-left: 3px solid var(--accent, #0061a2);
         border-radius: 0.6rem;
-        background: color-mix(in srgb, var(--accent, #0061a2) 7%, #ffffff);
+        background: color-mix(in srgb, var(--accent, #0061a2) 7%, var(--surface));
     }
 
     .schedule-agenda-time {
         display: grid;
-        color: #0f172a;
+        color: var(--text);
         font-size: 0.85rem;
         font-weight: 600;
         font-variant-numeric: tabular-nums;
     }
 
     .schedule-agenda-time span:last-child {
-        color: #94a3b8;
+        color: var(--text-faint);
         font-weight: 400;
     }
 
     .schedule-agenda-copy strong {
         display: block;
-        color: #0f172a;
+        color: var(--text);
         font-size: 0.95rem;
         line-height: 1.3;
     }
 
     .schedule-agenda-copy p {
         margin: 0.15rem 0 0;
-        color: #64748b;
+        color: var(--text-muted);
         font-size: 0.85rem;
     }
 }
@@ -248,11 +252,11 @@
 .schedule-link {
     color: inherit;
     text-decoration: underline;
-    text-decoration-color: #cbd5e1;
+    text-decoration-color: var(--text-faint);
     text-underline-offset: 0.15rem;
 }
 
 .schedule-link:hover {
-    color: #0061a2;
+    color: var(--accent);
     text-decoration-color: currentColor;
 }

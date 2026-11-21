@@ -54,7 +54,7 @@ else
                     @if (IsCurrentWeek(weekGroup.Key))
                     {
                         <span> · </span>
-                        <span style="color: #B23A48">This Week</span>
+                        <span style="color: var(--danger)">This Week</span>
                     }
                 </h2>
 
@@ -67,12 +67,12 @@ else
                         @if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date))
                         {
                             <span> - </span>
-                            <span style="color: #B23A48">Today!</span>
+                            <span style="color: var(--danger)">Today!</span>
                         }
                         else if (assignmentGroup.Key == DateOnly.FromDateTime(Helper.Now().Date.AddDays(1)))
                         {
                             <span> - </span>
-                            <span style="color: #0061a2">Tomorrow</span>
+                            <span style="color: var(--accent)">Tomorrow</span>
                         }
                     </h3>
 

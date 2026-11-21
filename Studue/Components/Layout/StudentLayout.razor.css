@@ -14,8 +14,8 @@
     gap: 1.75rem;
     height: 3.5rem;
     padding: 0 1.25rem;
-    background: #ffffff;
-    border-bottom: 1px solid #dbe5ee;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
 }
 
 .app-brand {
@@ -23,7 +23,7 @@
     align-items: center;
     gap: 0.55rem;
     flex: 0 0 auto;
-    color: #0061a2;
+    color: var(--accent);
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -46,20 +46,20 @@
 .app-nav-link {
     padding: 0.4rem 0.8rem;
     border-radius: 0.6rem;
-    color: #4f6477;
+    color: var(--text-muted);
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
 }
 
 .app-nav-link:hover {
-    background: #f1f6fa;
-    color: #0061a2;
+    background: var(--surface-muted);
+    color: var(--accent);
 }
 
 .app-nav-link.is-active {
-    background: #eaf4fb;
-    color: #0061a2;
+    background: var(--accent-soft);
+    color: var(--accent);
 }
 
 .app-account {
@@ -72,28 +72,28 @@
 .app-account-name {
     padding: 0.4rem 0.6rem;
     border-radius: 0.6rem;
-    color: #4f6477;
+    color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
     text-decoration: none;
 }
 
 .app-account-name:hover {
-    background: #f1f6fa;
-    color: #0061a2;
+    background: var(--surface-muted);
+    color: var(--accent);
 }
 
 .app-account-name.is-active {
-    background: #eaf4fb;
-    color: #0061a2;
+    background: var(--accent-soft);
+    color: var(--accent);
 }
 
 a.disable {
     pointer-events: none;
     cursor: default;
-    border-color: #c8d6e4;
-    background: #f1f6fa;
-    color: #7a8ea1;
+    border-color: var(--border-strong);
+    background: var(--surface-muted);
+    color: var(--text-faint);
 }
 
 .app-notice {
@@ -101,9 +101,9 @@ a.disable {
     align-items: baseline;
     gap: 1rem;
     padding: 0.7rem 1.25rem;
-    background: #eaf4fb;
-    border-bottom: 1px solid #cfe3f2;
-    color: #0b4f7f;
+    background: var(--accent-soft);
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--accent);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -134,9 +134,9 @@ a.disable {
     align-items: baseline;
     gap: 1rem;
     padding: 0.7rem 1.25rem;
-    background: #f1f6fa;
-    border-bottom: 1px solid #dbe5ee;
-    color: #0f172a;
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -151,7 +151,7 @@ a.disable {
 }
 
 .app-promo a {
-    color: #0061a2;
+    color: var(--accent);
     font-weight: 600;
 }
 

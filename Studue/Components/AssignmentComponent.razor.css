@@ -30,7 +30,7 @@
 
 .assignment-form-field label,
 .assignment-form-field span {
-    color: #111111;
+    color: var(--text);
     font-size: 0.875rem;
     font-weight: 600;
 }
@@ -48,25 +48,25 @@
     justify-content: center;
     min-height: 2.75rem;
     padding: 0.55rem 1rem;
-    border: 1px solid #cfdce8;
+    border: 1px solid var(--border-strong);
     border-radius: 0.85rem;
-    background: #ffffff;
-    color: #111111;
+    background: var(--surface);
+    color: var(--text);
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
 }
 
 .assignment-form-radio-option:has(.assignment-form-radio:checked) {
-    border-color: #0061a2;
-    background: #eaf4fb;
-    color: #0061a2;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
 }
 
 .assignment-form-radio-option-mandatory:has(.assignment-form-radio:checked) {
-    border-color: #f0b7b7;
-    background: #fff1f1;
-    color: #9f1d1d;
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
 }
 
 .assignment-form-radio {
@@ -102,8 +102,8 @@
     padding: 0.75rem 1rem;
     border: 1px solid transparent;
     border-radius: 0.9rem;
-    background: #ffffff;
-    color: #111111;
+    background: var(--surface);
+    color: var(--text);
     font: inherit;
     font-weight: 600;
     text-decoration: none;
@@ -118,12 +118,12 @@
 .assignment-form-button:focus-visible,
 .assignment-form-close:focus-visible {
     outline: none;
-    border-color: #0061a2;
-    box-shadow: 0 0 0 4px rgba(0, 97, 162, 0.12);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .assignment-form-button-primary {
-    background: #0061a2;
+    background: var(--accent-solid);
     color: #ffffff;
 }
 
@@ -132,14 +132,14 @@
     padding-inline: 0;
     border: 0;
     background: transparent;
-    color: #111111;
+    color: var(--text);
 }
 
 .assignment-form-button-secondary,
 .assignment-form-close {
-    border-color: #cfdce8;
-    background: #ffffff;
-    color: #111111;
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
 }
 
 .assignment-form-delete {
