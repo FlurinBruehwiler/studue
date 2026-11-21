@@ -51,7 +51,7 @@ else
                             var lesson = slot.Entries.First();
 
                             <article class="schedule-entry-card"
-                                     style="grid-row: @(ScheduleSlots.IndexOf(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --accent: @accents[lesson.Module.Code];"
+                                     style="grid-row: @(ScheduleSlots.IndexOf(lesson.StartTime) - firstSlot + 2) / span @lesson.Duration; --lesson-accent: @accents[lesson.Module.Code];"
                                      aria-label="@lesson.Module.Name in @string.Join(", ", slot.Entries.Select(x => x.Room))">
                                 <span class="schedule-entry-code">@lesson.Module.Code</span>
                                 <strong class="schedule-entry-title">@lesson.Module.Name</strong>
@@ -86,7 +86,7 @@ else
                     {
                         var lesson = slot.Entries.First();
 
-                        <article class="schedule-agenda-item" style="--accent: @accents[lesson.Module.Code];">
+                        <article class="schedule-agenda-item" style="--lesson-accent: @accents[lesson.Module.Code];">
                             <div class="schedule-agenda-time">
                                 <span>@lesson.StartTime.ToString("HH:mm")</span>
                                 <span>@ScheduleSlots.EndTimeOf(lesson.StartTime, lesson.Duration).ToString("HH:mm")</span>

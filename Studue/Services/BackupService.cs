@@ -68,7 +68,7 @@ public class BackupService(IOptions<Settings> settings, ILogger<BackupService> l
         var backupDir = Path.GetFullPath(settings.DatabaseBackupDir);
         Directory.CreateDirectory(backupDir);
 
-        var path = Path.Combine(backupDir, $"upload-{DateTime.UtcNow:yyyyMMdd-HHmmss}.db");
+        var path = Path.Combine(backupDir, $"upload-{Helper.Now():yyyyMMdd-HHmmss}.db");
         await using var file = new FileStream(path, FileMode.CreateNew);
         await upload.CopyToAsync(file);
 
@@ -113,7 +113,7 @@ public class BackupService(IOptions<Settings> settings, ILogger<BackupService> l
     public static async Task<string> CreateBackup(Settings settings, string? label = null)
     {
         var suffix = label == null ? "" : $"-{label}";
-        var fileName = $"studueDb-{DateTime.UtcNow:yyyyMMdd-HHmmss}{suffix}.db";
+        var fileName = $"studueDb-{Helper.Now():yyyyMMdd-HHmmss}{suffix}.db";
         var backupDir = Path.GetFullPath(settings.DatabaseBackupDir);
         var backupPath = Path.Combine(Path.GetFullPath(settings.DatabaseBackupDir), fileName);
 

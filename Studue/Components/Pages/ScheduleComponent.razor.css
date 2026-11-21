@@ -123,21 +123,18 @@
     flex-direction: column;
     padding: 0.6rem 0.7rem;
     border: 1px solid var(--border);
-    border-left: 3px solid var(--accent, #0061a2);
+    border-left: 3px solid var(--lesson-accent, var(--accent));
     border-radius: 0.5rem;
     background: var(--surface);
-    background: color-mix(in srgb, var(--accent, #0061a2) 7%, var(--surface));
     color: var(--text);
     overflow: hidden;
 }
 
 .schedule-entry-code {
     align-self: flex-start;
-    /* lesson colours are mixed towards white so they stay readable as text, more so on a dark surface */
-    color: light-dark(
-        color-mix(in srgb, var(--accent, #0061a2), white 10%),
-        color-mix(in srgb, var(--accent, #0061a2), white 45%)
-    );
+    /* lesson colours are mixed towards white so they stay readable as text, more so on a dark
+       surface; --lesson-text-mix in app.css follows the theme */
+    color: var(--lesson-accent, var(--accent));
     font-size: 0.72rem;
     font-weight: 700;
 }
@@ -217,9 +214,9 @@
         gap: 0.85rem;
         padding: 0.7rem 0.8rem;
         border: 1px solid var(--border);
-        border-left: 3px solid var(--accent, #0061a2);
+        border-left: 3px solid var(--lesson-accent, var(--accent));
         border-radius: 0.6rem;
-        background: color-mix(in srgb, var(--accent, #0061a2) 7%, var(--surface));
+        background: var(--surface);
     }
 
     .schedule-agenda-time {
@@ -259,4 +256,18 @@
 .schedule-link:hover {
     color: var(--accent);
     text-decoration-color: currentColor;
+}
+
+/* Tinted lesson colours. A plain second declaration is no fallback here: anything containing
+   var() passes the parser and only fails later, as "unset" - so where color-mix() is
+   unsupported (Safari < 16.2, Chrome < 111) the plain values above are kept by @supports. */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .schedule-entry-card,
+    .schedule-agenda-item {
+        background: color-mix(in srgb, var(--lesson-accent, var(--accent)) 7%, var(--surface));
+    }
+
+    .schedule-entry-code {
+        color: color-mix(in srgb, var(--lesson-accent, var(--accent)), white var(--lesson-text-mix));
+    }
 }

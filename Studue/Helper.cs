@@ -35,7 +35,7 @@ public static class Helper
 
     private static (string Semester, int Year) GetCurrentSemesterInfo()
     {
-        var now = DateTime.Now;
+        var now = Now();
         var year = now.Year;
 
         if (now < new DateTime(year, 2, 1))

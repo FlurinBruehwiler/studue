@@ -1,25 +1,77 @@
 :root {
-    color-scheme: light dark;
+    color-scheme: light;
 
-    --bg: light-dark(#f1f5f9, #0b1220);
-    --surface: light-dark(#ffffff, #131c2e);
-    --surface-muted: light-dark(#f1f6fa, #1a2438);
-    --border: light-dark(#e2e8f0, #253148);
-    --border-strong: light-dark(#cfdce8, #354560);
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface-muted: #f1f6fa;
+    --border: #e2e8f0;
+    --border-strong: #cfdce8;
 
-    --text: light-dark(#111111, #e6edf5);
-    --text-muted: light-dark(#64748b, #9aa8bb);
-    --text-faint: light-dark(#94a3b8, #6b7a90);
+    --text: #111111;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
 
     /* --accent: text and borders, --accent-solid: fills under white text */
-    --accent: light-dark(#0061a2, #5eb0ea);
-    --accent-solid: light-dark(#0061a2, #0a6cb5);
-    --accent-soft: light-dark(#eaf4fb, #11304b);
+    --accent: #0061a2;
+    --accent-solid: #0061a2;
+    --accent-soft: #eaf4fb;
 
-    --danger: light-dark(#b23a48, #f0788a);
-    --danger-soft: light-dark(#fff1f1, #3a161d);
+    --danger: #b23a48;
+    --danger-soft: #fff1f1;
 
-    --focus-ring: light-dark(rgba(0, 97, 162, 0.14), rgba(94, 176, 234, 0.3));
+    --focus-ring: rgba(0, 97, 162, 0.14);
+
+    /* how far lesson colours are mixed towards white when used as text */
+    --lesson-text-mix: 10%;
+}
+
+/* Plain values plus a media query rather than light-dark(): light-dark() needs
+   Safari 17.5 / Chrome 123, and where it is unsupported every token is dropped at once.
+
+   data-theme on <html> is the choice from the settings page (rendered from the theme cookie).
+   Light is the default; "system" follows the device and "dark" forces dark. The dark values
+   appear twice, once for each of those - keep both blocks in sync. */
+:root[data-theme="system"] {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="system"] {
+        --bg: #0b1220;
+        --surface: #131c2e;
+        --surface-muted: #1a2438;
+        --border: #253148;
+        --border-strong: #354560;
+        --text: #e6edf5;
+        --text-muted: #9aa8bb;
+        --text-faint: #6b7a90;
+        --accent: #5eb0ea;
+        --accent-solid: #0a6cb5;
+        --accent-soft: #11304b;
+        --danger: #f0788a;
+        --danger-soft: #3a161d;
+        --focus-ring: rgba(94, 176, 234, 0.3);
+        --lesson-text-mix: 45%;
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b1220;
+    --surface: #131c2e;
+    --surface-muted: #1a2438;
+    --border: #253148;
+    --border-strong: #354560;
+    --text: #e6edf5;
+    --text-muted: #9aa8bb;
+    --text-faint: #6b7a90;
+    --accent: #5eb0ea;
+    --accent-solid: #0a6cb5;
+    --accent-soft: #11304b;
+    --danger: #f0788a;
+    --danger-soft: #3a161d;
+    --focus-ring: rgba(94, 176, 234, 0.3);
+    --lesson-text-mix: 45%;
 }
 
 ::view-transition-group(app-bar),
@@ -374,4 +426,14 @@ h1:focus {
     .login-logo-mobile {
         display: block;
     }
+}
+
+/* hidden on screen, still read out by screen readers */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

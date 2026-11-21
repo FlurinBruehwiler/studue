@@ -189,9 +189,8 @@ else
 
     private WeekGroup GetWeekGroup(DateOnly date)
     {
-        var index = _weeks.FindIndex(x => x.Start <= date && date <= x.End);
-        if (index >= 0)
-            return new WeekGroup(index + 1, _weeks[index].Start, _weeks[index].End);
+        if (_weeks.WeekNumber(date) is { } number)
+            return new WeekGroup(number, _weeks[number - 1].Start, _weeks[number - 1].End);
 
         //outside the lecture weeks (e.g. exam session) there is no number, but still a Monday-Sunday week
         var monday = date.AddDays(-(((int)date.DayOfWeek + 6) % 7));

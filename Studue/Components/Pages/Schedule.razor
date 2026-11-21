@@ -40,7 +40,6 @@
         //outside the lecture weeks (e.g. exam session) there is no week number, so no badge
         var weeks = await SemesterService.GetWeeks(Helper.GetCurrentSemester()) ?? [];
         var today = DateOnly.FromDateTime(Helper.Now().Date);
-        var index = weeks.FindIndex(x => x.Start <= today && today <= x.End);
-        _currentWeekNumber = index >= 0 ? index + 1 : null;
+        _currentWeekNumber = weeks.WeekNumber(today);
     }
 }

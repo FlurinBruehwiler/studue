@@ -15,8 +15,15 @@
     padding: 2rem;
     border: 1px solid var(--border);
     border-radius: 1.5rem;
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    background: var(--surface);
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+}
+
+/* see ScheduleComponent.razor.css: with var() inside, only @supports gives a real fallback */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .login-shell {
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+    }
 }
 
 .login-hero {

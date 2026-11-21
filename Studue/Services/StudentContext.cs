@@ -553,7 +553,7 @@ public class StudentContext(
         {
             EventType = "StudentSignup",
             Message = $"{newStudent.StudentId} of class {newStudent.Class} signed up",
-            DateTime = DateTime.UtcNow
+            DateTime = Helper.Now()
         });
 
         await context.SaveChangesAsync();

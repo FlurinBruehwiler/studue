@@ -1,6 +1,6 @@
 ﻿@inject AntiforgeryStateProvider Antiforgery
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="@_theme">
 
 <head>
     <meta charset="utf-8"/>
@@ -15,8 +15,9 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Studue" />
-    <meta name="theme-color" content="#0061a2" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#131c2e" media="(prefers-color-scheme: dark)" />
+    @* both tags stay, so setTheme() can retarget them; only "system" gives them different colours *@
+    <meta name="theme-color" content="@(_theme == Theme.Dark ? DarkThemeColor : LightThemeColor)" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="@(_theme == Theme.Light ? LightThemeColor : DarkThemeColor)" media="(prefers-color-scheme: dark)" />
     <ResourcePreloader/>
     @* self-hosted: the google stylesheet was an @@import inside app.css, so the font was
        three serial hops and two extra origins away. Declared here rather than in app.css
@@ -246,6 +247,37 @@
         status.style.display = "block";
     }
 
+    // "light", "dark" or "system". The server renders data-theme from the cookie on every
+    // request (see Theme.cs), so this only has to bring the page that is already open in line.
+    function setTheme(theme) {
+        // every choice is stored, "light" too, so a later change of the default leaves it alone
+        document.cookie = `@Theme.CookieName=${theme}; path=/; max-age=31536000; SameSite=Lax`;
+        applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+        const colors = document.querySelectorAll('meta[name="theme-color"]');
+        const light = "@LightThemeColor", dark = "@DarkThemeColor";
+
+        document.documentElement.dataset.theme = theme;
+        colors[0].content = theme === "dark" ? dark : light;
+        colors[1].content = theme === "light" ? light : dark;
+
+        // the settings page's radios, when this is that page
+        const radio = document.querySelector(`input[name="theme"][value="${theme}"]`);
+        if (radio) radio.checked = true;
+    }
+
+    // Back/forward can restore a page from the browser's cache exactly as it was left, theme
+    // included, without asking the server - so bring it in line with the cookie, mirroring
+    // Theme.FromRequest (anything but dark or system is light).
+    addEventListener('pageshow', e => {
+        if (!e.persisted) return;
+
+        const stored = document.cookie.match(/(?:^|; )@Theme.CookieName=([^;]*)/)?.[1];
+        applyTheme(stored === "dark" || stored === "system" ? stored : "light");
+    });
+
     async function dismissBanner(bannerId) {
         document.getElementById(`banner-${bannerId}`)?.remove();
         await postWithToken(`/banner/${bannerId}/dismiss`);
@@ -337,3 +369,14 @@
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private const string LightThemeColor = "#0061a2";
+    private const string DarkThemeColor = "#131c2e";
+
+    private string _theme = Theme.Light;
+
+    protected override void OnInitialized() => _theme = Theme.FromRequest(HttpContext);
+}

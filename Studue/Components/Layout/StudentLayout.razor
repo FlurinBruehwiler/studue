@@ -117,7 +117,7 @@
             .OrderBy(x => x.Id)
             .ToListAsync();
 
-        disableAuthenticateButton = (DateTime.UtcNow - StudentContext.Student.LastAuthenticationMailSend).TotalMinutes < 1;
+        disableAuthenticateButton = (Helper.Now() - StudentContext.Student.LastAuthenticationMailSend).TotalMinutes < 1;
 
         if (!RequestEditLink || disableAuthenticateButton)
             return;
@@ -155,11 +155,11 @@
         {
             EventType = "RequestingEditLink",
             Message = $"{StudentContext.Student.StudentId} of {StudentContext.Student.Class} requested an edit link",
-            DateTime = DateTime.UtcNow
+            DateTime = Helper.Now()
         });
 
         disableAuthenticateButton = true;
-        StudentContext.Student.LastAuthenticationMailSend = DateTime.UtcNow;
+        StudentContext.Student.LastAuthenticationMailSend = Helper.Now();
         await DatabaseContext.SaveChangesAsync();
     }
 }

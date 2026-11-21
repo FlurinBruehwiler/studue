@@ -60,9 +60,10 @@
         _moduleInstanceCount = await DatabaseContext.ModuleInstances.CountAsync();
         _assignmentCount = await DatabaseContext.Assignements.CountAsync();
 
-        var dayCutoff = DateTime.UtcNow.AddHours(-24);
+        // LastAccess is stored in Zurich time (Helper.Now()), so the cutoffs must be too
+        var dayCutoff = Helper.Now().AddHours(-24);
         _activeUsersInTheLast24Hours = await DatabaseContext.Students.Where(x => x.LastAccess > dayCutoff).CountAsync();
-        var weekCutoff = DateTime.Now.AddDays(-7);
+        var weekCutoff = Helper.Now().AddDays(-7);
         _activeUsersInTheLastWeek = await DatabaseContext.Students.Where(x => x.LastAccess > weekCutoff).CountAsync();
 
         var semesterStart = Helper.GetCurrentSemesterStart();

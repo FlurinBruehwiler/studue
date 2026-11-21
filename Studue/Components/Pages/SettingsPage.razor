@@ -19,7 +19,7 @@
         <p>Signed in as @StudentContext.Student.StudentId, @StudentContext.Student.Class.</p>
     </div>
 
-    <div>
+    <div class="settings-header-actions">
         @if (StudentContext.HasWriteAccess)
         {
             <button type="button" class="app-button app-button-secondary" onclick="rotateToken()">Log out on all devices</button>
@@ -27,6 +27,28 @@
         <button type="button" class="app-button app-button-secondary" onclick="logout()">Log out</button>
     </div>
 </header>
+
+<section class="panel settings-section">
+    <h2>Appearance</h2>
+
+    <p class="settings-note">
+        Choose a theme for this browser, or let it follow your device.
+    </p>
+
+    @* plain radios with an onchange, like the other settings here: the page is static, and the
+       server already checked the saved option, so nothing is filled in after paint *@
+    <fieldset class="theme-picker">
+        <legend class="visually-hidden">Theme</legend>
+        @foreach (var (value, label) in ThemeOptions)
+        {
+            <label class="theme-option">
+                <input type="radio" name="theme" value="@value" checked="@(value == _theme)"
+                       onchange="setTheme(this.value)" />
+                <span>@label</span>
+            </label>
+        }
+    </fieldset>
+</section>
 
 <section class="panel settings-section">
     <h2>Notifications</h2>
@@ -119,6 +141,13 @@
 </section>
 
 @code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private static readonly (string Value, string Label)[] ThemeOptions =
+        [(Theme.System, "System"), (Theme.Light, "Light"), (Theme.Dark, "Dark")];
+
+    private string _theme = Theme.Light;
+
     private string? _vapidPublicKey;
     private string? _mcpConfig;
     private string? _maskedMcpConfig;
@@ -129,6 +158,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _theme = Theme.FromRequest(HttpContext);
+
         _vapidPublicKey = (await DatabaseContext.Configs.FirstAsync(x => x.Id == "VapidKey.Public")).Data;
 
         // webcal:// makes the OS hand the feed to the calendar app as a subscription,

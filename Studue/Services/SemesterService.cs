@@ -8,6 +8,22 @@ namespace Studue.Services;
 
 public sealed record SemesterWeek(DateOnly Start, DateOnly End);
 
+public static class SemesterWeeks
+{
+    // 1-based semester week the date falls in, or null outside the lecture weeks (e.g. the exam
+    // session). Home and Schedule both number weeks through this, so they always agree.
+    public static int? WeekNumber(this IReadOnlyList<SemesterWeek> weeks, DateOnly date)
+    {
+        for (var i = 0; i < weeks.Count; i++)
+        {
+            if (weeks[i].Start <= date && date <= weeks[i].End)
+                return i + 1;
+        }
+
+        return null;
+    }
+}
+
 // stundenplan.zhaw.ch only ever hands out a weekly grid, with no dates on it. The week dropdown
 // on the same page is the one place the semester's real calendar dates appear, so that is where
 // the semester weeks come from.
