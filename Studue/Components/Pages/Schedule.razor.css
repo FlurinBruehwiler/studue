@@ -2,3 +2,26 @@
     display: grid;
     gap: 1.5rem;
 }
+
+/* same look as the accent badge on the assignments, a bit larger to sit next to the title */
+.schedule-week-badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #b6d2e7;
+    border-radius: 999px;
+    background: #eaf4fb;
+    color: #003f6b;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .schedule-week-badge {
+        align-self: flex-start;
+    }
+}
