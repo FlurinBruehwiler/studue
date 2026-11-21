@@ -132,8 +132,7 @@
 
 .schedule-entry-code {
     align-self: flex-start;
-    /* lesson colours are mixed towards white so they stay readable as text, more so on a dark
-       surface; --lesson-text-mix in app.css follows the theme */
+    /* lesson colours are mixed towards white so they stay readable as text, more so on a dark surface */
     color: var(--lesson-accent, var(--accent));
     font-size: 0.72rem;
     font-weight: 700;
@@ -258,9 +257,6 @@
     text-decoration-color: currentColor;
 }
 
-/* Tinted lesson colours. A plain second declaration is no fallback here: anything containing
-   var() passes the parser and only fails later, as "unset" - so where color-mix() is
-   unsupported (Safari < 16.2, Chrome < 111) the plain values above are kept by @supports. */
 @supports (color: color-mix(in srgb, red, blue)) {
     .schedule-entry-card,
     .schedule-agenda-item {

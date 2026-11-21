@@ -21,16 +21,9 @@
 
     --focus-ring: rgba(0, 97, 162, 0.14);
 
-    /* how far lesson colours are mixed towards white when used as text */
     --lesson-text-mix: 10%;
 }
 
-/* Plain values plus a media query rather than light-dark(): light-dark() needs
-   Safari 17.5 / Chrome 123, and where it is unsupported every token is dropped at once.
-
-   data-theme on <html> is the choice from the settings page (rendered from the theme cookie).
-   Light is the default; "system" follows the device and "dark" forces dark. The dark values
-   appear twice, once for each of those - keep both blocks in sync. */
 :root[data-theme="system"] {
     color-scheme: light dark;
 }
@@ -428,7 +421,6 @@ h1:focus {
     }
 }
 
-/* hidden on screen, still read out by screen readers */
 .visually-hidden {
     position: absolute;
     width: 1px;

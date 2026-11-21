@@ -10,8 +10,6 @@ public sealed record SemesterWeek(DateOnly Start, DateOnly End);
 
 public static class SemesterWeeks
 {
-    // 1-based semester week the date falls in, or null outside the lecture weeks (e.g. the exam
-    // session). Home and Schedule both number weeks through this, so they always agree.
     public static int? WeekNumber(this IReadOnlyList<SemesterWeek> weeks, DateOnly date)
     {
         for (var i = 0; i < weeks.Count; i++)

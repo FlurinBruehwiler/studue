@@ -13,7 +13,6 @@
     line-height: 1.6;
 }
 
-/* the log out buttons next to the page title */
 .settings-header-actions {
     display: flex;
     flex-wrap: wrap;
@@ -45,7 +44,6 @@
     margin-top: 1.25rem;
 }
 
-/* a segmented control: three radios that look like one pill with a sliding selection */
 .theme-picker {
     display: inline-flex;
     gap: 0.25rem;
@@ -60,8 +58,6 @@
     position: relative;
 }
 
-/* the input stays in the layout and focusable, only invisible, so keyboard and screen readers
-   still treat the group as ordinary radios */
 .theme-option input {
     position: absolute;
     inset: 0;
