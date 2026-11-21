@@ -39,10 +39,7 @@ public partial class SemesterService(
     public async Task<List<SemesterWeek>?> GetWeeks(string semester)
     {
         var config = await context.Configs.FirstOrDefaultAsync(x => x.Id == ConfigId(semester));
-        if (config != null)
-            return JsonSerializer.Deserialize<List<SemesterWeek>>(config.Data);
-
-        return await RefreshWeeks(semester);
+        return config == null ? null : JsonSerializer.Deserialize<List<SemesterWeek>>(config.Data);
     }
 
     public async Task<List<SemesterWeek>?> RefreshWeeks(string semester)

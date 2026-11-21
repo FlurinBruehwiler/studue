@@ -103,6 +103,7 @@ try
 
     builder.Services.AddHostedService<PushService>();
     builder.Services.AddHostedService<ScheduleRefreshService>();
+    builder.Services.AddHostedService<SemesterWeeksService>();
 
     var app = builder.Build();
 
